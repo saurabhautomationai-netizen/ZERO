@@ -1,0 +1,2154 @@
+[
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "Frontend Developer",
+    "path": "engineering/engineering-frontend-developer.md",
+    "specialty": "React/Vue/Angular, UI implementation, performance",
+    "when": "Modern web apps, pixel-perfect UIs, Core Web Vitals optimization"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "Backend Architect",
+    "path": "engineering/engineering-backend-architect.md",
+    "specialty": "API design, database architecture, scalability",
+    "when": "Server-side systems, microservices, cloud infrastructure"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "Mobile App Builder",
+    "path": "engineering/engineering-mobile-app-builder.md",
+    "specialty": "iOS/Android, React Native, Flutter",
+    "when": "Native and cross-platform mobile applications"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "AI Engineer",
+    "path": "engineering/engineering-ai-engineer.md",
+    "specialty": "ML models, deployment, AI integration",
+    "when": "Machine learning features, data pipelines, AI-powered apps"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "DevOps Automator",
+    "path": "engineering/engineering-devops-automator.md",
+    "specialty": "CI/CD, infrastructure automation, cloud ops",
+    "when": "Pipeline development, deployment automation, monitoring"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "Network Engineer",
+    "path": "engineering/engineering-network-engineer.md",
+    "specialty": "Cisco IOS/IOS-XE, Juniper Junos, Palo Alto PAN-OS",
+    "when": "Router/switch/firewall configuration, BGP/OSPF, ACLs, show-output troubleshooting"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "Rapid Prototyper",
+    "path": "engineering/engineering-rapid-prototyper.md",
+    "specialty": "Fast POC development, MVPs",
+    "when": "Quick proof-of-concepts, hackathon projects, fast iteration"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "Senior Developer",
+    "path": "engineering/engineering-senior-developer.md",
+    "specialty": "Laravel/Livewire, advanced patterns",
+    "when": "Complex implementations, architecture decisions"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "Filament Optimization Specialist",
+    "path": "engineering/engineering-filament-optimization-specialist.md",
+    "specialty": "Filament PHP admin UX, structural form redesign, resource optimization",
+    "when": "Restructuring Filament resources/forms/tables for faster, cleaner admin workflows"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "Autonomous Optimization Architect",
+    "path": "engineering/engineering-autonomous-optimization-architect.md",
+    "specialty": "LLM routing, cost optimization, shadow testing",
+    "when": "Autonomous systems needing intelligent API selection and cost guardrails"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "Embedded Firmware Engineer",
+    "path": "engineering/engineering-embedded-firmware-engineer.md",
+    "specialty": "Bare-metal, RTOS, ESP32/STM32/Nordic firmware",
+    "when": "Production-grade embedded systems and IoT devices"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "Incident Response Commander",
+    "path": "engineering/engineering-incident-response-commander.md",
+    "specialty": "Incident management, post-mortems, on-call",
+    "when": "Managing production incidents and building incident readiness"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "Solidity Smart Contract Engineer",
+    "path": "engineering/engineering-solidity-smart-contract-engineer.md",
+    "specialty": "EVM contracts, gas optimization, DeFi",
+    "when": "Secure, gas-optimized smart contracts and DeFi protocols"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "Codebase Onboarding Engineer",
+    "path": "engineering/engineering-codebase-onboarding-engineer.md",
+    "specialty": "Fast developer onboarding, read-only codebase exploration, factual explanation",
+    "when": "Helping new developers understand unfamiliar repos quickly by reading the code, tracing code paths, and stating facts about structure and behavior"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "Technical Writer",
+    "path": "engineering/engineering-technical-writer.md",
+    "specialty": "Developer docs, API reference, tutorials",
+    "when": "Clear, accurate technical documentation"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "WeChat Mini Program Developer",
+    "path": "engineering/engineering-wechat-mini-program-developer.md",
+    "specialty": "WeChat ecosystem, Mini Programs, payment integration",
+    "when": "Building performant apps for the WeChat ecosystem"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "Code Reviewer",
+    "path": "engineering/engineering-code-reviewer.md",
+    "specialty": "Constructive code review, security, maintainability",
+    "when": "PR reviews, code quality gates, mentoring through review"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "Database Optimizer",
+    "path": "engineering/engineering-database-optimizer.md",
+    "specialty": "Schema design, query optimization, indexing strategies",
+    "when": "PostgreSQL/MySQL tuning, slow query debugging, migration planning"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "Git Workflow Master",
+    "path": "engineering/engineering-git-workflow-master.md",
+    "specialty": "Branching strategies, conventional commits, advanced Git",
+    "when": "Git workflow design, history cleanup, CI-friendly branch management"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "Software Architect",
+    "path": "engineering/engineering-software-architect.md",
+    "specialty": "System design, DDD, architectural patterns, trade-off analysis",
+    "when": "Architecture decisions, domain modeling, system evolution strategy"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "SRE",
+    "path": "engineering/engineering-sre.md",
+    "specialty": "SLOs, error budgets, observability, chaos engineering",
+    "when": "Production reliability, toil reduction, capacity planning"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "AI Data Remediation Engineer",
+    "path": "engineering/engineering-ai-data-remediation-engineer.md",
+    "specialty": "Self-healing pipelines, air-gapped SLMs, semantic clustering",
+    "when": "Fixing broken data at scale with zero data loss"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "Data Engineer",
+    "path": "engineering/engineering-data-engineer.md",
+    "specialty": "Data pipelines, lakehouse architecture, ETL/ELT",
+    "when": "Building reliable data infrastructure and warehousing"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "Feishu Integration Developer",
+    "path": "engineering/engineering-feishu-integration-developer.md",
+    "specialty": "Feishu/Lark Open Platform, bots, workflows",
+    "when": "Building integrations for the Feishu ecosystem"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "CMS Developer",
+    "path": "engineering/engineering-cms-developer.md",
+    "specialty": "WordPress & Drupal themes, plugins/modules, content architecture",
+    "when": "Code-first CMS implementation and customization"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "Email Intelligence Engineer",
+    "path": "engineering/engineering-email-intelligence-engineer.md",
+    "specialty": "Email parsing, MIME extraction, structured data for AI agents",
+    "when": "Turning raw email threads into reasoning-ready context"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "Voice AI Integration Engineer",
+    "path": "engineering/engineering-voice-ai-integration-engineer.md",
+    "specialty": "Speech-to-text pipelines, Whisper, ASR, speaker diarization",
+    "when": "End-to-end transcription pipelines, audio preprocessing, structured transcript delivery"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "IT Service Manager",
+    "path": "engineering/engineering-it-service-manager.md",
+    "specialty": "ITIL 4 service management",
+    "when": "Incident/problem/change management, SLAs, CMDB"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "Minimal Change Engineer",
+    "path": "engineering/engineering-minimal-change-engineer.md",
+    "specialty": "Minimum-viable diffs",
+    "when": "Fixing only what's asked, no scope creep"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "OrgScript Engineer",
+    "path": "engineering/engineering-orgscript-engineer.md",
+    "specialty": "OrgScript grammar & AST validation",
+    "when": "Designing/parsing OrgScript business-logic definitions"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "Prompt Engineer",
+    "path": "engineering/engineering-prompt-engineer.md",
+    "specialty": "LLM prompt design & optimization",
+    "when": "Turning vague instructions into reliable AI behaviors"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "Multi-Agent Systems Architect",
+    "path": "engineering/engineering-multi-agent-systems-architect.md",
+    "specialty": "Multi-agent pipeline design & governance",
+    "when": "Topology, context, trust, failure recovery for agent systems"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "Drupal Shopping Cart Engineer",
+    "path": "engineering/engineering-drupal-shopping-cart.md",
+    "specialty": "Drupal Commerce storefronts",
+    "when": "Catalog, payments, checkout, orders on Drupal 10/11"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "WordPress Shopping Cart Engineer",
+    "path": "engineering/engineering-wordpress-shopping-cart.md",
+    "specialty": "WooCommerce storefronts",
+    "when": "Catalog, payments, checkout, conversion on WordPress"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "Payments & Billing Engineer",
+    "path": "engineering/engineering-payments-billing-engineer.md",
+    "specialty": "PSP integration, idempotent payment flows, subscription billing",
+    "when": "Stripe/Adyen/Braintree integrations, webhook processing, dunning, reconciliation"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "Internationalization Engineer",
+    "path": "engineering/engineering-i18n-engineer.md",
+    "specialty": "ICU MessageFormat, RTL/bidi layouts, CLDR formatting, pseudo-localization",
+    "when": "Making apps translation-ready, locale-aware formatting, RTL support, i18n audits"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "Drupal Performance Engineer",
+    "path": "engineering/engineering-drupal-performance.md",
+    "specialty": "Drupal performance & Core Web Vitals",
+    "when": "Caching, DB/query tuning, render pipeline, profiling high-traffic Drupal"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "WordPress Performance Engineer",
+    "path": "engineering/engineering-wordpress-performance.md",
+    "specialty": "WordPress performance & Core Web Vitals",
+    "when": "Caching, query/asset optimization, plugin tuning, profiling high-traffic WP"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "Section 508 Accessibility Specialist",
+    "path": "engineering/engineering-section-508-specialist.md",
+    "specialty": "US federal 508 / WCAG accessibility",
+    "when": "ARIA, screen-reader testing, VPAT/ACR authoring, remediation"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "USWDS Developer",
+    "path": "engineering/engineering-uswds-developer.md",
+    "specialty": "US Web Design System (federal)",
+    "when": "Accessible gov UI components & design-system patterns"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "Search Relevance Engineer",
+    "path": "engineering/engineering-search-relevance-engineer.md",
+    "specialty": "Search ranking & relevance",
+    "when": "Query understanding, embeddings, ranking/eval, relevance tuning"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "Identity & Access Engineer",
+    "path": "engineering/engineering-identity-access-engineer.md",
+    "specialty": "AuthN/AuthZ & IAM",
+    "when": "OAuth/OIDC/SAML, SSO, RBAC/ABAC, token & session security"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "Realtime Collaboration Engineer",
+    "path": "engineering/engineering-realtime-collaboration-engineer.md",
+    "specialty": "Realtime sync & presence",
+    "when": "CRDTs/OT, conflict resolution, live cursors, offline sync"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "Desktop App Engineer",
+    "path": "engineering/engineering-desktop-app-engineer.md",
+    "specialty": "Cross-platform desktop apps",
+    "when": "Electron/Tauri, native integration, packaging, auto-update"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "Mobile Release Engineer",
+    "path": "engineering/engineering-mobile-release-engineer.md",
+    "specialty": "Mobile release & CI/CD",
+    "when": "App Store/Play submission, signing, staged rollout, crash triage"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "Video Streaming Engineer",
+    "path": "engineering/engineering-video-streaming-engineer.md",
+    "specialty": "Video streaming & transcoding",
+    "when": "HLS/DASH, ABR, codecs, CDN delivery, low-latency streaming"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "FinOps Engineer",
+    "path": "engineering/engineering-finops-engineer.md",
+    "specialty": "Cloud cost engineering",
+    "when": "Cost allocation, rightsizing, unit economics, budget & anomaly control"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "WebAssembly Engineer",
+    "path": "engineering/engineering-webassembly-engineer.md",
+    "specialty": "WebAssembly & WASI",
+    "when": "Rust/C++\u2192WASM, sandboxing, host bindings, performance"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "API Platform Engineer",
+    "path": "engineering/engineering-api-platform-engineer.md",
+    "specialty": "API gateways & platforms",
+    "when": "Gateway design, versioning, rate limiting, developer portals"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "Database Reliability Engineer",
+    "path": "engineering/engineering-database-reliability-engineer.md",
+    "specialty": "Database reliability (DBRE)",
+    "when": "HA/replication, automated failover, PITR backups, zero-downtime ops"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "Developer Tooling Engineer",
+    "path": "engineering/engineering-developer-tooling-engineer.md",
+    "specialty": "CLI & developer tooling",
+    "when": "Command-line tools, internal DX, build/dev workflows"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "IoT Fleet Engineer",
+    "path": "engineering/engineering-iot-fleet-engineer.md",
+    "specialty": "IoT & edge fleet",
+    "when": "Device provisioning/identity, MQTT telemetry, OTA updates"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "RAG Pipeline Engineer",
+    "path": "engineering/engineering-rag-pipeline-engineer.md",
+    "specialty": "Production RAG pipelines",
+    "when": "Chunking, retrieval quality, hybrid search, re-ranking, eval-driven iteration"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "GaussDB Expert Engineer",
+    "path": "engineering/engineering-gaussdb-expert.md",
+    "specialty": "Huawei GaussDB OLTP",
+    "when": "Enterprise OLTP performance, HA, and migration on Huawei's GaussDB"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "Privacy Engineer",
+    "path": "engineering/engineering-privacy-engineer.md",
+    "specialty": "PII discovery, data minimization, consent enforcement, DSAR/deletion pipelines",
+    "when": "Implementing privacy in code, right-to-be-forgotten across services, retention automation"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "Rust Refactoring Specialist",
+    "path": "engineering/engineering-rust-refactoring-specialist.md",
+    "specialty": "Behavior-aware Rust refactoring",
+    "when": "Reforming crates/traits/modules with evidence-based, behavior-preserving changes"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "LLM Post-Training Engineer",
+    "path": "engineering/engineering-llm-post-training-engineer.md",
+    "specialty": "Post-training stack (SFT/DPO/GRPO/RLVR)",
+    "when": "Evidence-based experiment gating, checkpoint integrity, failure classification"
+  },
+  {
+    "division": "Engineering",
+    "subsection": null,
+    "name": "Data Visualization Engineer",
+    "path": "engineering/engineering-data-visualization-engineer.md",
+    "specialty": "Perceptually honest data viz",
+    "when": "Chart-type selection, colorblind-safe palettes, performant D3/Vega rendering"
+  },
+  {
+    "division": "Design",
+    "subsection": null,
+    "name": "UI Designer",
+    "path": "design/design-ui-designer.md",
+    "specialty": "Visual design, component libraries, design systems",
+    "when": "Interface creation, brand consistency, component design"
+  },
+  {
+    "division": "Design",
+    "subsection": null,
+    "name": "UX Researcher",
+    "path": "design/design-ux-researcher.md",
+    "specialty": "User testing, behavior analysis, research",
+    "when": "Understanding users, usability testing, design insights"
+  },
+  {
+    "division": "Design",
+    "subsection": null,
+    "name": "UX Architect",
+    "path": "design/design-ux-architect.md",
+    "specialty": "Technical architecture, CSS systems, implementation",
+    "when": "Developer-friendly foundations, implementation guidance"
+  },
+  {
+    "division": "Design",
+    "subsection": null,
+    "name": "Brand Guardian",
+    "path": "design/design-brand-guardian.md",
+    "specialty": "Brand identity, consistency, positioning",
+    "when": "Brand strategy, identity development, guidelines"
+  },
+  {
+    "division": "Design",
+    "subsection": null,
+    "name": "Visual Storyteller",
+    "path": "design/design-visual-storyteller.md",
+    "specialty": "Visual narratives, multimedia content",
+    "when": "Compelling visual stories, brand storytelling"
+  },
+  {
+    "division": "Design",
+    "subsection": null,
+    "name": "Whimsy Injector",
+    "path": "design/design-whimsy-injector.md",
+    "specialty": "Personality, delight, playful interactions",
+    "when": "Adding joy, micro-interactions, Easter eggs, brand personality"
+  },
+  {
+    "division": "Design",
+    "subsection": null,
+    "name": "Image Prompt Engineer",
+    "path": "design/design-image-prompt-engineer.md",
+    "specialty": "AI image generation prompts, photography",
+    "when": "Photography prompts for Midjourney, DALL-E, Stable Diffusion"
+  },
+  {
+    "division": "Design",
+    "subsection": null,
+    "name": "Inclusive Visuals Specialist",
+    "path": "design/design-inclusive-visuals-specialist.md",
+    "specialty": "Representation, bias mitigation, authentic imagery",
+    "when": "Generating culturally accurate AI images and video"
+  },
+  {
+    "division": "Design",
+    "subsection": null,
+    "name": "Persona Walkthrough Specialist",
+    "path": "design/design-persona-walkthrough.md",
+    "specialty": "Persona-driven cognitive walkthroughs",
+    "when": "Simulating user reactions and friction at each scroll position"
+  },
+  {
+    "division": "Design",
+    "subsection": null,
+    "name": "UI Finish-Gate Reviewer",
+    "path": "design/design-ui-finish-gate-reviewer.md",
+    "specialty": "Anti-generic UI finish gate",
+    "when": "Catching interchangeable UI before ship via evidence + a written design contract"
+  },
+  {
+    "division": "Paid Media",
+    "subsection": null,
+    "name": "PPC Campaign Strategist",
+    "path": "paid-media/paid-media-ppc-strategist.md",
+    "specialty": "Google/Microsoft/Amazon Ads, account architecture, bidding",
+    "when": "Account buildouts, budget allocation, scaling, performance diagnosis"
+  },
+  {
+    "division": "Paid Media",
+    "subsection": null,
+    "name": "Search Query Analyst",
+    "path": "paid-media/paid-media-search-query-analyst.md",
+    "specialty": "Search term analysis, negative keywords, intent mapping",
+    "when": "Query audits, wasted spend elimination, keyword discovery"
+  },
+  {
+    "division": "Paid Media",
+    "subsection": null,
+    "name": "Paid Media Auditor",
+    "path": "paid-media/paid-media-auditor.md",
+    "specialty": "200+ point account audits, competitive analysis",
+    "when": "Account takeovers, quarterly reviews, competitive pitches"
+  },
+  {
+    "division": "Paid Media",
+    "subsection": null,
+    "name": "Tracking & Measurement Specialist",
+    "path": "paid-media/paid-media-tracking-specialist.md",
+    "specialty": "GTM, GA4, conversion tracking, CAPI",
+    "when": "New implementations, tracking audits, platform migrations"
+  },
+  {
+    "division": "Paid Media",
+    "subsection": null,
+    "name": "Ad Creative Strategist",
+    "path": "paid-media/paid-media-creative-strategist.md",
+    "specialty": "RSA copy, Meta creative, Performance Max assets",
+    "when": "Creative launches, testing programs, ad fatigue refreshes"
+  },
+  {
+    "division": "Paid Media",
+    "subsection": null,
+    "name": "Programmatic & Display Buyer",
+    "path": "paid-media/paid-media-programmatic-buyer.md",
+    "specialty": "GDN, DSPs, partner media, ABM display",
+    "when": "Display planning, partner outreach, ABM programs"
+  },
+  {
+    "division": "Paid Media",
+    "subsection": null,
+    "name": "Paid Social Strategist",
+    "path": "paid-media/paid-media-paid-social-strategist.md",
+    "specialty": "Meta, LinkedIn, TikTok, cross-platform social",
+    "when": "Social ad programs, platform selection, audience strategy"
+  },
+  {
+    "division": "Sales",
+    "subsection": null,
+    "name": "Outbound Strategist",
+    "path": "sales/sales-outbound-strategist.md",
+    "specialty": "Signal-based prospecting, multi-channel sequences, ICP targeting",
+    "when": "Building pipeline through research-driven outreach, not volume"
+  },
+  {
+    "division": "Sales",
+    "subsection": null,
+    "name": "Discovery Coach",
+    "path": "sales/sales-discovery-coach.md",
+    "specialty": "SPIN, Gap Selling, Sandler \u2014 question design and call structure",
+    "when": "Preparing for discovery calls, qualifying opportunities, coaching reps"
+  },
+  {
+    "division": "Sales",
+    "subsection": null,
+    "name": "Deal Strategist",
+    "path": "sales/sales-deal-strategist.md",
+    "specialty": "MEDDPICC qualification, competitive positioning, win planning",
+    "when": "Scoring deals, exposing pipeline risk, building win strategies"
+  },
+  {
+    "division": "Sales",
+    "subsection": null,
+    "name": "Sales Engineer",
+    "path": "sales/sales-engineer.md",
+    "specialty": "Technical demos, POC scoping, competitive battlecards",
+    "when": "Pre-sales technical wins, demo prep, competitive positioning"
+  },
+  {
+    "division": "Sales",
+    "subsection": null,
+    "name": "Proposal Strategist",
+    "path": "sales/sales-proposal-strategist.md",
+    "specialty": "RFP response, win themes, narrative structure",
+    "when": "Writing proposals that persuade, not just comply"
+  },
+  {
+    "division": "Sales",
+    "subsection": null,
+    "name": "Pipeline Analyst",
+    "path": "sales/sales-pipeline-analyst.md",
+    "specialty": "Forecasting, pipeline health, deal velocity, RevOps",
+    "when": "Pipeline reviews, forecast accuracy, revenue operations"
+  },
+  {
+    "division": "Sales",
+    "subsection": null,
+    "name": "Account Strategist",
+    "path": "sales/sales-account-strategist.md",
+    "specialty": "Land-and-expand, QBRs, stakeholder mapping",
+    "when": "Post-sale expansion, account planning, NRR growth"
+  },
+  {
+    "division": "Sales",
+    "subsection": null,
+    "name": "Sales Coach",
+    "path": "sales/sales-coach.md",
+    "specialty": "Rep development, call coaching, pipeline review facilitation",
+    "when": "Making every rep and every deal better through structured coaching"
+  },
+  {
+    "division": "Sales",
+    "subsection": null,
+    "name": "Sales Outreach",
+    "path": "specialized/sales-outreach.md",
+    "specialty": "Cold prospecting, multi-touch cadences, objection handling, proposals",
+    "when": "Top-of-funnel B2B outreach \u2014 from cold email to booked discovery call"
+  },
+  {
+    "division": "Sales",
+    "subsection": null,
+    "name": "Offer & Lead Gen Strategist",
+    "path": "sales/sales-offer-lead-gen-strategist.md",
+    "specialty": "Offers & lead magnets",
+    "when": "Top-of-funnel offer construction and lead gen"
+  },
+  {
+    "division": "Marketing",
+    "subsection": null,
+    "name": "Growth Hacker",
+    "path": "marketing/marketing-growth-hacker.md",
+    "specialty": "Rapid user acquisition, viral loops, experiments",
+    "when": "Explosive growth, user acquisition, conversion optimization"
+  },
+  {
+    "division": "Marketing",
+    "subsection": null,
+    "name": "Content Creator",
+    "path": "marketing/marketing-content-creator.md",
+    "specialty": "Multi-platform content, editorial calendars",
+    "when": "Content strategy, copywriting, brand storytelling"
+  },
+  {
+    "division": "Marketing",
+    "subsection": null,
+    "name": "Twitter Engager",
+    "path": "marketing/marketing-twitter-engager.md",
+    "specialty": "Real-time engagement, thought leadership",
+    "when": "Twitter strategy, LinkedIn campaigns, professional social"
+  },
+  {
+    "division": "Marketing",
+    "subsection": null,
+    "name": "X/Twitter Intelligence Analyst",
+    "path": "marketing/marketing-x-twitter-intelligence-analyst.md",
+    "specialty": "Social listening, trend detection, account monitoring",
+    "when": "Brand risk, competitor, and audience intelligence on X/Twitter"
+  },
+  {
+    "division": "Marketing",
+    "subsection": null,
+    "name": "TikTok Strategist",
+    "path": "marketing/marketing-tiktok-strategist.md",
+    "specialty": "Viral content, algorithm optimization",
+    "when": "TikTok growth, viral content, Gen Z/Millennial audience"
+  },
+  {
+    "division": "Marketing",
+    "subsection": null,
+    "name": "Instagram Curator",
+    "path": "marketing/marketing-instagram-curator.md",
+    "specialty": "Visual storytelling, community building",
+    "when": "Instagram strategy, aesthetic development, visual content"
+  },
+  {
+    "division": "Marketing",
+    "subsection": null,
+    "name": "Reddit Community Builder",
+    "path": "marketing/marketing-reddit-community-builder.md",
+    "specialty": "Authentic engagement, value-driven content",
+    "when": "Reddit strategy, community trust, authentic marketing"
+  },
+  {
+    "division": "Marketing",
+    "subsection": null,
+    "name": "App Store Optimizer",
+    "path": "marketing/marketing-app-store-optimizer.md",
+    "specialty": "ASO, conversion optimization, discoverability",
+    "when": "App marketing, store optimization, app growth"
+  },
+  {
+    "division": "Marketing",
+    "subsection": null,
+    "name": "Social Media Strategist",
+    "path": "marketing/marketing-social-media-strategist.md",
+    "specialty": "Cross-platform strategy, campaigns",
+    "when": "Overall social strategy, multi-platform campaigns"
+  },
+  {
+    "division": "Marketing",
+    "subsection": null,
+    "name": "Xiaohongshu Specialist",
+    "path": "marketing/marketing-xiaohongshu-specialist.md",
+    "specialty": "Lifestyle content, trend-driven strategy",
+    "when": "Xiaohongshu growth, aesthetic storytelling, Gen Z audience"
+  },
+  {
+    "division": "Marketing",
+    "subsection": null,
+    "name": "WeChat Official Account Manager",
+    "path": "marketing/marketing-wechat-official-account.md",
+    "specialty": "Subscriber engagement, content marketing",
+    "when": "WeChat OA strategy, community building, conversion optimization"
+  },
+  {
+    "division": "Marketing",
+    "subsection": null,
+    "name": "Zhihu Strategist",
+    "path": "marketing/marketing-zhihu-strategist.md",
+    "specialty": "Thought leadership, knowledge-driven engagement",
+    "when": "Zhihu authority building, Q&A strategy, lead generation"
+  },
+  {
+    "division": "Marketing",
+    "subsection": null,
+    "name": "Baidu SEO Specialist",
+    "path": "marketing/marketing-baidu-seo-specialist.md",
+    "specialty": "Baidu optimization, China SEO, ICP compliance",
+    "when": "Ranking in Baidu and reaching China's search market"
+  },
+  {
+    "division": "Marketing",
+    "subsection": null,
+    "name": "Bilibili Content Strategist",
+    "path": "marketing/marketing-bilibili-content-strategist.md",
+    "specialty": "B\u7ad9 algorithm, danmaku culture, UP\u4e3b growth",
+    "when": "Building audiences on Bilibili with community-first content"
+  },
+  {
+    "division": "Marketing",
+    "subsection": null,
+    "name": "Carousel Growth Engine",
+    "path": "marketing/marketing-carousel-growth-engine.md",
+    "specialty": "TikTok/Instagram carousels, autonomous publishing",
+    "when": "Generating and publishing viral carousel content"
+  },
+  {
+    "division": "Marketing",
+    "subsection": null,
+    "name": "LinkedIn Content Creator",
+    "path": "marketing/marketing-linkedin-content-creator.md",
+    "specialty": "Personal branding, thought leadership, professional content",
+    "when": "LinkedIn growth, professional audience building, B2B content"
+  },
+  {
+    "division": "Marketing",
+    "subsection": null,
+    "name": "China E-Commerce Operator",
+    "path": "marketing/marketing-china-ecommerce-operator.md",
+    "specialty": "Taobao, Tmall, Pinduoduo, live commerce",
+    "when": "Running multi-platform e-commerce in China"
+  },
+  {
+    "division": "Marketing",
+    "subsection": null,
+    "name": "Kuaishou Strategist",
+    "path": "marketing/marketing-kuaishou-strategist.md",
+    "specialty": "Kuaishou, \u8001\u94c1 community, grassroots growth",
+    "when": "Building authentic audiences in lower-tier markets"
+  },
+  {
+    "division": "Marketing",
+    "subsection": null,
+    "name": "SEO Specialist",
+    "path": "marketing/marketing-seo-specialist.md",
+    "specialty": "Technical SEO, content strategy, link building",
+    "when": "Driving sustainable organic search growth"
+  },
+  {
+    "division": "Marketing",
+    "subsection": null,
+    "name": "Book Co-Author",
+    "path": "marketing/marketing-book-co-author.md",
+    "specialty": "Thought-leadership books, ghostwriting, publishing",
+    "when": "Strategic book collaboration for founders and experts"
+  },
+  {
+    "division": "Marketing",
+    "subsection": null,
+    "name": "Cross-Border E-Commerce Specialist",
+    "path": "marketing/marketing-cross-border-ecommerce.md",
+    "specialty": "Amazon, Shopee, Lazada, cross-border fulfillment",
+    "when": "Full-funnel cross-border e-commerce strategy"
+  },
+  {
+    "division": "Marketing",
+    "subsection": null,
+    "name": "Douyin Strategist",
+    "path": "marketing/marketing-douyin-strategist.md",
+    "specialty": "Douyin platform, short-video marketing, algorithm",
+    "when": "Growing audiences on China's leading short-video platform"
+  },
+  {
+    "division": "Marketing",
+    "subsection": null,
+    "name": "Livestream Commerce Coach",
+    "path": "marketing/marketing-livestream-commerce-coach.md",
+    "specialty": "Host training, live room optimization, conversion",
+    "when": "Building high-performing livestream e-commerce operations"
+  },
+  {
+    "division": "Marketing",
+    "subsection": null,
+    "name": "Podcast Strategist",
+    "path": "marketing/marketing-podcast-strategist.md",
+    "specialty": "Podcast content strategy, platform optimization",
+    "when": "Chinese podcast market strategy and operations"
+  },
+  {
+    "division": "Marketing",
+    "subsection": null,
+    "name": "Private Domain Operator",
+    "path": "marketing/marketing-private-domain-operator.md",
+    "specialty": "WeCom, private traffic, community operations",
+    "when": "Building enterprise WeChat private domain ecosystems"
+  },
+  {
+    "division": "Marketing",
+    "subsection": null,
+    "name": "Short-Video Editing Coach",
+    "path": "marketing/marketing-short-video-editing-coach.md",
+    "specialty": "Post-production, editing workflows, platform specs",
+    "when": "Hands-on short-video editing training and optimization"
+  },
+  {
+    "division": "Marketing",
+    "subsection": null,
+    "name": "Weibo Strategist",
+    "path": "marketing/marketing-weibo-strategist.md",
+    "specialty": "Sina Weibo, trending topics, fan engagement",
+    "when": "Full-spectrum Weibo operations and growth"
+  },
+  {
+    "division": "Marketing",
+    "subsection": null,
+    "name": "Global Podcast Strategist",
+    "path": "marketing/marketing-global-podcast-strategist.md",
+    "specialty": "Show positioning, audience growth, monetisation",
+    "when": "Podcast launch, platform algorithms, sponsorship, community building"
+  },
+  {
+    "division": "Marketing",
+    "subsection": null,
+    "name": "AI Citation Strategist",
+    "path": "marketing/marketing-ai-citation-strategist.md",
+    "specialty": "AEO/GEO, AI recommendation visibility, citation auditing",
+    "when": "Improving brand visibility across ChatGPT, Claude, Gemini, Perplexity"
+  },
+  {
+    "division": "Marketing",
+    "subsection": null,
+    "name": "China Market Localization Strategist",
+    "path": "marketing/marketing-china-market-localization-strategist.md",
+    "specialty": "Full-stack China market localization, Douyin/Xiaohongshu/WeChat GTM",
+    "when": "Turning trend signals into executable China go-to-market strategies"
+  },
+  {
+    "division": "Marketing",
+    "subsection": null,
+    "name": "Video Optimization Specialist",
+    "path": "marketing/marketing-video-optimization-specialist.md",
+    "specialty": "YouTube algorithm strategy, chaptering, thumbnail concepts",
+    "when": "YouTube channel growth, video SEO, audience retention optimization"
+  },
+  {
+    "division": "Marketing",
+    "subsection": null,
+    "name": "AEO Foundations Architect",
+    "path": "marketing/marketing-aeo-foundations.md",
+    "specialty": "AI Engine Optimization infrastructure",
+    "when": "llms.txt, AI-aware robots.txt, agent discovery files"
+  },
+  {
+    "division": "Marketing",
+    "subsection": null,
+    "name": "Agentic Search Optimizer",
+    "path": "marketing/marketing-agentic-search-optimizer.md",
+    "specialty": "WebMCP & agentic task completion",
+    "when": "Making sites usable by AI browsing agents"
+  },
+  {
+    "division": "Marketing",
+    "subsection": null,
+    "name": "Email Marketing Strategist",
+    "path": "marketing/marketing-email-strategist.md",
+    "specialty": "Lifecycle email & deliverability",
+    "when": "CRM campaigns, automation, segmentation"
+  },
+  {
+    "division": "Marketing",
+    "subsection": null,
+    "name": "Multi-Platform Publisher",
+    "path": "marketing/marketing-multi-platform-publisher.md",
+    "specialty": "One-click Chinese multi-platform publishing",
+    "when": "Routing one article to \u77e5\u4e4e/\u5c0f\u7ea2\u4e66/CSDN/B\u7ad9/\u516c\u4f17\u53f7/\u6398\u91d1"
+  },
+  {
+    "division": "Marketing",
+    "subsection": null,
+    "name": "PR & Communications Manager",
+    "path": "marketing/marketing-pr-communications-manager.md",
+    "specialty": "PR, media relations & crisis comms",
+    "when": "Press releases, thought leadership, reputation"
+  },
+  {
+    "division": "Product",
+    "subsection": null,
+    "name": "Sprint Prioritizer",
+    "path": "product/product-sprint-prioritizer.md",
+    "specialty": "Agile planning, feature prioritization",
+    "when": "Sprint planning, resource allocation, backlog management"
+  },
+  {
+    "division": "Product",
+    "subsection": null,
+    "name": "Trend Researcher",
+    "path": "product/product-trend-researcher.md",
+    "specialty": "Market intelligence, competitive analysis",
+    "when": "Market research, opportunity assessment, trend identification"
+  },
+  {
+    "division": "Product",
+    "subsection": null,
+    "name": "Feedback Synthesizer",
+    "path": "product/product-feedback-synthesizer.md",
+    "specialty": "User feedback analysis, insights extraction",
+    "when": "Feedback analysis, user insights, product priorities"
+  },
+  {
+    "division": "Product",
+    "subsection": null,
+    "name": "Behavioral Nudge Engine",
+    "path": "product/product-behavioral-nudge-engine.md",
+    "specialty": "Behavioral psychology, nudge design, engagement",
+    "when": "Maximizing user motivation through behavioral science"
+  },
+  {
+    "division": "Product",
+    "subsection": null,
+    "name": "Product Manager",
+    "path": "product/product-manager.md",
+    "specialty": "Full lifecycle product ownership",
+    "when": "Discovery, PRDs, roadmap planning, GTM, outcome measurement"
+  },
+  {
+    "division": "Project Management",
+    "subsection": null,
+    "name": "Studio Producer",
+    "path": "project-management/project-management-studio-producer.md",
+    "specialty": "High-level orchestration, portfolio management",
+    "when": "Multi-project oversight, strategic alignment, resource allocation"
+  },
+  {
+    "division": "Project Management",
+    "subsection": null,
+    "name": "Project Shepherd",
+    "path": "project-management/project-management-project-shepherd.md",
+    "specialty": "Cross-functional coordination, timeline management",
+    "when": "End-to-end project coordination, stakeholder management"
+  },
+  {
+    "division": "Project Management",
+    "subsection": null,
+    "name": "Studio Operations",
+    "path": "project-management/project-management-studio-operations.md",
+    "specialty": "Day-to-day efficiency, process optimization",
+    "when": "Operational excellence, team support, productivity"
+  },
+  {
+    "division": "Project Management",
+    "subsection": null,
+    "name": "Experiment Tracker",
+    "path": "project-management/project-management-experiment-tracker.md",
+    "specialty": "A/B tests, hypothesis validation",
+    "when": "Experiment management, data-driven decisions, testing"
+  },
+  {
+    "division": "Project Management",
+    "subsection": null,
+    "name": "Senior Project Manager",
+    "path": "project-management/project-manager-senior.md",
+    "specialty": "Realistic scoping, task conversion",
+    "when": "Converting specs to tasks, scope management"
+  },
+  {
+    "division": "Project Management",
+    "subsection": null,
+    "name": "Jira Workflow Steward",
+    "path": "project-management/project-management-jira-workflow-steward.md",
+    "specialty": "Git workflow, branch strategy, traceability",
+    "when": "Enforcing Jira-linked Git discipline and delivery"
+  },
+  {
+    "division": "Project Management",
+    "subsection": null,
+    "name": "Meeting Notes Specialist",
+    "path": "project-management/project-management-meeting-notes-specialist.md",
+    "specialty": "Structured meeting summaries",
+    "when": "Extracting decisions, action items, open questions"
+  },
+  {
+    "division": "Testing",
+    "subsection": null,
+    "name": "Evidence Collector",
+    "path": "testing/testing-evidence-collector.md",
+    "specialty": "Screenshot-based QA, visual proof",
+    "when": "UI testing, visual verification, bug documentation"
+  },
+  {
+    "division": "Testing",
+    "subsection": null,
+    "name": "Reality Checker",
+    "path": "testing/testing-reality-checker.md",
+    "specialty": "Evidence-based certification, quality gates",
+    "when": "Production readiness, quality approval, release certification"
+  },
+  {
+    "division": "Testing",
+    "subsection": null,
+    "name": "Test Results Analyzer",
+    "path": "testing/testing-test-results-analyzer.md",
+    "specialty": "Test evaluation, metrics analysis",
+    "when": "Test output analysis, quality insights, coverage reporting"
+  },
+  {
+    "division": "Testing",
+    "subsection": null,
+    "name": "Performance Benchmarker",
+    "path": "testing/testing-performance-benchmarker.md",
+    "specialty": "Performance testing, optimization",
+    "when": "Speed testing, load testing, performance tuning"
+  },
+  {
+    "division": "Testing",
+    "subsection": null,
+    "name": "API Tester",
+    "path": "testing/testing-api-tester.md",
+    "specialty": "API validation, integration testing",
+    "when": "API testing, endpoint verification, integration QA"
+  },
+  {
+    "division": "Testing",
+    "subsection": null,
+    "name": "Tool Evaluator",
+    "path": "testing/testing-tool-evaluator.md",
+    "specialty": "Technology assessment, tool selection",
+    "when": "Evaluating tools, software recommendations, tech decisions"
+  },
+  {
+    "division": "Testing",
+    "subsection": null,
+    "name": "Workflow Optimizer",
+    "path": "testing/testing-workflow-optimizer.md",
+    "specialty": "Process analysis, workflow improvement",
+    "when": "Process optimization, efficiency gains, automation opportunities"
+  },
+  {
+    "division": "Testing",
+    "subsection": null,
+    "name": "Accessibility Auditor",
+    "path": "testing/testing-accessibility-auditor.md",
+    "specialty": "WCAG auditing, assistive technology testing",
+    "when": "Accessibility compliance, screen reader testing, inclusive design verification"
+  },
+  {
+    "division": "Testing",
+    "subsection": null,
+    "name": "Test Automation Engineer",
+    "path": "testing/testing-test-automation-engineer.md",
+    "specialty": "Playwright/Cypress E2E, flake elimination, CI parallelization",
+    "when": "Browser test suites, deterministic pipelines, trace-driven failure debugging"
+  },
+  {
+    "division": "Security",
+    "subsection": null,
+    "name": "Security Architect",
+    "path": "security/security-architect.md",
+    "specialty": "Threat modeling, secure-by-design, trust boundaries",
+    "when": "System security models, architecture reviews, defense-in-depth"
+  },
+  {
+    "division": "Security",
+    "subsection": null,
+    "name": "Application Security Engineer",
+    "path": "security/security-appsec-engineer.md",
+    "specialty": "SDLC security, SAST/DAST, secure code review",
+    "when": "Securing the dev lifecycle, code-level vulnerabilities"
+  },
+  {
+    "division": "Security",
+    "subsection": null,
+    "name": "Penetration Tester",
+    "path": "security/security-penetration-tester.md",
+    "specialty": "Authorized pentests, red team ops, exploitation",
+    "when": "Finding exploitable weaknesses before attackers do"
+  },
+  {
+    "division": "Security",
+    "subsection": null,
+    "name": "Cloud Security Architect",
+    "path": "security/security-cloud-security-architect.md",
+    "specialty": "Zero trust, cloud-native defense-in-depth",
+    "when": "Securing cloud infrastructure and architectures"
+  },
+  {
+    "division": "Security",
+    "subsection": null,
+    "name": "Incident Responder",
+    "path": "security/security-incident-responder.md",
+    "specialty": "DFIR, breach investigation, threat containment",
+    "when": "Active breaches, forensics, crisis response"
+  },
+  {
+    "division": "Security",
+    "subsection": null,
+    "name": "Threat Intelligence Analyst",
+    "path": "security/security-threat-intelligence-analyst.md",
+    "specialty": "Adversary tracking, campaign mapping, ATT&CK",
+    "when": "Understanding who's attacking and how"
+  },
+  {
+    "division": "Security",
+    "subsection": null,
+    "name": "Threat Detection Engineer",
+    "path": "security/security-threat-detection-engineer.md",
+    "specialty": "SIEM rules, threat hunting, ATT&CK mapping",
+    "when": "Building detection layers and threat hunting"
+  },
+  {
+    "division": "Security",
+    "subsection": null,
+    "name": "Senior SecOps Engineer",
+    "path": "security/security-senior-secops.md",
+    "specialty": "Secrets scanning, secure-by-default submissions",
+    "when": "Defensive code-level security on every change"
+  },
+  {
+    "division": "Security",
+    "subsection": null,
+    "name": "Compliance Auditor",
+    "path": "security/security-compliance-auditor.md",
+    "specialty": "SOC 2, ISO 27001, HIPAA, PCI-DSS",
+    "when": "Guiding organizations through compliance certification"
+  },
+  {
+    "division": "Security",
+    "subsection": null,
+    "name": "Blockchain Security Auditor",
+    "path": "security/security-blockchain-security-auditor.md",
+    "specialty": "Smart contract audits, exploit analysis",
+    "when": "Finding vulnerabilities in contracts before deployment"
+  },
+  {
+    "division": "Security",
+    "subsection": null,
+    "name": "AI-Generated Code Security Auditor",
+    "path": "security/security-ai-generated-code-auditor.md",
+    "specialty": "Security review of AI/vibe-coded apps",
+    "when": "Hardcoded secrets, broken RLS, prompt-injection sinks"
+  },
+  {
+    "division": "Security",
+    "subsection": null,
+    "name": "Secrets & Credential Hygiene Engineer",
+    "path": "security/security-secrets-credential-engineer.md",
+    "specialty": "Secrets & credential lifecycle",
+    "when": "Detection, vaulting, rotation, leak response"
+  },
+  {
+    "division": "Support",
+    "subsection": null,
+    "name": "Support Responder",
+    "path": "support/support-support-responder.md",
+    "specialty": "Customer service, issue resolution",
+    "when": "Customer support, user experience, support operations"
+  },
+  {
+    "division": "Support",
+    "subsection": null,
+    "name": "Analytics Reporter",
+    "path": "support/support-analytics-reporter.md",
+    "specialty": "Data analysis, dashboards, insights",
+    "when": "Business intelligence, KPI tracking, data visualization"
+  },
+  {
+    "division": "Support",
+    "subsection": null,
+    "name": "Finance Tracker",
+    "path": "support/support-finance-tracker.md",
+    "specialty": "Financial planning, budget management",
+    "when": "Financial analysis, cash flow, business performance"
+  },
+  {
+    "division": "Support",
+    "subsection": null,
+    "name": "Infrastructure Maintainer",
+    "path": "support/support-infrastructure-maintainer.md",
+    "specialty": "System reliability, performance optimization",
+    "when": "Infrastructure management, system operations, monitoring"
+  },
+  {
+    "division": "Support",
+    "subsection": null,
+    "name": "Legal Compliance Checker",
+    "path": "support/support-legal-compliance-checker.md",
+    "specialty": "Compliance, regulations, legal review",
+    "when": "Legal compliance, regulatory requirements, risk management"
+  },
+  {
+    "division": "Support",
+    "subsection": null,
+    "name": "Executive Summary Generator",
+    "path": "support/support-executive-summary-generator.md",
+    "specialty": "C-suite communication, strategic summaries",
+    "when": "Executive reporting, strategic communication, decision support"
+  },
+  {
+    "division": "Spatial Computing",
+    "subsection": null,
+    "name": "XR Interface Architect",
+    "path": "spatial-computing/xr-interface-architect.md",
+    "specialty": "Spatial interaction design, immersive UX",
+    "when": "AR/VR/XR interface design, spatial computing UX"
+  },
+  {
+    "division": "Spatial Computing",
+    "subsection": null,
+    "name": "macOS Spatial/Metal Engineer",
+    "path": "spatial-computing/macos-spatial-metal-engineer.md",
+    "specialty": "Swift, Metal, high-performance 3D",
+    "when": "macOS spatial computing, Vision Pro native apps"
+  },
+  {
+    "division": "Spatial Computing",
+    "subsection": null,
+    "name": "XR Immersive Developer",
+    "path": "spatial-computing/xr-immersive-developer.md",
+    "specialty": "WebXR, browser-based AR/VR",
+    "when": "Browser-based immersive experiences, WebXR apps"
+  },
+  {
+    "division": "Spatial Computing",
+    "subsection": null,
+    "name": "XR Cockpit Interaction Specialist",
+    "path": "spatial-computing/xr-cockpit-interaction-specialist.md",
+    "specialty": "Cockpit-based controls, immersive systems",
+    "when": "Cockpit control systems, immersive control interfaces"
+  },
+  {
+    "division": "Spatial Computing",
+    "subsection": null,
+    "name": "visionOS Spatial Engineer",
+    "path": "spatial-computing/visionos-spatial-engineer.md",
+    "specialty": "Apple Vision Pro development",
+    "when": "Vision Pro apps, spatial computing experiences"
+  },
+  {
+    "division": "Spatial Computing",
+    "subsection": null,
+    "name": "Terminal Integration Specialist",
+    "path": "spatial-computing/terminal-integration-specialist.md",
+    "specialty": "Terminal integration, command-line tools",
+    "when": "CLI tools, terminal workflows, developer tools"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "Agents Orchestrator",
+    "path": "specialized/agents-orchestrator.md",
+    "specialty": "Multi-agent coordination, workflow management",
+    "when": "Complex projects requiring multiple agent coordination"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "LSP/Index Engineer",
+    "path": "specialized/lsp-index-engineer.md",
+    "specialty": "Language Server Protocol, code intelligence",
+    "when": "Code intelligence systems, LSP implementation, semantic indexing"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "Sales Data Extraction Agent",
+    "path": "specialized/sales-data-extraction-agent.md",
+    "specialty": "Excel monitoring, sales metric extraction",
+    "when": "Sales data ingestion, MTD/YTD/Year End metrics"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "Data Consolidation Agent",
+    "path": "specialized/data-consolidation-agent.md",
+    "specialty": "Sales data aggregation, dashboard reports",
+    "when": "Territory summaries, rep performance, pipeline snapshots"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "Report Distribution Agent",
+    "path": "specialized/report-distribution-agent.md",
+    "specialty": "Automated report delivery",
+    "when": "Territory-based report distribution, scheduled sends"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "Agentic Identity & Trust Architect",
+    "path": "specialized/agentic-identity-trust.md",
+    "specialty": "Agent identity, authentication, trust verification",
+    "when": "Multi-agent identity systems, agent authorization, audit trails"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "Identity Graph Operator",
+    "path": "specialized/identity-graph-operator.md",
+    "specialty": "Shared identity resolution for multi-agent systems",
+    "when": "Entity deduplication, merge proposals, cross-agent identity consistency"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "Accounts Payable Agent",
+    "path": "specialized/accounts-payable-agent.md",
+    "specialty": "Payment processing, vendor management, audit",
+    "when": "Autonomous payment execution across crypto, fiat, stablecoins"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "Cultural Intelligence Strategist",
+    "path": "specialized/specialized-cultural-intelligence-strategist.md",
+    "specialty": "Global UX, representation, cultural exclusion",
+    "when": "Ensuring software resonates across cultures"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "Developer Advocate",
+    "path": "specialized/specialized-developer-advocate.md",
+    "specialty": "Community building, DX, developer content",
+    "when": "Bridging product and developer community"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "Model QA Specialist",
+    "path": "specialized/specialized-model-qa.md",
+    "specialty": "ML audits, feature analysis, interpretability",
+    "when": "End-to-end QA for machine learning models"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "ZK Steward",
+    "path": "specialized/zk-steward.md",
+    "specialty": "Knowledge management, Zettelkasten, notes",
+    "when": "Building connected, validated knowledge bases"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "MCP Builder",
+    "path": "specialized/specialized-mcp-builder.md",
+    "specialty": "Model Context Protocol servers, AI agent tooling",
+    "when": "Building MCP servers that extend AI agent capabilities"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "Document Generator",
+    "path": "specialized/specialized-document-generator.md",
+    "specialty": "PDF, PPTX, DOCX, XLSX generation from code",
+    "when": "Professional document creation, reports, data visualization"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "Automation Governance Architect",
+    "path": "specialized/automation-governance-architect.md",
+    "specialty": "Automation governance, n8n, workflow auditing",
+    "when": "Evaluating and governing business automations at scale"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "Corporate Training Designer",
+    "path": "specialized/corporate-training-designer.md",
+    "specialty": "Enterprise training, curriculum development",
+    "when": "Designing training systems and learning programs"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "Personal Growth Mentor",
+    "path": "specialized/personal-growth-mentor.md",
+    "specialty": "Goal clarity, habit systems, accountability, life strategy",
+    "when": "Cross-domain personal development without motivational fluff"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "Government Digital Presales Consultant",
+    "path": "specialized/government-digital-presales-consultant.md",
+    "specialty": "China ToG presales, digital transformation",
+    "when": "Government digital transformation proposals and bids"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "Healthcare Marketing Compliance",
+    "path": "specialized/healthcare-marketing-compliance.md",
+    "specialty": "China healthcare advertising compliance",
+    "when": "Healthcare marketing regulatory compliance"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "Recruitment Specialist",
+    "path": "specialized/recruitment-specialist.md",
+    "specialty": "Talent acquisition, recruiting operations",
+    "when": "Recruitment strategy, sourcing, and hiring processes"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "Study Abroad Advisor",
+    "path": "specialized/study-abroad-advisor.md",
+    "specialty": "International education, application planning",
+    "when": "Study abroad planning across US, UK, Canada, Australia"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "Supply Chain Strategist",
+    "path": "specialized/supply-chain-strategist.md",
+    "specialty": "Supply chain management, procurement strategy",
+    "when": "Supply chain optimization and procurement planning"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "Workflow Architect",
+    "path": "specialized/specialized-workflow-architect.md",
+    "specialty": "Workflow discovery, mapping, and specification",
+    "when": "Mapping every path through a system before code is written"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "Salesforce Architect",
+    "path": "specialized/specialized-salesforce-architect.md",
+    "specialty": "Multi-cloud Salesforce design, governor limits, integrations",
+    "when": "Enterprise Salesforce architecture, org strategy, deployment pipelines"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "French Consulting Market Navigator",
+    "path": "specialized/specialized-french-consulting-market.md",
+    "specialty": "ESN/SI ecosystem, portage salarial, rate positioning",
+    "when": "Freelance consulting in the French IT market"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "Korean Business Navigator",
+    "path": "specialized/specialized-korean-business-navigator.md",
+    "specialty": "Korean business culture, \ud488\uc758 process, relationship mechanics",
+    "when": "Foreign professionals navigating Korean business relationships"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "Civil Engineer",
+    "path": "specialized/specialized-civil-engineer.md",
+    "specialty": "Structural analysis, geotechnical design, global building codes",
+    "when": "Multi-standard structural engineering across Eurocode, ACI, AISC, and more"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "Customer Service",
+    "path": "specialized/customer-service.md",
+    "specialty": "Omnichannel support, complaint handling, retention, escalation",
+    "when": "Any industry customer support \u2014 retail, SaaS, hospitality, finance, logistics"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "Healthcare Customer Service",
+    "path": "specialized/healthcare-customer-service.md",
+    "specialty": "HIPAA-aware patient support, billing, insurance, emergency routing",
+    "when": "Healthcare organizations needing compliant, empathetic patient support"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "Hospitality Guest Services",
+    "path": "specialized/hospitality-guest-services.md",
+    "specialty": "Reservations, concierge, complaint recovery, loyalty, events",
+    "when": "Hotels, resorts, restaurants, and event venues"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "HR Onboarding",
+    "path": "specialized/hr-onboarding.md",
+    "specialty": "Pre-boarding, compliance, benefits enrollment, 30-60-90 day plans",
+    "when": "Any company onboarding new hires \u2014 from startups to enterprise"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "Language Translator",
+    "path": "specialized/language-translator.md",
+    "specialty": "Spanish \u2194 English translation, dialect awareness, cultural context",
+    "when": "Travel, business, medical, and legal translation needs"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "Legal Billing & Time Tracking",
+    "path": "specialized/legal-billing-time-tracking.md",
+    "specialty": "Time capture, billing narratives, IOLTA compliance, collections",
+    "when": "Law firms maximizing revenue recovery and billing accuracy"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "Legal Client Intake",
+    "path": "specialized/legal-client-intake.md",
+    "specialty": "Prospect qualification, conflict screening, consultation scheduling",
+    "when": "Law firms converting inquiries into retained clients"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "Legal Document Review",
+    "path": "specialized/legal-document-review.md",
+    "specialty": "Contract review, risk flagging, version comparison, compliance",
+    "when": "Attorney-ready first-pass review across any practice area"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "Loan Officer Assistant",
+    "path": "specialized/loan-officer-assistant.md",
+    "specialty": "Borrower intake, TRID compliance, pipeline tracking, closing coordination",
+    "when": "Mortgage and consumer lending teams"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "Real Estate Buyer & Seller",
+    "path": "specialized/real-estate-buyer-seller.md",
+    "specialty": "Buyer/seller representation, offers, transaction coordination",
+    "when": "Residential and investment real estate transactions"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "Retail Customer Returns",
+    "path": "specialized/retail-customer-returns.md",
+    "specialty": "Return processing, fraud prevention, exchanges, vendor returns",
+    "when": "Brick-and-mortar, e-commerce, and omnichannel retail"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "Business Strategist",
+    "path": "specialized/business-strategist.md",
+    "specialty": "Management-consulting strategy",
+    "when": "Competitive analysis, market entry, growth planning"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "Change Management Consultant",
+    "path": "specialized/change-management-consultant.md",
+    "specialty": "ADKAR/Kotter/Prosci change",
+    "when": "Guiding orgs through transformation & adoption"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "Chief of Staff",
+    "path": "specialized/specialized-chief-of-staff.md",
+    "specialty": "Executive coordination",
+    "when": "Filtering noise, owning processes, routing decisions"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "Customer Success Manager",
+    "path": "specialized/customer-success-manager.md",
+    "specialty": "Onboarding, health & retention",
+    "when": "QBRs, churn prevention, renewals & expansion"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "Grant Writer",
+    "path": "specialized/grant-writer.md",
+    "specialty": "Grant proposals & funding",
+    "when": "LOIs, proposals, budgets for nonprofits/research"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "Medical Billing & Coding Specialist",
+    "path": "specialized/medical-billing-coding-specialist.md",
+    "specialty": "ICD-10/CPT/HCPCS & revenue cycle",
+    "when": "Claims, denial management, RCM optimization"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "Pricing Analyst",
+    "path": "specialized/specialized-pricing-analyst.md",
+    "specialty": "Pricing models & margin optimization",
+    "when": "Competitor/cost analysis, value-based pricing"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "Chief Financial Officer",
+    "path": "specialized/chief-financial-officer.md",
+    "specialty": "Capital allocation & financial strategy",
+    "when": "Treasury, FP&A, M&A finance, investor & board reporting"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "ESG & Sustainability Officer",
+    "path": "specialized/esg-sustainability-officer.md",
+    "specialty": "ESG programs & disclosure",
+    "when": "Sustainability strategy, decarbonization, reporting"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "Data Privacy Officer",
+    "path": "specialized/data-privacy-officer.md",
+    "specialty": "GDPR/CCPA privacy compliance",
+    "when": "Data mapping, DPIAs, consent, breach response"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "Operations Manager",
+    "path": "specialized/operations-manager.md",
+    "specialty": "Lean/Six Sigma operations",
+    "when": "Process mapping, capacity planning, KPI governance"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "M&A Integration Manager",
+    "path": "specialized/ma-integration-manager.md",
+    "specialty": "Post-merger integration",
+    "when": "Day 1/100-day plans, synergy tracking, TSA management"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "Organizational Psychologist",
+    "path": "specialized/organizational-psychologist.md",
+    "specialty": "Team dynamics & culture health",
+    "when": "Psychological safety, burnout risk, high-performing teams"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "Strategy Duel Agent",
+    "path": "specialized/specialized-strategy-duel-agent.md",
+    "specialty": "Game theory & the 36 stratagems",
+    "when": "Turn-based strategy duels, adversarial scenario simulation"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "FedRAMP & RMF Compliance Engineer",
+    "path": "specialized/specialized-fedramp-rmf-compliance.md",
+    "specialty": "Federal cloud authorization (ATO)",
+    "when": "NIST 800-53, FedRAMP Rev5/20x, SSP/POA&M, ConMon, OSCAL"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "Codebase Archaeologist",
+    "path": "specialized/specialized-codebase-archaeologist.md",
+    "specialty": "Multi-tool codebase drift audits",
+    "when": "Detecting silent drift across Claude/Cursor/Copilot/Windsurf edits"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "Resume Tailor",
+    "path": "specialized/resume-tailor.md",
+    "specialty": "Candidate-side resume optimization",
+    "when": "JD mapping, ATS keyword alignment, experience-to-requirement matching"
+  },
+  {
+    "division": "Specialized",
+    "subsection": null,
+    "name": "Aging Parent Care Companion",
+    "path": "specialized/healthcare-aging-parent-care-companion.md",
+    "specialty": "Family caregiver decision-support",
+    "when": "Appointment/medication coordination, care-team comms, caregiver wellbeing (HIPAA-aligned)"
+  },
+  {
+    "division": "Finance",
+    "subsection": null,
+    "name": "Bookkeeper & Controller",
+    "path": "finance/finance-bookkeeper-controller.md",
+    "specialty": "Month-end close, reconciliation, GAAP compliance, internal controls",
+    "when": "Day-to-day accounting operations, audit readiness, financial record-keeping"
+  },
+  {
+    "division": "Finance",
+    "subsection": null,
+    "name": "Financial Analyst",
+    "path": "finance/finance-financial-analyst.md",
+    "specialty": "Financial modeling, forecasting, scenario analysis, decision support",
+    "when": "Three-statement models, variance analysis, data-driven business intelligence"
+  },
+  {
+    "division": "Finance",
+    "subsection": null,
+    "name": "FP&A Analyst",
+    "path": "finance/finance-fpa-analyst.md",
+    "specialty": "Budgeting, rolling forecasts, variance analysis, business reviews",
+    "when": "Annual operating plans, monthly business reviews, strategic resource allocation"
+  },
+  {
+    "division": "Finance",
+    "subsection": null,
+    "name": "Investment Researcher",
+    "path": "finance/finance-investment-researcher.md",
+    "specialty": "Due diligence, portfolio analysis, asset valuation, equity research",
+    "when": "Investment thesis development, risk assessment, market research"
+  },
+  {
+    "division": "Finance",
+    "subsection": null,
+    "name": "Tax Strategist",
+    "path": "finance/finance-tax-strategist.md",
+    "specialty": "Tax optimization, multi-jurisdictional compliance, transfer pricing",
+    "when": "Entity structuring, ETR analysis, audit defense, strategic tax planning"
+  },
+  {
+    "division": "Game Development",
+    "subsection": "Cross-Engine Agents (Engine-Agnostic)",
+    "name": "Game Designer",
+    "path": "game-development/game-designer.md",
+    "specialty": "Systems design, GDD authorship, economy balancing, gameplay loops",
+    "when": "Designing game mechanics, progression systems, writing design documents"
+  },
+  {
+    "division": "Game Development",
+    "subsection": "Cross-Engine Agents (Engine-Agnostic)",
+    "name": "Level Designer",
+    "path": "game-development/level-designer.md",
+    "specialty": "Layout theory, pacing, encounter design, environmental storytelling",
+    "when": "Building levels, designing encounter flow, spatial narrative"
+  },
+  {
+    "division": "Game Development",
+    "subsection": "Cross-Engine Agents (Engine-Agnostic)",
+    "name": "Technical Artist",
+    "path": "game-development/technical-artist.md",
+    "specialty": "Shaders, VFX, LOD pipeline, art-to-engine optimization",
+    "when": "Bridging art and engineering, shader authoring, performance-safe asset pipelines"
+  },
+  {
+    "division": "Game Development",
+    "subsection": "Cross-Engine Agents (Engine-Agnostic)",
+    "name": "Game Audio Engineer",
+    "path": "game-development/game-audio-engineer.md",
+    "specialty": "FMOD/Wwise, adaptive music, spatial audio, audio budgets",
+    "when": "Interactive audio systems, dynamic music, audio performance"
+  },
+  {
+    "division": "Game Development",
+    "subsection": "Cross-Engine Agents (Engine-Agnostic)",
+    "name": "Narrative Designer",
+    "path": "game-development/narrative-designer.md",
+    "specialty": "Story systems, branching dialogue, lore architecture",
+    "when": "Writing branching narratives, implementing dialogue systems, world lore"
+  },
+  {
+    "division": "Game Development",
+    "subsection": "Unity",
+    "name": "Unity Architect",
+    "path": "game-development/unity/unity-architect.md",
+    "specialty": "ScriptableObjects, data-driven modularity, DOTS/ECS",
+    "when": "Large-scale Unity projects, data-driven system design, ECS performance work"
+  },
+  {
+    "division": "Game Development",
+    "subsection": "Unity",
+    "name": "Unity Shader Graph Artist",
+    "path": "game-development/unity/unity-shader-graph-artist.md",
+    "specialty": "Shader Graph, HLSL, URP/HDRP, Renderer Features",
+    "when": "Custom Unity materials, VFX shaders, post-processing passes"
+  },
+  {
+    "division": "Game Development",
+    "subsection": "Unity",
+    "name": "Unity Multiplayer Engineer",
+    "path": "game-development/unity/unity-multiplayer-engineer.md",
+    "specialty": "Netcode for GameObjects, Unity Relay/Lobby, server authority, prediction",
+    "when": "Online Unity games, client prediction, Unity Gaming Services integration"
+  },
+  {
+    "division": "Game Development",
+    "subsection": "Unity",
+    "name": "Unity Editor Tool Developer",
+    "path": "game-development/unity/unity-editor-tool-developer.md",
+    "specialty": "EditorWindows, AssetPostprocessors, PropertyDrawers, build validation",
+    "when": "Custom Unity Editor tooling, pipeline automation, content validation"
+  },
+  {
+    "division": "Game Development",
+    "subsection": "Unreal Engine",
+    "name": "Unreal Systems Engineer",
+    "path": "game-development/unreal-engine/unreal-systems-engineer.md",
+    "specialty": "C++/Blueprint hybrid, GAS, Nanite constraints, memory management",
+    "when": "Complex Unreal gameplay systems, Gameplay Ability System, engine-level C++"
+  },
+  {
+    "division": "Game Development",
+    "subsection": "Unreal Engine",
+    "name": "Unreal Technical Artist",
+    "path": "game-development/unreal-engine/unreal-technical-artist.md",
+    "specialty": "Material Editor, Niagara, PCG, Substrate",
+    "when": "Unreal materials, Niagara VFX, procedural content generation"
+  },
+  {
+    "division": "Game Development",
+    "subsection": "Unreal Engine",
+    "name": "Unreal Multiplayer Architect",
+    "path": "game-development/unreal-engine/unreal-multiplayer-architect.md",
+    "specialty": "Actor replication, GameMode/GameState hierarchy, dedicated server",
+    "when": "Unreal online games, replication graphs, server authoritative Unreal"
+  },
+  {
+    "division": "Game Development",
+    "subsection": "Unreal Engine",
+    "name": "Unreal World Builder",
+    "path": "game-development/unreal-engine/unreal-world-builder.md",
+    "specialty": "World Partition, Landscape, HLOD, LWC",
+    "when": "Large open-world Unreal levels, streaming systems, terrain at scale"
+  },
+  {
+    "division": "Game Development",
+    "subsection": "Godot",
+    "name": "Godot Gameplay Scripter",
+    "path": "game-development/godot/godot-gameplay-scripter.md",
+    "specialty": "GDScript 2.0, signals, composition, static typing",
+    "when": "Godot gameplay systems, scene composition, performance-conscious GDScript"
+  },
+  {
+    "division": "Game Development",
+    "subsection": "Godot",
+    "name": "Godot Multiplayer Engineer",
+    "path": "game-development/godot/godot-multiplayer-engineer.md",
+    "specialty": "MultiplayerAPI, ENet/WebRTC, RPCs, authority model",
+    "when": "Online Godot games, scene replication, server-authoritative Godot"
+  },
+  {
+    "division": "Game Development",
+    "subsection": "Godot",
+    "name": "Godot Shader Developer",
+    "path": "game-development/godot/godot-shader-developer.md",
+    "specialty": "Godot shading language, VisualShader, RenderingDevice",
+    "when": "Custom Godot materials, 2D/3D effects, post-processing, compute shaders"
+  },
+  {
+    "division": "Game Development",
+    "subsection": "Blender",
+    "name": "Blender Addon Engineer",
+    "path": "game-development/blender/blender-addon-engineer.md",
+    "specialty": "Blender Python (`bpy`), custom operators/panels, asset validators, exporters, pipeline automation",
+    "when": "Building Blender add-ons, asset prep tools, export workflows, and DCC pipeline automation"
+  },
+  {
+    "division": "Game Development",
+    "subsection": "Roblox Studio",
+    "name": "Roblox Systems Scripter",
+    "path": "game-development/roblox-studio/roblox-systems-scripter.md",
+    "specialty": "Luau, RemoteEvents/Functions, DataStore, server-authoritative module architecture",
+    "when": "Building secure Roblox game systems, client-server communication, data persistence"
+  },
+  {
+    "division": "Game Development",
+    "subsection": "Roblox Studio",
+    "name": "Roblox Experience Designer",
+    "path": "game-development/roblox-studio/roblox-experience-designer.md",
+    "specialty": "Engagement loops, monetization, D1/D7 retention, onboarding flow",
+    "when": "Designing Roblox game loops, Game Passes, daily rewards, player retention"
+  },
+  {
+    "division": "Game Development",
+    "subsection": "Roblox Studio",
+    "name": "Roblox Avatar Creator",
+    "path": "game-development/roblox-studio/roblox-avatar-creator.md",
+    "specialty": "UGC pipeline, accessory rigging, Creator Marketplace submission",
+    "when": "Roblox UGC items, HumanoidDescription customization, in-experience avatar shops"
+  },
+  {
+    "division": "Academic",
+    "subsection": null,
+    "name": "Anthropologist",
+    "path": "academic/academic-anthropologist.md",
+    "specialty": "Cultural systems, kinship, rituals, belief systems",
+    "when": "Designing culturally coherent societies with internal logic"
+  },
+  {
+    "division": "Academic",
+    "subsection": null,
+    "name": "Geographer",
+    "path": "academic/academic-geographer.md",
+    "specialty": "Physical/human geography, climate, cartography",
+    "when": "Building geographically coherent worlds with realistic terrain and settlements"
+  },
+  {
+    "division": "Academic",
+    "subsection": null,
+    "name": "Historian",
+    "path": "academic/academic-historian.md",
+    "specialty": "Historical analysis, periodization, material culture",
+    "when": "Validating historical coherence, enriching settings with authentic period detail"
+  },
+  {
+    "division": "Academic",
+    "subsection": null,
+    "name": "Narratologist",
+    "path": "academic/academic-narratologist.md",
+    "specialty": "Narrative theory, story structure, character arcs",
+    "when": "Analyzing and improving story structure with established theoretical frameworks"
+  },
+  {
+    "division": "Academic",
+    "subsection": null,
+    "name": "Psychologist",
+    "path": "academic/academic-psychologist.md",
+    "specialty": "Personality theory, motivation, cognitive patterns",
+    "when": "Building psychologically credible characters grounded in research"
+  },
+  {
+    "division": "Academic",
+    "subsection": null,
+    "name": "Statistician",
+    "path": "academic/academic-statistician.md",
+    "specialty": "Statistical inference & experiment design",
+    "when": "Hypothesis testing, causal inference, sampling, rigorous analysis"
+  },
+  {
+    "division": "GIS",
+    "subsection": null,
+    "name": "Technical Consultant",
+    "path": "gis/gis-technical-consultant.md",
+    "specialty": "GIS strategy, gap analysis, technology roadmaps, digital transformation",
+    "when": "Understanding business needs, selecting the right geospatial stack, planning multi-phase GIS programs"
+  },
+  {
+    "division": "GIS",
+    "subsection": null,
+    "name": "Solution Engineer",
+    "path": "gis/gis-solution-engineer.md",
+    "specialty": "Esri + FOSS4G prototype building, PoC delivery, technical feasibility",
+    "when": "Building working demos, validating technical approaches, pre-sales support"
+  },
+  {
+    "division": "GIS",
+    "subsection": null,
+    "name": "GIS Analyst",
+    "path": "gis/gis-analyst.md",
+    "specialty": "Map production, data QC, symbology, layouts, spatial queries",
+    "when": "Day-to-day GIS operations, creating publication-ready maps, maintaining data integrity"
+  },
+  {
+    "division": "GIS",
+    "subsection": null,
+    "name": "Spatial Data Engineer",
+    "path": "gis/gis-spatial-data-engineer.md",
+    "specialty": "Geospatial ETL, format conversion, CRS reprojection, automated pipelines",
+    "when": "Ingesting messy data from any source, building repeatable data transformation pipelines"
+  },
+  {
+    "division": "GIS",
+    "subsection": null,
+    "name": "Geoprocessing Specialist",
+    "path": "gis/gis-geoprocessing-specialist.md",
+    "specialty": "ArcPy, Python Toolbox (.pyt), Model Builder, batch automation",
+    "when": "Automating repetitive GIS workflows, building custom geoprocessing tools"
+  },
+  {
+    "division": "GIS",
+    "subsection": null,
+    "name": "GIS QA Engineer",
+    "path": "gis/gis-qa-engineer.md",
+    "specialty": "Topology validation, metadata audit, CRS consistency, accuracy assessment",
+    "when": "Quality gates before data publication, compliance verification, data integrity audits"
+  },
+  {
+    "division": "GIS",
+    "subsection": null,
+    "name": "GeoAI/ML Engineer",
+    "path": "gis/gis-geoai-ml-engineer.md",
+    "specialty": "Feature extraction, object detection, semantic segmentation, land cover classification",
+    "when": "Extracting buildings/roads/vehicles from imagery, change detection, environmental monitoring"
+  },
+  {
+    "division": "GIS",
+    "subsection": null,
+    "name": "BIM/GIS Specialist",
+    "path": "gis/gis-bim-specialist.md",
+    "specialty": "Revit/IFC to GIS, indoor mapping, digital twin architecture, facility management",
+    "when": "Smart campus, airport digital twins, indoor navigation, building operations"
+  },
+  {
+    "division": "GIS",
+    "subsection": null,
+    "name": "3D & Scene Developer",
+    "path": "gis/gis-3d-scene-developer.md",
+    "specialty": "Cesium, ArcGIS Scene Viewer, 3D Tiles, point clouds, terrain visualization",
+    "when": "3D city scenes, terrain flyovers, point cloud web viewers, OAuth-gated scene sharing"
+  },
+  {
+    "division": "GIS",
+    "subsection": null,
+    "name": "Spatial Data Scientist",
+    "path": "gis/gis-spatial-data-scientist.md",
+    "specialty": "Spatial statistics, clustering, regression, interpolation, point pattern analysis",
+    "when": "Hotspot detection, spatial modeling, predictive analytics, research-grade analysis"
+  },
+  {
+    "division": "GIS",
+    "subsection": null,
+    "name": "Drone/Reality Mapping",
+    "path": "gis/gis-drone-reality-mapping.md",
+    "specialty": "Photogrammetry, orthomosaic, DTM/DSM, point cloud classification, 3D mesh",
+    "when": "Drone survey processing, reality capture, construction monitoring, environmental mapping"
+  },
+  {
+    "division": "GIS",
+    "subsection": null,
+    "name": "Web GIS Developer",
+    "path": "gis/gis-web-gis-developer.md",
+    "specialty": "MapLibre GL JS, ArcGIS JS API, Leaflet, real-time dashboards, REST APIs",
+    "when": "Building interactive web maps, operational dashboards, real-time data visualization"
+  },
+  {
+    "division": "GIS",
+    "subsection": null,
+    "name": "Cartography Designer",
+    "path": "gis/gis-cartography-designer.md",
+    "specialty": "Color theory, typography, basemap design, visual hierarchy, print and web aesthetics",
+    "when": "Making maps beautiful and readable, colorblind-safe palettes, professional map layouts"
+  },
+  {
+    "division": "Healthcare",
+    "subsection": null,
+    "name": "Clinical Evidence Agent",
+    "path": "healthcare/healthcare-clinical-evidence-agent.md",
+    "specialty": "Evidence standards, validated vs unvalidated claims, diagnostic authority boundaries",
+    "when": "Making clinical claims credibly without overstepping into diagnostic authority"
+  },
+  {
+    "division": "Healthcare",
+    "subsection": null,
+    "name": "Sovereign Health Systems Agent",
+    "path": "healthcare/healthcare-sovereign-health-systems-agent.md",
+    "specialty": "Government health mandates, UHC policy, emerging market deployment",
+    "when": "Health tech teams operating at the intersection of national health infrastructure and sovereign health policy"
+  },
+  {
+    "division": "Healthcare",
+    "subsection": null,
+    "name": "Healthcare Innovation Strategist",
+    "path": "healthcare/healthcare-innovation-strategist.md",
+    "specialty": "Narrative architecture for healthcare founders across investor, regulatory, sovereign, and clinical audiences",
+    "when": "Healthcare founders who need to translate clinical and financial complexity into language that moves capital and builds trust"
+  }
+]

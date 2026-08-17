@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  zero_core:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: zero_os
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - FINANCE_DB_URL=postgresql://zero_finance_reader:reader_password@postgres_db:5432/finance_db
+      - AGENCY_AGENTS_PATH=/app/Agency-agents
+    volumes:
+      - ../Agency-agents:/app/Agency-agents:ro
+    depends_on:
+      - postgres_db
+
+  postgres_db:
+    image: pgvector/pgvector:pg16
+    container_name: zero_postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=finance_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres_dev_password
+    volumes:
+      - zero_pgdata:/var/lib/postgresql/data
+
+volumes:
+  zero_pgdata:

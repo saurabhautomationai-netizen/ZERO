@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZERO — Personal AI Operating System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="brand">
+          <span class="brand-logo">⚡</span>
+          <div class="brand-text">
+            <span class="brand-name">ZERO</span>
+            <span class="brand-sub">AI Operating System</span>
+          </div>
+        </div>
+        <div class="status-pill" title="Core systems online">
+          <span class="status-dot"></span>
+          <span class="status-label">Online</span>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="section-title">Quick Actions</div>
+        <div class="quick-nav">
+          <button class="nav-item" onclick="sendPrompt('Give me my morning operational briefing')">
+            <span class="nav-icon">🌅</span> Morning Briefing
+          </button>
+          <button class="nav-item" onclick="sendPrompt('What is my current trading bot status and last signal?')">
+            <span class="nav-icon">📈</span> Trading Status
+          </button>
+          <button class="nav-item" onclick="sendPrompt('Summarize my calendar schedule for today')">
+            <span class="nav-icon">📅</span> Today's Agenda
+          </button>
+          <button class="nav-item" onclick="sendPrompt('Check git working tree status and branch safety')">
+            <span class="nav-icon">🛡️</span> Git Tree Check
+          </button>
+          <button class="nav-item" onclick="sendPrompt('Check system diagnostics and health')">
+            <span class="nav-icon">🩺</span> System Health
+          </button>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="section-header">
+          <span class="section-title">Specialist Roster</span>
+          <span class="agent-count-badge" id="agent-count">282</span>
+        </div>
+        <div class="search-box">
+          <input type="text" id="agent-search" placeholder="Search agents..." oninput="filterAgents(this.value)">
+        </div>
+        <div class="agent-roster" id="agent-roster">
+          <!-- Populated by JavaScript -->
+          <div class="roster-loading">Loading specialist agents...</div>
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="system-metric">
+          <span class="metric-label">Engine</span>
+          <span class="metric-val">LangGraph + Fallback</span>
+        </div>
+        <div class="system-metric">
+          <span class="metric-label">Memory</span>
+          <span class="metric-val">Session + Vector RAG</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <header class="topbar">
+        <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle Navigation">☰</button>
+        <div class="topbar-title">Command Center</div>
+        <div class="topbar-actions">
+          <a href="/docs" target="_blank" class="topbar-link">Swagger API Docs</a>
+          <button class="btn-clear" onclick="clearChat()">Clear History</button>
+        </div>
+      </header>
+
+      <div class="chat-container" id="chat-container">
+        <!-- Welcome Hero Card -->
+        <div class="welcome-card" id="welcome-card">
+          <div class="welcome-badge">PLATFORM v0.1.0</div>
+          <h1 class="welcome-title">Zero Personal Command Center</h1>
+          <p class="welcome-subtitle">
+            Autonomous multi-agent orchestration coordinating 13 native domain engines and 269 agency specialists.
+          </p>
+          <div class="suggestion-chips">
+            <button class="chip" onclick="sendPrompt('Give me my morning briefing')">
+              🌅 Daily Briefing
+            </button>
+            <button class="chip" onclick="sendPrompt('What is the trading bot status?')">
+              📊 Trading Bot Status
+            </button>
+            <button class="chip" onclick="sendPrompt('Build a project blueprint for AI Invoice Processing Bot')">
+              🏗️ Project Blueprint
+            </button>
+            <button class="chip" onclick="sendPrompt('Synthesize research on Vector Database indexing algorithms')">
+              🔬 Technical Research
+            </button>
+            <button class="chip" onclick="sendPrompt('Design a threat model for our REST API endpoints')">
+              🔒 Threat Modeling
+            </button>
+          </div>
+        </div>
+
+        <!-- Chat Stream -->
+        <div class="messages-list" id="messages-list"></div>
+      </div>
+
+      <!-- Input Area -->
+      <div class="input-container">
+        <form class="input-form" onsubmit="handleSubmit(event)">
+          <textarea
+            id="task-input"
+            rows="1"
+            placeholder="Type a task, question, or query (e.g. 'check trading signals', 'build project for X')..."
+            onkeydown="handleKeyDown(event)"
+            oninput="autoResize(this)"
+            required
+          ></textarea>
+          <button type="submit" id="btn-send" class="btn-send" aria-label="Send Task">
+            <span>Send</span> ➔
+          </button>
+        </form>
+        <div class="input-hint">
+          <span>Press <strong>Enter</strong> to dispatch task</span> • <span><strong>Shift + Enter</strong> for newline</span>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+# ZERO Core — Phase 1
+# Only what Phase 1 (Agent Registry + Orchestrator skeleton) needs.
+# Deliberately does NOT include Memory/RAG, interface, or native-agent
+# dependencies yet — add those when you build those phases, so this file
+# stays an honest reflection of what's actually implemented.
+
+pytest>=8.0
+
+# Optional — Orchestrator auto-detects this and falls back to a pure-Python
+# state machine if it's not installed. Uncomment when you start Phase 2
+# (real multi-node graphs, conditional edges, checkpointing).
+# langgraph>=0.2
+
+# Required to actually USE zero_core.finance_status (it degrades to a clear
+# FinanceDBUnavailable error without it, tests mock it out either way).
+# Uncomment once you've created the read-only DB role and set
+# FINANCE_DB_URL in .env — see finance_status.py's docstring for the SQL.
+# psycopg2-binary>=2.9
+
+# Phase 2+ (Memory/RAG) — not wired up yet, listed here so the target stack
+# is documented in one place:
+# supabase>=2.0
+# pgvector>=0.3
+# langchain>=0.3
+# sentence-transformers>=3.0   # or an API-based embedding model
+
+# Web interface (zero_core/interfaces/web/app.py) — required to run it.
+# NOTE: app.py was written but never actually run — the sandbox building
+# this had no network access to install fastapi. handlers.py (all the real
+# logic) is fully tested without needing these; app.py is thin routing
+# glue you should smoke-test yourself after installing:
+fastapi>=0.115
+uvicorn>=0.30
+
+# Telegram interface — not built yet, listed for when it is:
+# python-telegram-bot>=21

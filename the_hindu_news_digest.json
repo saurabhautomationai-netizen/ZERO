@@ -1,0 +1,176 @@
+{
+  "name": "The Hindu Daily Executive News Digest",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 8 * * *"
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger-1",
+      "name": "Daily at 8:00 AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        180,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.thehindu.com/business/feeder/default.rss",
+        "options": {}
+      },
+      "id": "rss-business",
+      "name": "Fetch Business RSS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        380,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.thehindu.com/news/national/feeder/default.rss",
+        "options": {}
+      },
+      "id": "rss-national",
+      "name": "Fetch National RSS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        580,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.thehindu.com/news/international/feeder/default.rss",
+        "options": {}
+      },
+      "id": "rss-world",
+      "name": "Fetch Geopolitics RSS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        780,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.thehindu.com/sci-tech/feeder/default.rss",
+        "options": {}
+      },
+      "id": "rss-tech",
+      "name": "Fetch SciTech RSS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        980,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.thehindu.com/sport/feeder/default.rss",
+        "options": {}
+      },
+      "id": "rss-sports",
+      "name": "Fetch Sports RSS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1180,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "function parseTitles(xmlStr) {\n  if (!xmlStr || typeof xmlStr !== 'string') return [];\n  const cdataMatches = [...xmlStr.matchAll(/<item>[\\s\\S]*?<title><!\\[CDATA\\[(.*?)\\]\\]><\\/title>/g)];\n  if (cdataMatches.length > 0) return cdataMatches.slice(0, 2).map(m => m[1].trim());\n  const plain = [...xmlStr.matchAll(/<item>[\\s\\S]*?<title>(.*?)<\\/title>/g)];\n  return plain.slice(0, 2).map(m => m[1].replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').trim());\n}\n\nconst bizData = $('Fetch Business RSS').first().json.data || '';\nconst natData = $('Fetch National RSS').first().json.data || '';\nconst worldData = $('Fetch Geopolitics RSS').first().json.data || '';\nconst techData = $('Fetch SciTech RSS').first().json.data || '';\nconst sportData = $('Fetch Sports RSS').first().json.data || '';\n\nconst biz = parseTitles(bizData);\nconst nat = parseTitles(natData);\nconst world = parseTitles(worldData);\nconst tech = parseTitles(techData);\nconst sport = parseTitles(sportData);\n\nlet msg = '📰 *The Hindu — Daily Executive News Digest*\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n';\n\nif (biz.length) msg += '\\n📈 *Business & Markets*:\\n' + biz.map(t => '  • ' + t).join('\\n');\nif (nat.length) msg += '\\n\\n🏛️ *National Politics*:\\n' + nat.map(t => '  • ' + t).join('\\n');\nif (world.length) msg += '\\n\\n🌍 *Geopolitics*:\\n' + world.map(t => '  • ' + t).join('\\n');\nif (tech.length) msg += '\\n\\n🔬 *Science & Tech*:\\n' + tech.map(t => '  • ' + t).join('\\n');\nif (sport.length) msg += '\\n\\n🏆 *Sports*:\\n' + sport.map(t => '  • ' + t).join('\\n');\n\nmsg += '\\n\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n⚡ _Source: The Hindu Live Feeds • Automated by n8n_';\n\nreturn [{ json: { digest: msg } }];"
+      },
+      "id": "code-synthesizer",
+      "name": "Synthesize 5-10 Line Digest",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1380,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "1104381256",
+        "text": "={{ $json.digest }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "telegram-send",
+      "name": "Send to Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1580,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Daily at 8:00 AM": {
+      "main": [
+        [
+          { "node": "Fetch Business RSS", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Fetch Business RSS": {
+      "main": [
+        [
+          { "node": "Fetch National RSS", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Fetch National RSS": {
+      "main": [
+        [
+          { "node": "Fetch Geopolitics RSS", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Fetch Geopolitics RSS": {
+      "main": [
+        [
+          { "node": "Fetch SciTech RSS", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Fetch SciTech RSS": {
+      "main": [
+        [
+          { "node": "Fetch Sports RSS", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Fetch Sports RSS": {
+      "main": [
+        [
+          { "node": "Synthesize 5-10 Line Digest", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Synthesize 5-10 Line Digest": {
+      "main": [
+        [
+          { "node": "Send to Telegram", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  }
+}

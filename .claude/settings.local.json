@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(.venv/Scripts/python.exe -m pytest -v --tb=short)",
+      "Bash(.venv/Scripts/python.exe -m zero_core.bootstrap)"
+    ]
+  }
+}
