@@ -152,3 +152,20 @@ def bootstrap_native_workers(registry: Optional[WorkerRegistry] = None) -> Worke
     reg.register(ResearchWorker())
     reg.register(DEFAULT_UIUX_COORDINATOR)
     return reg
+
+
+def bootstrap_external_workers(registry: Optional[WorkerRegistry] = None) -> WorkerRegistry:
+    """Instantiates and registers external workers (ChatGPT, Google Antigravity)."""
+    reg = registry or DEFAULT_WORKER_REGISTRY
+    from zero_core.engineering.workers.external import AntigravityWorker, ChatGPTWorker
+    reg.register(ChatGPTWorker())
+    reg.register(AntigravityWorker())
+    return reg
+
+
+def bootstrap_all_workers(registry: Optional[WorkerRegistry] = None) -> WorkerRegistry:
+    """Bootstraps both native and external workers into the registry."""
+    reg = registry or DEFAULT_WORKER_REGISTRY
+    bootstrap_native_workers(reg)
+    bootstrap_external_workers(reg)
+    return reg

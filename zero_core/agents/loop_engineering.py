@@ -585,8 +585,102 @@ class LoopEngineeringAgent:
             return {"status": "APPROVAL_PENDING", "gate": "SECURITY_PERMISSIONS", "message": "Awaiting security audit approval."}
         elif manifest.current_phase == PhaseEnum.COMPLETED:
             return {"status": "COMPLETED", "message": f"{manifest.project_name} is already complete and operational."}
-
         return {"status": manifest.project_status.value, "phase": manifest.current_phase.value}
+
+    # -------------------------------------------------------------------------
+    # EXTERNAL WORKER EXPLICIT INVOCATION (PHASE 4)
+    # -------------------------------------------------------------------------
+    def execute_worker_task(
+        self,
+        manifest: ProjectManifest,
+        worker_id: str,
+        task: TaskItem,
+        target_files: Optional[List[str]] = None,
+    ) -> Any:
+        """Explicitly dispatches a task to a registered native or external worker with full sanitization."""
+        from zero_core.engineering.context_builder import DEFAULT_CONTEXT_BUILDER
+        from zero_core.engineering.workers.registry import DEFAULT_WORKER_REGISTRY
+
+        worker = DEFAULT_WORKER_REGISTRY.get(worker_id)
+        if not worker:
+            raise ValueError(f"Worker '{worker_id}' is not registered in WorkerRegistry.")
+
+        context = DEFAULT_CONTEXT_BUILDER.build_context(
+            project=manifest,
+            task=task,
+            worker=worker,
+            target_files=target_files,
+        )
+
+        result = worker.run_task(context)
+
+        # Record metadata and decisions in manifest
+        if result.decisions:
+            for d in result.decisions:
+                manifest.record_decision("EXTERNAL_WORKER_DECISION", d.get("title", "ADR"), d.get("rationale", ""))
+
+        if result.artifacts_created:
+            manifest.project_builder_artifacts.extend(result.artifacts_created)
+
+        self.store.save_project(manifest)
+        return result
+
+    def request_external_review(
+        self,
+        manifest: ProjectManifest,
+        task: TaskItem,
+        diff: str = "",
+        test_evidence: str = "",
+    ) -> Any:
+        """Requests an architectural or implementation review from ChatGPTWorker."""
+        from zero_core.engineering.context_builder import DEFAULT_CONTEXT_BUILDER
+        from zero_core.engineering.workers.external import ChatGPTWorker
+        from zero_core.engineering.workers.registry import DEFAULT_WORKER_REGISTRY
+
+        worker = DEFAULT_WORKER_REGISTRY.get("worker_chatgpt")
+        if not worker or not isinstance(worker, ChatGPTWorker):
+            worker = ChatGPTWorker()
+
+        context = DEFAULT_CONTEXT_BUILDER.build_context(
+            project=manifest,
+            task=task,
+            worker=worker,
+        )
+
+        return worker.review(context, diff=diff, test_evidence=test_evidence)
+
+    def create_manual_transport_task(
+        self,
+        manifest: ProjectManifest,
+        worker_id: str,
+        task: TaskItem,
+        instructions: str = "Please execute the following task and import the response into ZERO.",
+    ) -> Any:
+        """Creates a sanitized manual transport package for external clipboard exchange."""
+        from zero_core.engineering.context_builder import DEFAULT_CONTEXT_BUILDER
+        from zero_core.engineering.workers.registry import DEFAULT_WORKER_REGISTRY
+        from zero_core.engineering.workers.transport import ManualTransportManager
+
+        worker = DEFAULT_WORKER_REGISTRY.get(worker_id)
+        context = DEFAULT_CONTEXT_BUILDER.build_context(
+            project=manifest,
+            task=task,
+            worker=worker,
+        )
+        return ManualTransportManager.create_package(context, target_worker=worker_id, instructions=instructions)
+
+    def import_manual_task_result(
+        self,
+        manifest: ProjectManifest,
+        task_id: str,
+        worker_id: str,
+        raw_input: str,
+    ) -> Any:
+        """Imports and normalizes a user-pasted external worker response into WorkerResult."""
+        from zero_core.engineering.workers.transport import ManualTransportManager
+        result = ManualTransportManager.import_result(raw_input, task_id=task_id, worker_id=worker_id)
+        self.store.save_project(manifest)
+        return result
 
     def _extract_project_name(self, text: str) -> str:
         """Extracts a clean project title from a conversational prompt."""
