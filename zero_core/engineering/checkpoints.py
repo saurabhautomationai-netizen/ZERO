@@ -21,6 +21,11 @@ logger = logging.getLogger("zero.engineering.checkpoints")
 DEFAULT_CHECKPOINT_DIR = Path(__file__).resolve().parent.parent / "data" / "checkpoints"
 
 
+class CheckpointIsolationError(Exception):
+    """Raised when a checkpoint's project_id does not match the requested project_id."""
+    pass
+
+
 class CheckpointManager:
     """Manages project checkpoint creation, persistence, and restoration."""
 
@@ -91,15 +96,31 @@ class CheckpointManager:
         return ckpt
 
     def get_checkpoint(self, project_id: str, checkpoint_id: str) -> Optional[Checkpoint]:
-        """Retrieves a specific checkpoint snapshot."""
+        """Retrieves a specific checkpoint snapshot with strict project isolation."""
         ckpt_file = self.checkpoint_dir / project_id / f"{checkpoint_id}.json"
-        if ckpt_file.exists():
-            try:
-                data = json.loads(ckpt_file.read_text(encoding="utf-8"))
-                return Checkpoint.model_validate(data)
-            except Exception as exc:
-                logger.error("Failed to read checkpoint %s: %s", checkpoint_id, exc)
-        return None
+        if not ckpt_file.exists():
+            # Check if this checkpoint exists under any other project (cross-project probe attempt)
+            for other_file in self.checkpoint_dir.glob(f"*/{checkpoint_id}.json"):
+                raise CheckpointIsolationError(
+                    f"CHECKPOINT_ISOLATION_ERROR: Checkpoint '{checkpoint_id}' belongs to another project "
+                    f"('{other_file.parent.name}'), not requested project '{project_id}'."
+                )
+            return None
+
+        try:
+            data = json.loads(ckpt_file.read_text(encoding="utf-8"))
+            ckpt = Checkpoint.model_validate(data)
+            if ckpt.project_id != project_id:
+                raise CheckpointIsolationError(
+                    f"CHECKPOINT_ISOLATION_ERROR: Checkpoint '{checkpoint_id}' belongs to project "
+                    f"'{ckpt.project_id}', not requested project '{project_id}'."
+                )
+            return ckpt
+        except CheckpointIsolationError:
+            raise
+        except Exception as exc:
+            logger.error("Failed to read checkpoint %s: %s", checkpoint_id, exc)
+            return None
 
     def list_checkpoints(self, project_id: str) -> List[Checkpoint]:
         """Lists all checkpoints for a project sorted chronologically."""
@@ -129,6 +150,11 @@ class CheckpointManager:
             return None
 
         manifest = ProjectManifest.model_validate(ckpt.manifest_snapshot)
+        if manifest.project_id != project_id:
+            raise CheckpointIsolationError(
+                f"CHECKPOINT_ISOLATION_ERROR: Restored manifest has project_id '{manifest.project_id}', "
+                f"expected '{project_id}'."
+            )
         logger.info("Restored project %s from checkpoint %s (Phase: %s)", project_id, checkpoint_id, ckpt.phase)
         return manifest
 

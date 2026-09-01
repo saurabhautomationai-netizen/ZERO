@@ -21,6 +21,7 @@ class TaskRequest(BaseModel):
     task: str
     agent_slug: Optional[str] = None
     auto_invoke_llm: bool = True
+    project_id: Optional[str] = None
 
 
 @app.get("/")
@@ -48,6 +49,7 @@ def post_task(body: TaskRequest):
             task=body.task,
             agent_slug=body.agent_slug,
             auto_invoke_llm=body.auto_invoke_llm,
+            project_id=body.project_id,
         )
     except Exception as exc:
         return JSONResponse(

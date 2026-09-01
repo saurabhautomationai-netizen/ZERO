@@ -89,6 +89,7 @@ class WorkerResult:
     worker_id: str
     status: str  # "SUCCESS" | "FAILED" | "BLOCKED" | "NEEDS_REVIEW" | "MANUAL_INPUT_REQUIRED"
     summary: str
+    project_id: Optional[str] = None
     analysis: str = ""
     files_read: List[str] = field(default_factory=list)
     files_created: List[str] = field(default_factory=list)

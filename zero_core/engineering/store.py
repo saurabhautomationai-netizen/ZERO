@@ -8,7 +8,7 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 from zero_core.engineering.manifest import ProjectManifest
 
@@ -76,31 +76,43 @@ class EngineeringProjectStore:
             
         q = name_or_query.lower().strip(" .?!:;\"'")
         
-        # 1. Exact match
+        # 1. Exact match (project_id or project_name)
         for p in self._cache.values():
             if q == p.project_id.lower() or q == p.project_name.lower():
                 return p
-                
-        # 2. Substring match
-        for p in self._cache.values():
-            if q in p.project_name.lower() or q in p.project_id.lower() or p.project_name.lower() in q:
-                return p
 
-        # 3. Clean token overlap (strip noise words)
-        noise = {"the", "project", "assistant", "a", "an", "for", "with", "status", "of"}
-        q_tokens = {w for w in q.replace("_", " ").replace("-", " ").split() if w not in noise}
+        # 2. Check canonical alias map
+        from zero_core.engineering.resolver import CANONICAL_PROJECT_ALIASES
+        canonical_id = CANONICAL_PROJECT_ALIASES.get(q)
+        if canonical_id and canonical_id in self._cache:
+            return self._cache[canonical_id]
+
+        # 3. Clean token overlap (strip noise words) without reverse substring matching
+        noise = {
+            "the", "project", "assistant", "a", "an", "for", "with", "status",
+            "of", "in", "to", "my", "existing", "development", "please", "can", "you"
+        }
+        q_tokens = {w for w in q.replace("_", " ").replace("-", " ").split() if w not in noise and len(w) > 1}
         
         if q_tokens:
-            best_match = None
-            best_overlap = 0
+            matches: List[Tuple[float, ProjectManifest]] = []
             for p in self._cache.values():
-                p_tokens = {w for w in p.project_name.lower().replace("_", " ").replace("-", " ").split() if w not in noise}
+                p_tokens = {w for w in p.project_name.lower().replace("_", " ").replace("-", " ").split() if w not in noise and len(w) > 1}
+                if not p_tokens:
+                    continue
                 overlap = len(q_tokens & p_tokens)
-                if overlap > best_overlap:
-                    best_overlap = overlap
-                    best_match = p
-            if best_match and best_overlap > 0:
-                return best_match
+                if overlap > 0:
+                    score = overlap / len(p_tokens)
+                    matches.append((score, p))
+            
+            if matches:
+                matches.sort(key=lambda x: x[0], reverse=True)
+                top_score, top_match = matches[0]
+                if top_score >= 0.5:
+                    if len(matches) > 1 and (top_score - matches[1][0]) < 0.15:
+                        logger.warning("find_by_name('%s') ambiguous between %s and %s", q, top_match.project_id, matches[1][1].project_id)
+                        return None
+                    return top_match
 
         return None
 

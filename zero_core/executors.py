@@ -140,16 +140,64 @@ def _execute_deployment_agent(task: str) -> str:
 
 
 def _execute_loop_engineering(task: str) -> str:
-    t_lower = task.lower()
-    
-    # 0. Read-only discovery / state recovery / HITL gate inspection
-    if any(k in t_lower for k in (
-        "read-only", "read only", "discovery", "recover project state",
-        "recover its last checkpoint", "recover last checkpoint",
-        "continuation hitl gate", "hitl gate", "inspect the existing", "inspect project", "inspect",
-        "audit", "review", "analyze"
-    )):
-        manifest = DEFAULT_LOOP_ENGINEERING_AGENT.intake_project(idea=task)
+    from zero_core.engineering.resolver import (
+        DEFAULT_PROJECT_RESOLVER,
+        EngineeringIntent,
+        ResolutionError,
+        ResolutionStatus,
+    )
+
+    req = DEFAULT_PROJECT_RESOLVER.parse_request(raw_instruction=task)
+
+    # Special handling for GATE_APPROVAL when user did not specify project
+    if req.intent == EngineeringIntent.GATE_APPROVAL and not req.project_id and not req.repository_path and not req.project_name:
+        pending_projects = [
+            p for p in DEFAULT_LOOP_ENGINEERING_AGENT.store.list_projects()
+            if p.project_status == ProjectStatus.APPROVAL_PENDING
+        ]
+        if len(pending_projects) > 1:
+            names = [f"{p.project_name} (`{p.project_id}`)" for p in pending_projects]
+            return (
+                f"⚠️ **PROJECT_AMBIGUOUS**: Multiple projects are currently awaiting approval: {', '.join(names)}. "
+                "Please specify the target Project ID (e.g., `Approve feature scope for Project ID: proj_...`)."
+            )
+        elif len(pending_projects) == 1:
+            req.project_id = pending_projects[0].project_id
+
+    # Resolve project using 8-tier resolver
+    try:
+        manifest = DEFAULT_PROJECT_RESOLVER.resolve_project(req)
+    except ResolutionError as err:
+        if err.status == ResolutionStatus.PROJECT_NOT_FOUND:
+            return f"❌ **PROJECT_NOT_FOUND**: {err.message}"
+        elif err.status == ResolutionStatus.PROJECT_AMBIGUOUS:
+            return f"⚠️ **PROJECT_AMBIGUOUS**: {err.message}"
+        elif err.status == ResolutionStatus.BOUNDARY_VIOLATION:
+            return f"❌ **PROJECT_BOUNDARY_VIOLATION**: {err.message}"
+        else:
+            return f"❌ **Resolution Error**: {err.message}"
+
+    # 1. DIAGNOSTIC Intent (Strictly Read-Only)
+    if req.intent == EngineeringIntent.DIAGNOSTIC:
+        diag = DEFAULT_LOOP_ENGINEERING_AGENT.diagnose_issue(manifest, req)
+        findings_md = "\n".join(f"- {f}" for f in diag.get("findings", []))
+        return (
+            f"# 🔬 Project Diagnostic Report: {manifest.project_name}\n"
+            f"- **Project ID**: `{manifest.project_id}`\n"
+            f"- **Repository**: `{manifest.repository_path}`\n"
+            f"- **Mode**: `READ-ONLY DIAGNOSTIC`\n"
+            f"- **Status**: `{manifest.project_status.value if hasattr(manifest.project_status, 'value') else manifest.project_status}`\n\n"
+            f"### Architectural Findings:\n{findings_md}\n\n"
+            f"### Analysis:\n{diag.get('analysis', 'Diagnosis completed.')}\n\n"
+            f"*(Zero Diagnostic Mode: No files were mutated, no gates were approved, and no phases were advanced.)*"
+        )
+
+    # 2. STATUS Intent
+    if req.intent == EngineeringIntent.STATUS:
+        return DEFAULT_LOOP_ENGINEERING_AGENT.get_project_summary(manifest.project_id)
+
+    # 3. DISCOVERY Intent (Read-Only State Inspection / Scope)
+    if req.intent == EngineeringIntent.DISCOVERY:
         disc_res = DEFAULT_LOOP_ENGINEERING_AGENT.run_discovery(manifest)
         stack_str = ", ".join(disc_res.get("detected_stack", ["Python 3.x", "Zero Engine"]))
         must_cnt = len(disc_res.get("feature_scope", {}).get("must_have", []))
@@ -169,89 +217,87 @@ def _execute_loop_engineering(task: str) -> str:
             f"🛑 **Halted at Continuation HITL Gate**: Read-only discovery complete. Awaiting human scope approval before proceeding with development."
         )
 
-    # 1. Project Status Queries
-    if any(k in t_lower for k in ("where are we with", "status of", "how is the", "progress on", "summary of")):
-        # Extract target project name
-        q = task
-        for prefix in ("where are we with", "what is the status of", "status of", "how is the", "progress on", "summary of"):
-            if prefix in t_lower:
-                q = task[t_lower.index(prefix) + len(prefix):].strip(" ?.:!\"'")
-                break
-        res = DEFAULT_LOOP_ENGINEERING_AGENT.get_project_summary(q)
-        return res
-
-    # 2. Project Continuation Queries
-    continuation_prefixes = (
-        "continue the", "resume project", "continue project", "resume the",
-        "continue development of", "continue development", "continue my", "resume development",
-        "resume my existing project", "resume my project", "resume my existing", "resume my"
-    )
-    if any(k in t_lower for k in continuation_prefixes):
-        q = task
-        for prefix in continuation_prefixes:
-            if prefix in t_lower:
-                q = task[t_lower.index(prefix) + len(prefix):].strip(" ?.:!\"'")
-                break
-        res = DEFAULT_LOOP_ENGINEERING_AGENT.continue_project(q)
+    # 4. RESUME Intent
+    if req.intent == EngineeringIntent.RESUME:
+        res = DEFAULT_LOOP_ENGINEERING_AGENT.continue_project(manifest.project_id)
         if "error" in res:
-            manifest = DEFAULT_LOOP_ENGINEERING_AGENT.intake_project(idea=task)
-            disc_res = DEFAULT_LOOP_ENGINEERING_AGENT.run_discovery(manifest)
+            return f"❌ **Error Resuming Project**: {res['error']}"
+        return (
+            f"🔄 **Project Resumed**: {manifest.project_name}\n"
+            f"- **Status**: `{res.get('status')}`\n"
+            f"- **Phase**: `{res.get('phase', manifest.current_phase)}`\n"
+            f"- **Message**: {res.get('message', 'Processing active milestones.')}"
+        )
+
+    # 5. GATE_APPROVAL Intent (Strict Project Isolation)
+    if req.intent == EngineeringIntent.GATE_APPROVAL:
+        gate_name = req.requested_gate or ""
+        if "scope" in gate_name.lower() or "feature" in gate_name.lower() or "gate_1" in gate_name.lower():
+            res = DEFAULT_LOOP_ENGINEERING_AGENT.approve_feature_scope(manifest.project_id)
+            return f"✅ **Feature Scope Approved**\n- **Project**: `{manifest.project_name}`\n- **Phase**: `{res.get('current_phase')}`\n- **Message**: {res.get('message')}"
+        elif "ui" in gate_name.lower() or "design" in gate_name.lower() or "gate_2" in gate_name.lower():
+            res = DEFAULT_LOOP_ENGINEERING_AGENT.approve_uiux_and_build(manifest.project_id)
             return (
-                f"# 🔄 Project Inception / Discovery: {manifest.project_name}\n"
-                f"- **Project ID**: `{manifest.project_id}`\n"
-                f"- **Repository**: `{manifest.repository_path}`\n"
-                f"- **Status**: `AWAITING_SCOPE_APPROVAL (GATE 1)`\n"
-                f"- **Message**: {disc_res.get('message')}"
+                f"✅ **UI/UX Approved & Build Executed**\n"
+                f"- **Project**: `{manifest.project_name}`\n"
+                f"- **Phase**: `{res.get('current_phase')}`\n"
+                f"- **Database**: `{res.get('database_status')}`\n"
+                f"- **Backend**: `{res.get('backend_status')}`\n"
+                f"- **Frontend**: `{res.get('frontend_status')}`\n"
+                f"- **Testing**: `{res.get('testing_status')}`\n"
+                f"- **Message**: {res.get('message')}"
             )
-        return f"🔄 **Project Resumed**\n- **Status**: `{res.get('status')}`\n- **Message**: {res.get('message', 'Processing active milestones.')}"
+        elif "security" in gate_name.lower() or "deploy" in gate_name.lower() or "gate_3" in gate_name.lower() or "gate_4" in gate_name.lower():
+            res = DEFAULT_LOOP_ENGINEERING_AGENT.approve_security_and_deploy(manifest.project_id)
+            return f"🚀 **Security & Deployment Approved**\n- **Project**: `{manifest.project_name}`\n- **Status**: `{res.get('status')}`\n- **Message**: {res.get('message')}"
+        else:
+            return f"❌ **Unknown Gate**: Could not determine gate to approve from instruction."
 
-    # 3. Approval Gate Commands
-    def _get_target_project() -> Optional[ProjectManifest]:
-        projects = DEFAULT_LOOP_ENGINEERING_AGENT.store.list_projects()
-        # Prefer projects currently waiting for approval
-        pending = [p for p in projects if p.project_status == ProjectStatus.APPROVAL_PENDING]
-        if pending:
-            return pending[-1]
-        return projects[-1] if projects else None
+    # 6. PLAN Intent
+    if req.intent == EngineeringIntent.PLAN:
+        dag = DEFAULT_LOOP_ENGINEERING_AGENT.lifecycle.get_or_create_dag(manifest)
+        tasks = dag.list_all_tasks()
+        task_md = "\n".join(f"- `[{t.state.value}]` **{t.title}** ({t.task_id})" for t in tasks)
+        return (
+            f"# 📋 Engineering Plan: {manifest.project_name}\n"
+            f"- **Project ID**: `{manifest.project_id}`\n"
+            f"- **Current Phase**: `{manifest.current_phase.value if hasattr(manifest.current_phase, 'value') else manifest.current_phase}`\n"
+            f"- **Total Tasks**: {len(tasks)}\n\n"
+            f"### Task DAG:\n{task_md or 'No tasks registered yet.'}"
+        )
 
-    if "approve feature" in t_lower or "approve scope" in t_lower:
-        proj = _get_target_project()
-        if proj:
-            res = DEFAULT_LOOP_ENGINEERING_AGENT.approve_feature_scope(proj.project_id)
-            return f"✅ **Feature Scope Approved**\n- **Project**: `{proj.project_name}`\n- **Phase**: `{res.get('current_phase')}`\n- **Message**: {res.get('message')}"
-        return "No active project found awaiting feature scope approval."
+    # 7. AUTONOMOUS_BUILD Intent (Explicit Mutation)
+    if req.intent == EngineeringIntent.AUTONOMOUS_BUILD:
+        DEFAULT_PROJECT_RESOLVER.verify_mutation_boundary(manifest)
+        auto_res = DEFAULT_LOOP_ENGINEERING_AGENT.execute_autonomous_build(manifest)
+        return (
+            f"# 🚀 Autonomous Engineering Complete: {manifest.project_name}\n"
+            f"- **Project ID**: `{manifest.project_id}`\n"
+            f"- **Status**: `COMPLETED (100%)`\n"
+            f"- **Repository**: `{manifest.repository_path}`\n"
+            f"- **Message**: {auto_res.get('message')}"
+        )
 
-    if "approve ui" in t_lower or "approve design" in t_lower:
-        proj = _get_target_project()
-        if proj:
-            res = DEFAULT_LOOP_ENGINEERING_AGENT.approve_uiux_and_build(proj.project_id)
-            return f"✅ **UI/UX Approved & Build Executed**\n- **Project**: `{proj.project_name}`\n- **Phase**: `{res.get('current_phase')}`\n- **Database**: `{res.get('database_status')}`\n- **Backend**: `{res.get('backend_status')}`\n- **Frontend**: `{res.get('frontend_status')}`\n- **Testing**: `{res.get('testing_status')}`\n- **Message**: {res.get('message')}"
-        return "No active project found awaiting UI/UX approval."
+    # 8. TASK_EXECUTION Intent
+    if req.intent == EngineeringIntent.TASK_EXECUTION:
+        DEFAULT_PROJECT_RESOLVER.verify_mutation_boundary(manifest)
+        res = DEFAULT_LOOP_ENGINEERING_AGENT.advance_project_lifecycle(manifest)
+        return (
+            f"# ⚙️ Task Execution: {manifest.project_name}\n"
+            f"- **Status**: `{res.get('status')}`\n"
+            f"- **Phase**: `{res.get('phase')}`\n"
+            f"- **Detail**: {res}"
+        )
 
-    if "approve security" in t_lower or "approve deploy" in t_lower:
-        proj = _get_target_project()
-        if proj:
-            res = DEFAULT_LOOP_ENGINEERING_AGENT.approve_security_and_deploy(proj.project_id)
-            return f"🚀 **Security & Deployment Approved**\n- **Project**: `{proj.project_name}`\n- **Status**: `{res.get('status')}`\n- **Message**: {res.get('message')}"
-        return "No active project found awaiting deployment approval."
-
-    # 4. Standard Autonomous Intake, Architecture, Design, Implementation & Test Sweep
-    manifest = DEFAULT_LOOP_ENGINEERING_AGENT.intake_project(idea=task)
-    auto_res = DEFAULT_LOOP_ENGINEERING_AGENT.execute_autonomous_build(manifest)
-
-    stack_str = ", ".join(auto_res.get("details", {}).get("detected_stack", ["FastAPI", "Supabase", "Pytest", "Streamlit"]))
-
+    # 9. UNKNOWN Intent (FAIL-CLOSED: NEVER MUTATE)
     return (
-        f"# 🚀 Autonomous Engineering Complete: {manifest.project_name}\n"
-        f"- **Project ID**: `{manifest.project_id}`\n"
-        f"- **Status**: `COMPLETED (100%)`\n"
+        f"# ℹ️ Loop Engineering Instruction Received\n"
+        f"- **Resolved Project**: `{manifest.project_name}` (`{manifest.project_id}`)\n"
         f"- **Repository**: `{manifest.repository_path}`\n"
-        f"- **Database / Models**: `COMPLETED`\n"
-        f"- **Backend & Business Logic**: `COMPLETED`\n"
-        f"- **UI/UX Design System**: `COMPLETED (Lodgify Modern Theme)`\n"
-        f"- **Automated Tests**: `100% PASSED (0 Regressions)`\n"
-        f"\n**Message**: {auto_res.get('message')}\n"
-        f"*(Note: Human-in-the-Loop is strictly reserved for Security credentials, API keys, Money transactions, and Logins.)*"
+        f"- **Current Phase**: `{manifest.current_phase.value if hasattr(manifest.current_phase, 'value') else manifest.current_phase}`\n"
+        f"- **Project Status**: `{manifest.project_status.value if hasattr(manifest.project_status, 'value') else manifest.project_status}`\n\n"
+        f"**Directive**: {req.raw_instruction}\n\n"
+        f"*(Unrecognized command intent. For safety, no files were mutated. Available actions: `status`, `diagnose`, `discovery`, `resume`, `plan`, `execute task`, or `approve <gate>`)*"
     )
 
 

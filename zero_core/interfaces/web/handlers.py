@@ -46,9 +46,13 @@ def handle_task(
     task: str,
     agent_slug: Optional[str] = None,
     auto_invoke_llm: bool = True,
+    project_id: Optional[str] = None,
 ) -> dict[str, Any]:
     if not task or not task.strip():
         return {"error": "task must be a non-empty string"}
+
+    if project_id and "project id:" not in task.lower() and "project_id:" not in task.lower():
+        task = f"Project ID: {project_id}\n{task}"
 
     try:
         orch = build_orchestrator()

@@ -143,13 +143,29 @@ class ProjectKnowledgeStore:
         self._projects[profile.project_id] = profile
 
     def get_project(self, project_id: str) -> Optional[ProjectProfile]:
-        return self._projects.get(project_id)
+        if project_id in self._projects:
+            return self._projects[project_id]
+        from zero_core.engineering.resolver import CANONICAL_PROJECT_ALIASES
+        # Bidirectional resolution between short knowledge keys and canonical manifest project_ids
+        for alias, canon in CANONICAL_PROJECT_ALIASES.items():
+            if canon == project_id and alias in self._projects:
+                return self._projects[alias]
+            if alias == project_id and canon in self._projects:
+                return self._projects[canon]
+        return None
 
     def search_projects(self, query: str) -> List[ProjectProfile]:
         q = query.lower()
+        from zero_core.engineering.resolver import CANONICAL_PROJECT_ALIASES
+        canon_target = CANONICAL_PROJECT_ALIASES.get(q)
         results = []
         for p in self._projects.values():
-            if q in p.name.lower() or q in p.purpose.lower() or q in p.project_id:
+            if (
+                q in p.name.lower()
+                or q in p.purpose.lower()
+                or q in p.project_id
+                or (canon_target and canon_target == p.project_id)
+            ):
                 results.append(p)
         return results
 
