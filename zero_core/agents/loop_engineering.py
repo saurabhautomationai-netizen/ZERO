@@ -108,6 +108,14 @@ class LoopEngineeringAgent:
                     repo_path = str(hr_path)
                     project_type = "EXISTING_PROJECT"
                     project_name = "HR Recruitment AI Assistant"
+            elif "finance tracker" in idea_lower or "personal finance" in idea_lower or "smart finance" in idea_lower:
+                finance_path = DEFAULT_PROJECTS_BASE_DIR / "Smart Finance AI Tracker" / "Personal Finance Tracker"
+                if not finance_path.exists():
+                    finance_path = DEFAULT_PROJECTS_BASE_DIR / "Smart Finance AI Tracker"
+                if finance_path.exists():
+                    repo_path = str(finance_path)
+                    project_type = "EXISTING_PROJECT"
+                    project_name = "Personal Finance Tracker"
 
             if not repo_path:
                 # Check direct match in sibling projects
@@ -954,6 +962,12 @@ class LoopEngineeringAgent:
                 t = t[len(lead):].strip(" ,:.-")
 
         for prefix in (
+            "continue development of my existing", "continue development of the existing",
+            "continue development of my", "continue development of the", "continue development of",
+            "continue development", "continue my existing", "continue the existing",
+            "continue my", "continue the", "continue project", "continue",
+            "resume development of", "resume project", "resume the", "resume",
+            "inspect the existing", "inspect project", "inspect",
             "build me a complete independent", "build me a complete", "build a complete independent",
             "build a complete", "build me a new", "build me a", "build a new", "build a",
             "create a completely new", "create a new", "create a", "create", "build",
@@ -963,7 +977,13 @@ class LoopEngineeringAgent:
                 t = t[len(prefix):].strip(" ,:.-")
                 break
         
-        words = [w.capitalize() for w in t.split()[:4]]
+        # Isolate project title before trailing instruction clauses
+        first_clause = t.split(".")[0].split("\n")[0].split(",")[0].strip()
+        for suffix in ("in read-only mode", "in read only mode", "read-only", "read only", "project"):
+            if first_clause.lower().endswith(suffix):
+                first_clause = first_clause[:-len(suffix)].strip(" ,:.-")
+
+        words = [w.capitalize() for w in first_clause.split()[:5]]
         return " ".join(words) if words else "Autonomous AI Project"
 
 

@@ -386,6 +386,42 @@ class ChatGPTWorker(ExternalEngineeringWorker):
         criteria: List[str],
     ) -> WorkerResult:
         """Parses structured JSON or formats markdown text into WorkerResult."""
+        cleaned = (raw_text or "").strip()
+        err_signatures = (
+            "internal server error", "internal service unavailable", "service unavailable",
+            "502 bad gateway", "503 service", "504 gateway", "http error", "rate limit exceeded",
+            "traceback (most recent call last)"
+        )
+        if any(cleaned.lower().startswith(sig) for sig in err_signatures):
+            from zero_core.observability import DEFAULT_LOGGER
+            DEFAULT_LOGGER.error(
+                event_type="worker_response_parse_failed",
+                message=f"ChatGPTWorker provider error: {cleaned[:100]}",
+                worker_id=self.worker_id,
+                stage="Response Parsing",
+                error_category="WORKER_EXECUTION_FAILED",
+                expected="WorkerResult JSON",
+                received=cleaned[:100],
+            )
+            return WorkerResult(
+                task_id=task_id,
+                worker_id=self.worker_id,
+                status="FAILED",
+                summary=f"ChatGPT API returned provider error: {cleaned[:60]}",
+                analysis=cleaned,
+                errors=[f"Provider error: {cleaned[:200]}"],
+                requires_human=True,
+                recommended_next_action="Fallback to native capable worker or retry via manual transport",
+                execution_metadata={
+                    "execution_id": exec_id,
+                    "transport": "API",
+                    "stage": "Response Parsing",
+                    "error_category": "WORKER_RESPONSE_PARSE_FAILED",
+                    "expected": "WorkerResult JSON",
+                    "received": cleaned[:100],
+                },
+            )
+
         try:
             start = raw_text.find("{")
             end = raw_text.rfind("}") + 1

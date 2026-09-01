@@ -166,13 +166,25 @@ async function handleSubmit(event) {
       body: JSON.stringify({ task }),
     });
 
-    const data = await res.json();
+    let data;
+    const contentType = res.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      data = await res.json();
+    } else {
+      const rawText = await res.text();
+      data = {
+        selected: { name: 'ZERO Core' },
+        answer: res.ok ? rawText : `⚠️ Server Error (${res.status}): ${rawText || res.statusText}`,
+        status: res.ok ? 'SUCCESS' : 'ERROR',
+      };
+    }
+
     const agentName = data.selected ? data.selected.name : 'ZERO Core';
     const answer = data.answer || JSON.stringify(data, null, 2);
 
     appendMessage('agent', agentName, answer);
     if (radar) radar.textContent = `DISPATCHED: ${agentName.toUpperCase()}`;
-    playSound('approve');
+    playSound(res.ok ? 'approve' : 'alert');
   } catch (err) {
     appendMessage('agent', 'ERROR', `Failed to execute task: ${err.message}`);
     if (radar) radar.textContent = 'TASK ROUTING ERROR';
@@ -1392,8 +1404,19 @@ async function executeDossierAction(promptText) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ task: promptText, auto_invoke_llm: true }),
     });
-    const data = await res.json();
-    playSound('approve');
+    let data;
+    const contentType = res.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      data = await res.json();
+    } else {
+      const rawText = await res.text();
+      data = {
+        selected: { name: 'ZERO Core' },
+        answer: res.ok ? rawText : `⚠️ Server Error (${res.status}): ${rawText || res.statusText}`,
+        status: res.ok ? 'SUCCESS' : 'ERROR',
+      };
+    }
+    playSound(res.ok ? 'approve' : 'alert');
 
     if (feed) {
       feed.textContent = `[✓ Task Executed Successfully]\n\n` + (data.answer || JSON.stringify(data, null, 2));

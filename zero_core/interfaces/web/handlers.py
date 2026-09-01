@@ -18,10 +18,13 @@ complexity before it's actually needed.
 
 from __future__ import annotations
 
+import logging
 from typing import Any, Optional
 
 from zero_core.agent_registry import AgentSpec
 from zero_core.bootstrap import build_orchestrator, build_registry
+
+logger = logging.getLogger("zero.web.handlers")
 
 
 def _spec_to_dict(spec: Optional[AgentSpec]) -> Optional[dict[str, Any]]:
@@ -43,47 +46,70 @@ def handle_task(task: str, auto_invoke_llm: bool = True) -> dict[str, Any]:
     if not task or not task.strip():
         return {"error": "task must be a non-empty string"}
 
-    orch = build_orchestrator()
+    try:
+        orch = build_orchestrator()
 
-    # Check for multi-line multi-agent batch dispatch (@Agent1: ... \n @Agent2: ...)
-    lines = [l.strip() for l in task.strip().splitlines() if l.strip()]
-    at_lines = [l for l in lines if l.startswith("@")]
+        # Check for multi-line multi-agent batch dispatch (@Agent1: ... \n @Agent2: ...)
+        lines = [l.strip() for l in task.strip().splitlines() if l.strip()]
+        at_lines = [l for l in lines if l.startswith("@")]
 
-    if len(at_lines) > 1:
-        sub_results = []
-        for line in at_lines:
-            decision = orch.run(line)
-            outcome = orch.execute(line)
-            ans = outcome.answer
-            if outcome.needs_llm and outcome.persona and auto_invoke_llm and ans is None:
-                ans = DEFAULT_LLM_MANAGER.call_specialist(persona=outcome.persona, task=line)
-            agent_name = decision.selected.name if decision.selected else "Specialist"
-            sub_results.append(f"### 🤖 {agent_name}\n**Assigned Directive**: `{line}`\n\n{ans or 'Acknowledged and processed.'}")
+        if len(at_lines) > 1:
+            sub_results = []
+            for line in at_lines:
+                decision = orch.run(line)
+                outcome = orch.execute(line)
+                ans = outcome.answer
+                if outcome.needs_llm and outcome.persona and auto_invoke_llm and ans is None:
+                    ans = DEFAULT_LLM_MANAGER.call_specialist(persona=outcome.persona, task=line)
+                agent_name = decision.selected.name if decision.selected else "Specialist"
+                sub_results.append(f"### 🤖 {agent_name}\n**Assigned Directive**: `{line}`\n\n{ans or 'Acknowledged and processed.'}")
+
+            return {
+                "task": task,
+                "selected": {"name": f"Multi-Agent Squad ({len(at_lines)} Agents)", "slug": "squad", "source": "squad", "division": "orchestrated-squad"},
+                "alternatives": [],
+                "needs_llm": False,
+                "answer": "\n\n---\n\n".join(sub_results),
+                "persona": None,
+            }
+
+        decision = orch.run(task)
+        outcome = orch.execute(task)
+
+        answer = outcome.answer
+        if outcome.needs_llm and outcome.persona and auto_invoke_llm and answer is None:
+            try:
+                answer = DEFAULT_LLM_MANAGER.call_specialist(persona=outcome.persona, task=task)
+            except Exception as exc:
+                logger.error("LLM specialist invocation failed: %s", exc)
+                answer = f"⚠️ LLM Specialist invocation error: {exc}"
 
         return {
             "task": task,
-            "selected": {"name": f"Multi-Agent Squad ({len(at_lines)} Agents)", "slug": "squad", "source": "squad", "division": "orchestrated-squad"},
+            "selected": _spec_to_dict(decision.selected),
+            "alternatives": [_spec_to_dict(a) for a in decision.alternatives],
+            "needs_llm": outcome.needs_llm,
+            "answer": answer,
+            "persona": outcome.persona if outcome.needs_llm else None,
+        }
+    except Exception as exc:
+        logger.exception("handle_task failed: %s", exc)
+        from zero_core.observability import DEFAULT_LOGGER
+        DEFAULT_LOGGER.error(
+            event_type="task_execution_failed",
+            message=f"handle_task caught error: {exc}",
+            task=task[:100],
+            error=str(exc),
+        )
+        return {
+            "task": task,
+            "selected": {"name": "ZERO Core", "slug": "zero-core", "source": "system"},
             "alternatives": [],
             "needs_llm": False,
-            "answer": "\n\n---\n\n".join(sub_results),
-            "persona": None,
+            "answer": f"⚠️ ZERO Task Error: {exc}",
+            "status": "ERROR",
+            "error_details": {"type": type(exc).__name__, "message": str(exc)},
         }
-
-    decision = orch.run(task)
-    outcome = orch.execute(task)
-
-    answer = outcome.answer
-    if outcome.needs_llm and outcome.persona and auto_invoke_llm and answer is None:
-        answer = DEFAULT_LLM_MANAGER.call_specialist(persona=outcome.persona, task=task)
-
-    return {
-        "task": task,
-        "selected": _spec_to_dict(decision.selected),
-        "alternatives": [_spec_to_dict(a) for a in decision.alternatives],
-        "needs_llm": outcome.needs_llm,
-        "answer": answer,
-        "persona": outcome.persona if outcome.needs_llm else None,
-    }
 
 
 def handle_list_agents(division: Optional[str] = None) -> dict[str, Any]:

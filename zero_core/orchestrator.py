@@ -82,10 +82,21 @@ class Orchestrator:
             final_state = self._run_fallback(task)
 
         match: RegistryMatch = final_state["match"]
+        selected = final_state["selected"]
+
+        from zero_core.observability import DEFAULT_LOGGER
+        DEFAULT_LOGGER.info(
+            event_type="routing_decision_created",
+            message=f"Task routed to {selected.name if selected else 'None'}",
+            task=task[:100],
+            selected_agent=selected.slug if selected else None,
+            routing_reason="Direct intent match / keyword resolution",
+        )
+
         return OrchestratorResult(
             task=task,
-            selected=final_state["selected"],
-            alternatives=[c for c in match.candidates if c != final_state["selected"]],
+            selected=selected,
+            alternatives=[c for c in match.candidates if c != selected],
         )
 
     def execute(self, task: str) -> ExecutionResult:
@@ -98,4 +109,19 @@ class Orchestrator:
         decision = self.run(task)
         if decision.selected is None:
             return ExecutionResult(spec=None, answer="No specialist matched this task.", needs_llm=False)
-        return _execute_spec(decision.selected, task, agency_adapter=self.registry.agency)
+        try:
+            return _execute_spec(decision.selected, task, agency_adapter=self.registry.agency)
+        except Exception as exc:
+            from zero_core.observability import DEFAULT_LOGGER
+            DEFAULT_LOGGER.error(
+                event_type="task_execution_failed",
+                message=f"Execution error for {decision.selected.name}: {exc}",
+                selected_agent=decision.selected.slug,
+                task=task[:100],
+                error=str(exc),
+            )
+            return ExecutionResult(
+                spec=decision.selected,
+                answer=f"⚠️ Agent Execution Failed ({decision.selected.name}): {exc}",
+                needs_llm=False,
+            )

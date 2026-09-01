@@ -43,7 +43,7 @@ FINANCE_AGENT = _native(
     slug="native/finance-agent",
     division="zero-native",
     description="Owns your transaction database, subscriptions, budgets, and financial history.",
-    keywords=["budget", "expense", "subscription", "spending", "transaction", "finance tracker"],
+    keywords=["budget", "expense", "expenses", "subscription", "subscriptions", "spending", "spend", "spent", "transaction", "transactions", "finance status"],
     integration_note=(
         "CORRECTED after inspecting the live n8n workflow (initial assumption of "
         "'prompt-driven .txt files' was wrong): 'Zero Finance Tracker' is a 118-node n8n "
@@ -146,7 +146,11 @@ LOOP_ENGINEERING_AGENT = _native(
         "engineering manifest", "product engineering", "build hr recruitment", "engineering status",
         "continue project", "approve feature scope", "approve ui/ux", "approve security", "engineering cockpit",
         "improve my existing", "improve existing", "improve the", "improve hr", "improve recruitment", "upgrade project",
-        "redesign", "redesign the", "dashboard_eg", "hr dashboard", "reference design", "rebuild ui", "update ui", "ui/ux", "redesign hr"
+        "redesign", "redesign the", "dashboard_eg", "hr dashboard", "reference design", "rebuild ui", "update ui", "ui/ux", "redesign hr",
+        "continue development", "continue development of", "continue my", "continue project", "resume development",
+        "inspect project", "inspect the existing", "read-only discovery", "discovery mode",
+        "recover project state", "recover its last checkpoint", "recover last checkpoint",
+        "continuation hitl gate", "hitl gate", "engineering lifecycle"
     ],
     integration_note="DELIVERED (Loop v2): zero_core.agents.loop_engineering.LoopEngineeringAgent.",
 )
@@ -158,9 +162,8 @@ PROJECT_BUILDER = _native(
     description="Orchestrates software inception: Idea -> SRS -> Architecture -> ADRs -> Folder Structure -> Roadmap.",
     keywords=[
         "project builder", "build project", "create project", "srs",
-        "architecture plan", "scaffold", "blueprint", "project blueprint",
-        "design and build", "build system", "system architecture",
-        "status of zero", "status of", "project status", "zero architecture"
+        "architecture plan", "scaffold", "scaffolding", "blueprint", "project blueprint",
+        "design and build", "build system", "system architecture", "zero architecture"
     ],
     integration_note="DELIVERED (M15): zero_core.agents.project_builder.ProjectBuilderAgent.",
 )

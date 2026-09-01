@@ -148,8 +148,42 @@ class ManualTransportManager:
         task_id: str,
         worker_id: str,
     ) -> WorkerResult:
-        """Parses a pasted or imported external response into a standardized WorkerResult."""
-        cleaned = raw_text.strip()
+        cleaned = (raw_text or "").strip()
+        # 1. Detect provider / server errors
+        err_signatures = (
+            "internal server error", "internal service unavailable", "service unavailable",
+            "502 bad gateway", "503 service", "504 gateway", "http error", "connection refused",
+            "rate limit exceeded", "traceback (most recent call last)"
+        )
+        if any(cleaned.lower().startswith(sig) for sig in err_signatures):
+            from zero_core.observability import DEFAULT_LOGGER
+            DEFAULT_LOGGER.error(
+                event_type="worker_response_parse_failed",
+                message=f"Worker {worker_id} response was a provider error: {cleaned[:100]}",
+                worker_id=worker_id,
+                stage="Response Parsing",
+                error_category="WORKER_EXECUTION_FAILED",
+                expected="WorkerResult JSON",
+                received=cleaned[:100],
+            )
+            return WorkerResult(
+                task_id=task_id,
+                worker_id=worker_id,
+                status="FAILED",
+                summary=f"Worker {worker_id} failed: Provider returned error response ({cleaned[:60]})",
+                analysis=cleaned,
+                errors=[f"Provider error: {cleaned[:200]}"],
+                requires_human=True,
+                recommended_next_action="Fallback to native capable worker or retry via manual transport",
+                execution_metadata={
+                    "transport": "MANUAL_TRANSPORT",
+                    "stage": "Response Parsing",
+                    "error_category": "WORKER_RESPONSE_PARSE_FAILED",
+                    "expected": "WorkerResult JSON",
+                    "received": cleaned[:100],
+                    "imported_at": datetime.now(timezone.utc).isoformat(),
+                },
+            )
 
         # Check if user pasted JSON
         parsed_json: Optional[Dict[str, Any]] = None

@@ -41,7 +41,18 @@ def get_cockpit_page():
 @app.post("/task")
 @app.post("/api/task")
 def post_task(body: TaskRequest):
-    return handlers.handle_task(body.task)
+    try:
+        return handlers.handle_task(body.task)
+    except Exception as exc:
+        return JSONResponse(
+            status_code=500,
+            content={
+                "task": body.task,
+                "selected": {"name": "ZERO Core", "slug": "zero-core"},
+                "answer": f"Internal task processing error: {exc}",
+                "status": "ERROR",
+            },
+        )
 
 
 @app.get("/agents")

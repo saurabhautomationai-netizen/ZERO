@@ -276,12 +276,30 @@ class AgentRegistry:
         task_lower = task.lower()
         native_candidates: list[tuple[int, int, AgentSpec]] = []
 
+        engineering_directives = (
+            "continue development", "continue my", "continue the project", "continue project",
+            "resume development", "resume project", "resume the",
+            "inspect project", "inspect the existing", "read-only discovery", "discovery mode",
+            "recover project state", "recover its last checkpoint", "recover last checkpoint",
+            "continuation hitl gate", "hitl gate", "engineering lifecycle",
+            "build me a complete", "build a complete", "create a new saas",
+            "approve feature scope", "approve ui/ux", "approve security", "approve deployment",
+            "engineering cockpit", "engineering status"
+        )
+        is_engineering_task = any(d in task_lower for d in engineering_directives)
+
         for native in self._native.values():
             matched_kws = [k for k in native.keywords if k in task_lower]
             if matched_kws:
                 score = len(matched_kws)
                 max_len = max(len(k) for k in matched_kws)
+                # If an explicit engineering lifecycle directive is present, strongly prioritize Loop Engineering Agent
+                if is_engineering_task and native.slug == "native/loop-engineering-agent":
+                    score += 100
                 native_candidates.append((score, max_len, native))
+            elif is_engineering_task and native.slug == "native/loop-engineering-agent":
+                # Ensure Loop Engineering Agent is included even if individual keywords had slightly different phrasing
+                native_candidates.append((100, 20, native))
 
         # Sort by match count, then longest matched keyword phrase descending
         native_candidates.sort(key=lambda item: (item[0], item[1]), reverse=True)

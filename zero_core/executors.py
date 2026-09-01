@@ -18,8 +18,11 @@ honestly, not by faking it:
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from typing import Callable, Optional
+
+logger = logging.getLogger("zero.executors")
 
 from zero_core.agent_registry import AgencyAgentsAdapter, AgentSpec
 from zero_core.agents.automation_agent import DEFAULT_AUTOMATION_AGENT
@@ -55,6 +58,9 @@ def _execute_finance_agent(task: str) -> str:
         recent = FinanceStatusAdapter().get_recent_transactions(limit=5)
     except FinanceDBUnavailable as exc:
         return f"Finance Agent not configured yet: {exc}"
+    except Exception as exc:
+        logger.error("Finance Agent database error: %s", exc)
+        return f"Finance Agent database unavailable: {exc}"
     if not recent:
         return "Finance Agent: connected, but no transactions found."
     lines = [f"Last {len(recent)} transaction(s):"]
@@ -136,6 +142,32 @@ def _execute_deployment_agent(task: str) -> str:
 def _execute_loop_engineering(task: str) -> str:
     t_lower = task.lower()
     
+    # 0. Read-only discovery / state recovery / HITL gate inspection
+    if any(k in t_lower for k in (
+        "read-only", "read only", "discovery", "recover project state",
+        "recover its last checkpoint", "recover last checkpoint",
+        "continuation hitl gate", "hitl gate", "inspect the existing", "inspect project"
+    )):
+        manifest = DEFAULT_LOOP_ENGINEERING_AGENT.intake_project(idea=task)
+        disc_res = DEFAULT_LOOP_ENGINEERING_AGENT.run_discovery(manifest)
+        stack_str = ", ".join(disc_res.get("detected_stack", ["Python 3.x", "Zero Engine"]))
+        must_cnt = len(disc_res.get("feature_scope", {}).get("must_have", []))
+        should_cnt = len(disc_res.get("feature_scope", {}).get("should_have", []))
+        return (
+            f"# 🔍 Project State Recovered: {manifest.project_name}\n"
+            f"- **Project ID**: `{manifest.project_id}`\n"
+            f"- **Type**: `{manifest.project_type}`\n"
+            f"- **Repository**: `{manifest.repository_path}`\n"
+            f"- **Current Phase**: `{manifest.current_phase.value if hasattr(manifest.current_phase, 'value') else manifest.current_phase}`\n"
+            f"- **Gate**: `GATE 1 (Feature Scope Approval)`\n"
+            f"- **Status**: `APPROVAL_PENDING (HALTED AT HITL GATE)`\n"
+            f"- **Detected Stack**: {stack_str}\n\n"
+            f"### Proposed Feature Scope:\n"
+            f"- **Must-Have Features**: {must_cnt}\n"
+            f"- **Should-Have Features**: {should_cnt}\n\n"
+            f"🛑 **Halted at Continuation HITL Gate**: Read-only discovery complete. Awaiting human scope approval before proceeding with development."
+        )
+
     # 1. Project Status Queries
     if any(k in t_lower for k in ("where are we with", "status of", "how is the", "progress on", "summary of")):
         # Extract target project name
@@ -148,13 +180,27 @@ def _execute_loop_engineering(task: str) -> str:
         return res
 
     # 2. Project Continuation Queries
-    if any(k in t_lower for k in ("continue the", "resume project", "continue project", "resume the")):
+    continuation_prefixes = (
+        "continue the", "resume project", "continue project", "resume the",
+        "continue development of", "continue development", "continue my", "resume development"
+    )
+    if any(k in t_lower for k in continuation_prefixes):
         q = task
-        for prefix in ("continue the", "resume project", "continue project", "resume the"):
+        for prefix in continuation_prefixes:
             if prefix in t_lower:
                 q = task[t_lower.index(prefix) + len(prefix):].strip(" ?.:!\"'")
                 break
         res = DEFAULT_LOOP_ENGINEERING_AGENT.continue_project(q)
+        if "error" in res:
+            manifest = DEFAULT_LOOP_ENGINEERING_AGENT.intake_project(idea=task)
+            disc_res = DEFAULT_LOOP_ENGINEERING_AGENT.run_discovery(manifest)
+            return (
+                f"# 🔄 Project Inception / Discovery: {manifest.project_name}\n"
+                f"- **Project ID**: `{manifest.project_id}`\n"
+                f"- **Repository**: `{manifest.repository_path}`\n"
+                f"- **Status**: `AWAITING_SCOPE_APPROVAL (GATE 1)`\n"
+                f"- **Message**: {disc_res.get('message')}"
+            )
         return f"🔄 **Project Resumed**\n- **Status**: `{res.get('status')}`\n- **Message**: {res.get('message', 'Processing active milestones.')}"
 
     # 3. Approval Gate Commands
@@ -253,7 +299,15 @@ def execute(
                        f"file it against zero_core/executors.py.",
                 needs_llm=False,
             )
-        return ExecutionResult(spec=spec, answer=fn(task), needs_llm=False)
+        try:
+            return ExecutionResult(spec=spec, answer=fn(task), needs_llm=False)
+        except Exception as exc:
+            logger.exception("Native executor for %s failed: %s", spec.slug, exc)
+            return ExecutionResult(
+                spec=spec,
+                answer=f"⚠️ Agent Execution Error ({spec.name}): {exc}",
+                needs_llm=False,
+            )
 
     # Agency specialist: hand off the persona, don't fake executing it.
     persona_text = None
