@@ -146,7 +146,8 @@ def _execute_loop_engineering(task: str) -> str:
     if any(k in t_lower for k in (
         "read-only", "read only", "discovery", "recover project state",
         "recover its last checkpoint", "recover last checkpoint",
-        "continuation hitl gate", "hitl gate", "inspect the existing", "inspect project"
+        "continuation hitl gate", "hitl gate", "inspect the existing", "inspect project", "inspect",
+        "audit", "review", "analyze"
     )):
         manifest = DEFAULT_LOOP_ENGINEERING_AGENT.intake_project(idea=task)
         disc_res = DEFAULT_LOOP_ENGINEERING_AGENT.run_discovery(manifest)
