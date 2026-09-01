@@ -51,17 +51,36 @@ def telegram_worker():
     DEFAULT_TELEGRAM_RUNNER.run_forever()
 
 
+def patrol_worker():
+    from zero_core.patrol import DEFAULT_PATROL_WORKER
+    logging.info("Starting Autonomous Project Patrol Worker daemon (6h cycle)...")
+    # Initial scan after short warmup
+    time.sleep(10)
+    while True:
+        try:
+            DEFAULT_PATROL_WORKER.run_patrol_sweep()
+        except Exception as e:
+            logging.error(f"Error in Patrol Worker cycle: {e}")
+        # Sleep 6 hours (21,600 seconds)
+        time.sleep(21600)
+
+
 def main():
     setup_logging()
     logging.info("=" * 50)
     logging.info("[*] Launching ZERO Unified Operating System Daemon")
     logging.info("  • Web Command Center: http://127.0.0.1:8000/")
     logging.info("  • Telegram Interface: Active")
+    logging.info("  • Autonomous Project Patrol: Active")
     logging.info("=" * 50)
 
     # Start Telegram background daemon thread
-    t = threading.Thread(target=telegram_worker, daemon=True, name="TelegramWorker")
-    t.start()
+    t_tel = threading.Thread(target=telegram_worker, daemon=True, name="TelegramWorker")
+    t_tel.start()
+
+    # Start Patrol background daemon thread
+    t_patrol = threading.Thread(target=patrol_worker, daemon=True, name="PatrolWorker")
+    t_patrol.start()
 
     # Run Uvicorn server on main thread
     try:
@@ -80,3 +99,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

@@ -40,58 +40,66 @@ class MockOfflineLLMClient(BaseLLMClient):
 class GeminiLLMClient(BaseLLMClient):
     """Client for Google AI Gemini API via standard HTTPS endpoint."""
 
-    def __init__(self, api_key: Optional[str] = None, default_model: str = "gemini-flash-latest"):
+    def __init__(self, api_key: Optional[str] = None, default_model: str = "gemini-3.6-flash"):
         self.api_key = api_key if api_key is not None else os.environ.get("GEMINI_API_KEY", "")
         self.default_model = os.environ.get("GEMINI_MODEL", default_model)
+        self.fallback_models = ["gemini-3.6-flash", "gemini-3.5-flash", "gemini-flash-latest", "gemini-3-flash-preview"]
 
     def generate(self, system_prompt: str, user_prompt: str, model: Optional[str] = None) -> str:
         if not self.api_key:
             return "Gemini API Error: GEMINI_API_KEY is not set in environment or .env file."
 
-        selected_model = model or self.default_model
-        url = (
-            f"https://generativelanguage.googleapis.com/v1beta/models/{selected_model}:generateContent"
-            f"?key={self.api_key}"
-        )
+        models_to_try = [model] if model else ([self.default_model] + [m for m in self.fallback_models if m != self.default_model])
 
-        payload = {
-            "system_instruction": {
-                "parts": [{"text": system_prompt}]
-            },
-            "contents": [
-                {
-                    "role": "user",
-                    "parts": [{"text": user_prompt}]
+        for target_model in models_to_try:
+            url = (
+                f"https://generativelanguage.googleapis.com/v1beta/models/{target_model}:generateContent"
+                f"?key={self.api_key}"
+            )
+
+            payload = {
+                "system_instruction": {
+                    "parts": [{"text": system_prompt}]
+                },
+                "contents": [
+                    {
+                        "role": "user",
+                        "parts": [{"text": user_prompt}]
+                    }
+                ],
+                "generationConfig": {
+                    "temperature": 0.3,
+                    "maxOutputTokens": 2048,
                 }
-            ],
-            "generationConfig": {
-                "temperature": 0.3,
-                "maxOutputTokens": 2048,
             }
-        }
 
-        data_bytes = json.dumps(payload).encode("utf-8")
-        req = urllib.request.Request(
-            url,
-            data=data_bytes,
-            headers={"Content-Type": "application/json"},
-            method="POST",
-        )
+            data_bytes = json.dumps(payload).encode("utf-8")
+            req = urllib.request.Request(
+                url,
+                data=data_bytes,
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
 
-        try:
-            with urllib.request.urlopen(req, timeout=30) as resp:
-                resp_json = json.loads(resp.read().decode("utf-8"))
-                candidates = resp_json.get("candidates", [])
-                if candidates and "content" in candidates[0]:
-                    parts = candidates[0]["content"].get("parts", [])
-                    if parts:
-                        return parts[0].get("text", "")
-                return "Gemini API: No text returned in candidate response."
-        except urllib.error.HTTPError as err:
-            err_msg = err.read().decode("utf-8") if err.fp else str(err)
-            return f"Gemini API HTTP Error ({err.code}): {err_msg}"
-        except Exception as exc:
-            return f"Gemini API Connection Error: {exc}"
+            try:
+                with urllib.request.urlopen(req, timeout=30) as resp:
+                    resp_json = json.loads(resp.read().decode("utf-8"))
+                    candidates = resp_json.get("candidates", [])
+                    if candidates and "content" in candidates[0]:
+                        parts = candidates[0]["content"].get("parts", [])
+                        if parts:
+                            return parts[0].get("text", "")
+                    return "Gemini API: No text returned in candidate response."
+            except urllib.error.HTTPError as err:
+                # If 503 (High demand) or 429 (Rate limit), try next fallback model
+                if err.code in (503, 429, 404):
+                    continue
+                err_msg = err.read().decode("utf-8") if err.fp else str(err)
+                return f"Gemini API HTTP Error ({err.code}): {err_msg}"
+            except Exception:
+                continue
+
+        return "⚠️ Gemini API: Models temporarily experiencing high demand. Please try again in a few moments."
 
 
 class OllamaLLMClient(BaseLLMClient):

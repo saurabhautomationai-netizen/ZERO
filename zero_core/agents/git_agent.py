@@ -1,12 +1,16 @@
-"""Git Agent for ZERO (Milestone M16).
+"""Git Agent for ZERO (Milestone M16 & Autonomous Builder Pipeline).
 
-Provides Git status inspection, conventional commit generation, and destructive command guardrails.
+Provides Git status inspection, conventional commit generation, repository initialization,
+and destructive command guardrails.
 """
 
 from __future__ import annotations
 
+import os
 import re
+import subprocess
 from dataclasses import asdict, dataclass, field
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 
@@ -83,6 +87,25 @@ class GitAgent:
             untracked_files=untracked,
             is_clean=is_clean,
         )
+
+    def init_and_commit(self, repo_path: Path, message: str) -> Dict[str, Any]:
+        """Initializes git repo if needed, stages all files, and creates a commit."""
+        if not repo_path.exists():
+            return {"success": False, "error": f"Path {repo_path} does not exist"}
+
+        try:
+            if not (repo_path / ".git").exists():
+                subprocess.run(["git", "init"], cwd=str(repo_path), capture_output=True, check=True)
+
+            subprocess.run(["git", "add", "."], cwd=str(repo_path), capture_output=True, check=True)
+            res = subprocess.run(["git", "commit", "-m", message], cwd=str(repo_path), capture_output=True, text=True)
+            return {
+                "success": res.returncode == 0,
+                "message": message,
+                "output": res.stdout or res.stderr,
+            }
+        except Exception as exc:
+            return {"success": False, "error": str(exc)}
 
 
 # Global singleton instance

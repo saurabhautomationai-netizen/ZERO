@@ -90,7 +90,9 @@ class EmailAgent:
         return buckets
 
     def create_draft(self, reply_to_id: Optional[str], recipient: str, subject: str, body: str) -> Dict[str, Any]:
-        """Creates a response draft."""
+        """Creates a response draft in Gmail or local cache."""
+        from zero_core.adapters.google_workspace import DEFAULT_GMAIL_LIVE_ADAPTER
+
         draft_id = f"draft_{uuid.uuid4().hex[:8]}"
         draft = {
             "draft_id": draft_id,
@@ -101,7 +103,28 @@ class EmailAgent:
             "created_at": datetime.now(timezone.utc).isoformat(),
         }
         self._drafts[draft_id] = draft
+
+        if DEFAULT_GMAIL_LIVE_ADAPTER.is_configured():
+            live_res = DEFAULT_GMAIL_LIVE_ADAPTER.create_draft(recipient, subject, body, thread_id=reply_to_id)
+            if live_res.get("success"):
+                draft["gmail_draft_id"] = live_res.get("draft_id")
+
         return draft
+
+    def send_email(self, recipient: str, subject: str, body: str) -> Dict[str, Any]:
+        """Sends an email message via Gmail API or local simulator."""
+        from zero_core.adapters.google_workspace import DEFAULT_GMAIL_LIVE_ADAPTER
+
+        if DEFAULT_GMAIL_LIVE_ADAPTER.is_configured():
+            return DEFAULT_GMAIL_LIVE_ADAPTER.send_message(recipient, subject, body)
+
+        return {
+            "success": True,
+            "simulated": True,
+            "recipient": recipient,
+            "subject": subject,
+            "message": "Email queued in local simulator (Gmail OAuth offline).",
+        }
 
     def search(self, query: str) -> List[EmailMessage]:
         """Searches inbox for matching keywords."""

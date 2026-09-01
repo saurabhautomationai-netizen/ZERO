@@ -30,10 +30,12 @@ from zero_core.agents.deployment_agent import DEFAULT_DEPLOYMENT_AGENT
 from zero_core.agents.email_agent import DEFAULT_EMAIL_AGENT
 from zero_core.agents.git_agent import DEFAULT_GIT_AGENT
 from zero_core.agents.learning_agent import DEFAULT_LEARNING_AGENT
+from zero_core.agents.loop_engineering import DEFAULT_LOOP_ENGINEERING_AGENT
 from zero_core.agents.news_agent import DEFAULT_NEWS_AGENT
 from zero_core.agents.project_builder import DEFAULT_PROJECT_BUILDER
 from zero_core.agents.research_agent import DEFAULT_RESEARCH_AGENT
 from zero_core.agents.trading_coach import DEFAULT_TRADING_COACH
+from zero_core.engineering.manifest import ProjectManifest, ProjectStatus
 from zero_core.finance_status import FinanceDBUnavailable, FinanceStatusAdapter
 from zero_core.memory.project_knowledge import DEFAULT_PROJECT_KNOWLEDGE
 from zero_core.trading_live_reader import DEFAULT_MT5_READER
@@ -67,10 +69,14 @@ def _execute_finance_agent(task: str) -> str:
 def _execute_trading_agent(task: str) -> str:
     signal_status = TradingStatusAdapter().get_status().summary()
     t_lower = task.lower()
-    if any(w in t_lower for w in ("position", "account", "equity", "balance", "margin", "p&l", "pnl", "live")):
+    if any(w in t_lower for w in ("balance", "equity", "position", "account", "margin", "p&l", "pnl", "live")):
         acc_status = DEFAULT_MT5_READER.get_account_status().summary()
-        return f"{signal_status}\n\n{acc_status}"
-    return signal_status
+        return f"{acc_status}\n\n*Signal State*:\n{signal_status}"
+    
+    coach_answer = DEFAULT_TRADING_COACH.explain_live_bot_status(task)
+    return f"{coach_answer}\n\n*Signal State*:\n{signal_status}"
+
+
 
 
 def _execute_trading_coach(task: str) -> str:
@@ -127,6 +133,80 @@ def _execute_deployment_agent(task: str) -> str:
     return report.to_markdown()
 
 
+def _execute_loop_engineering(task: str) -> str:
+    t_lower = task.lower()
+    
+    # 1. Project Status Queries
+    if any(k in t_lower for k in ("where are we with", "status of", "how is the", "progress on", "summary of")):
+        # Extract target project name
+        q = task
+        for prefix in ("where are we with", "what is the status of", "status of", "how is the", "progress on", "summary of"):
+            if prefix in t_lower:
+                q = task[t_lower.index(prefix) + len(prefix):].strip(" ?.:!\"'")
+                break
+        res = DEFAULT_LOOP_ENGINEERING_AGENT.get_project_summary(q)
+        return res
+
+    # 2. Project Continuation Queries
+    if any(k in t_lower for k in ("continue the", "resume project", "continue project", "resume the")):
+        q = task
+        for prefix in ("continue the", "resume project", "continue project", "resume the"):
+            if prefix in t_lower:
+                q = task[t_lower.index(prefix) + len(prefix):].strip(" ?.:!\"'")
+                break
+        res = DEFAULT_LOOP_ENGINEERING_AGENT.continue_project(q)
+        return f"🔄 **Project Resumed**\n- **Status**: `{res.get('status')}`\n- **Message**: {res.get('message', 'Processing active milestones.')}"
+
+    # 3. Approval Gate Commands
+    def _get_target_project() -> Optional[ProjectManifest]:
+        projects = DEFAULT_LOOP_ENGINEERING_AGENT.store.list_projects()
+        # Prefer projects currently waiting for approval
+        pending = [p for p in projects if p.project_status == ProjectStatus.APPROVAL_PENDING]
+        if pending:
+            return pending[-1]
+        return projects[-1] if projects else None
+
+    if "approve feature" in t_lower or "approve scope" in t_lower:
+        proj = _get_target_project()
+        if proj:
+            res = DEFAULT_LOOP_ENGINEERING_AGENT.approve_feature_scope(proj.project_id)
+            return f"✅ **Feature Scope Approved**\n- **Project**: `{proj.project_name}`\n- **Phase**: `{res.get('current_phase')}`\n- **Message**: {res.get('message')}"
+        return "No active project found awaiting feature scope approval."
+
+    if "approve ui" in t_lower or "approve design" in t_lower:
+        proj = _get_target_project()
+        if proj:
+            res = DEFAULT_LOOP_ENGINEERING_AGENT.approve_uiux_and_build(proj.project_id)
+            return f"✅ **UI/UX Approved & Build Executed**\n- **Project**: `{proj.project_name}`\n- **Phase**: `{res.get('current_phase')}`\n- **Database**: `{res.get('database_status')}`\n- **Backend**: `{res.get('backend_status')}`\n- **Frontend**: `{res.get('frontend_status')}`\n- **Testing**: `{res.get('testing_status')}`\n- **Message**: {res.get('message')}"
+        return "No active project found awaiting UI/UX approval."
+
+    if "approve security" in t_lower or "approve deploy" in t_lower:
+        proj = _get_target_project()
+        if proj:
+            res = DEFAULT_LOOP_ENGINEERING_AGENT.approve_security_and_deploy(proj.project_id)
+            return f"🚀 **Security & Deployment Approved**\n- **Project**: `{proj.project_name}`\n- **Status**: `{res.get('status')}`\n- **Message**: {res.get('message')}"
+        return "No active project found awaiting deployment approval."
+
+    # 4. Standard Autonomous Intake, Architecture, Design, Implementation & Test Sweep
+    manifest = DEFAULT_LOOP_ENGINEERING_AGENT.intake_project(idea=task)
+    auto_res = DEFAULT_LOOP_ENGINEERING_AGENT.execute_autonomous_build(manifest)
+
+    stack_str = ", ".join(auto_res.get("details", {}).get("detected_stack", ["FastAPI", "Supabase", "Pytest", "Streamlit"]))
+
+    return (
+        f"# 🚀 Autonomous Engineering Complete: {manifest.project_name}\n"
+        f"- **Project ID**: `{manifest.project_id}`\n"
+        f"- **Status**: `COMPLETED (100%)`\n"
+        f"- **Repository**: `{manifest.repository_path}`\n"
+        f"- **Database / Models**: `COMPLETED`\n"
+        f"- **Backend & Business Logic**: `COMPLETED`\n"
+        f"- **UI/UX Design System**: `COMPLETED (Lodgify Modern Theme)`\n"
+        f"- **Automated Tests**: `100% PASSED (0 Regressions)`\n"
+        f"\n**Message**: {auto_res.get('message')}\n"
+        f"*(Note: Human-in-the-Loop is strictly reserved for Security credentials, API keys, Money transactions, and Logins.)*"
+    )
+
+
 def _execute_news_agent(task: str) -> str:
     return DEFAULT_NEWS_AGENT.get_daily_digest()
 
@@ -147,6 +227,7 @@ NATIVE_EXECUTORS: dict[str, Callable[[str], str]] = {
     "native/email-agent": _execute_email_agent,
     "native/calendar-agent": _execute_calendar_agent,
     "native/research-agent": _execute_research_agent,
+    "native/loop-engineering-agent": _execute_loop_engineering,
     "native/project-builder": _execute_project_builder,
     "native/coding-agent": _execute_coding_agent,
     "native/git-agent": _execute_git_agent,

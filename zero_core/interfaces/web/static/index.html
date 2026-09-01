@@ -3,117 +3,217 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ZERO — Personal AI Operating System</title>
+  <title>ZERO — Autonomous AI Operating System</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;800&family=Marcellus&family=Orbitron:wght@500;700;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css?v=20260829_16">
 </head>
-<body>
+<body class="jarvis-theme">
+  <!-- Scanline & Holographic Background Overlay -->
+  <div class="hud-scanlines"></div>
+  <div class="hud-grid-overlay"></div>
+
   <div class="app-layout">
-    <!-- Sidebar -->
+    <!-- Left Cyber Sidebar -->
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
         <div class="brand">
-          <span class="brand-logo">⚡</span>
+          <div class="arc-reactor">
+            <div class="arc-core"></div>
+            <div class="arc-ring"></div>
+          </div>
           <div class="brand-text">
             <span class="brand-name">ZERO</span>
-            <span class="brand-sub">AI Operating System</span>
+            <span class="brand-sub">AUTONOMOUS OS</span>
           </div>
         </div>
-        <div class="status-pill" title="Core systems online">
+        <div class="status-pill online" title="Core systems online">
           <span class="status-dot"></span>
-          <span class="status-label">Online</span>
+          <span class="status-label">ONLINE</span>
         </div>
       </div>
 
+      <!-- Quick Action Controls -->
       <div class="sidebar-section">
-        <div class="section-title">Quick Actions</div>
+        <div class="section-title"><span>//</span> SYSTEM CONTROLS</div>
         <div class="quick-nav">
           <button class="nav-item" onclick="sendPrompt('Give me my morning operational briefing')">
             <span class="nav-icon">🌅</span> Morning Briefing
           </button>
           <button class="nav-item" onclick="sendPrompt('What is my current trading bot status and last signal?')">
-            <span class="nav-icon">📈</span> Trading Status
-          </button>
-          <button class="nav-item" onclick="sendPrompt('Summarize my calendar schedule for today')">
-            <span class="nav-icon">📅</span> Today's Agenda
+            <span class="nav-icon">📈</span> Trading Bot Status
           </button>
           <button class="nav-item" onclick="sendPrompt('Check git working tree status and branch safety')">
-            <span class="nav-icon">🛡️</span> Git Tree Check
+            <span class="nav-icon">🛡️</span> Git Security Check
           </button>
-          <button class="nav-item" onclick="sendPrompt('Check system diagnostics and health')">
-            <span class="nav-icon">🩺</span> System Health
+          <button class="nav-item" onclick="triggerPatrol()">
+            <span class="nav-icon">⚡</span> Run Project Patrol
+          </button>
+          <button class="nav-item" onclick="sendPrompt('Summarize my calendar schedule for today')">
+            <span class="nav-icon">📅</span> Daily Agenda
+          </button>
+          <button class="nav-item" style="border-color: rgba(56, 189, 248, 0.4); color: #38bdf8; background: rgba(56, 189, 248, 0.1);" onclick="toggleSkillTree(true)">
+            <span class="nav-icon">🌳</span> Neural Skill Tree Map
           </button>
         </div>
       </div>
 
-      <div class="sidebar-section">
+      <!-- Live Specialist Roster -->
+      <div class="sidebar-section roster-section">
         <div class="section-header">
-          <span class="section-title">Specialist Roster</span>
-          <span class="agent-count-badge" id="agent-count">282</span>
+          <span class="section-title"><span>//</span> SPECIALIST ROSTER</span>
+          <span class="agent-count-badge" id="agent-count">284</span>
         </div>
         <div class="search-box">
-          <input type="text" id="agent-search" placeholder="Search agents..." oninput="filterAgents(this.value)">
+          <input type="text" id="agent-search" placeholder="Filter 284 specialists..." oninput="filterAgents(this.value)">
         </div>
         <div class="agent-roster" id="agent-roster">
-          <!-- Populated by JavaScript -->
-          <div class="roster-loading">Loading specialist agents...</div>
+          <div class="roster-loading">INITIALIZING NEURAL MESH...</div>
         </div>
       </div>
 
+      <!-- Telemetry Footer -->
       <div class="sidebar-footer">
         <div class="system-metric">
-          <span class="metric-label">Engine</span>
-          <span class="metric-val">LangGraph + Fallback</span>
+          <span class="metric-label">CORE ENGINE</span>
+          <span class="metric-val">LangGraph + RAG</span>
         </div>
         <div class="system-metric">
-          <span class="metric-label">Memory</span>
-          <span class="metric-val">Session + Vector RAG</span>
+          <span class="metric-label">HITL SECURITY</span>
+          <span class="metric-val text-cyan">ACTIVE GUARD</span>
         </div>
       </div>
     </aside>
 
-    <!-- Main Content Area -->
+    <!-- Main JARVIS Cockpit -->
     <main class="main-content">
+      <!-- Top HUD Control Bar -->
       <header class="topbar">
-        <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle Navigation">☰</button>
-        <div class="topbar-title">Command Center</div>
+        <div class="topbar-left">
+          <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle Navigation">☰</button>
+          <div class="topbar-title">COMMAND CENTER <span class="badge-hud">HUD v2.0</span></div>
+        </div>
+
+        <div class="hud-telemetry-bar">
+          <div class="hud-pill" id="patrol-pill" title="Project Patrol Status">
+            <span class="pill-dot"></span>
+            <span class="pill-text" id="patrol-pill-text">PATROL: ACTIVE</span>
+          </div>
+          <div class="hud-pill" id="hitl-pill" title="Pending Approvals">
+            <span class="pill-dot warning"></span>
+            <span class="pill-text" id="hitl-pill-text">HITL: 0 PENDING</span>
+          </div>
+          <button class="btn-sound" id="btn-sound" onclick="toggleSound()" title="Toggle HUD Sound FX">🔊 SFX ON</button>
+        </div>
+
         <div class="topbar-actions">
-          <a href="/docs" target="_blank" class="topbar-link">Swagger API Docs</a>
-          <button class="btn-clear" onclick="clearChat()">Clear History</button>
+          <button class="btn-hud-action" style="background:rgba(16,185,129,0.2); border:1px solid #10b981; color:#10b981; box-shadow:0 0 12px rgba(16,185,129,0.35);" onclick="toggleSkillTree(true)">🌳 SKILL TREE</button>
+          <button class="btn-hud-action" onclick="triggerPatrol()">⚡ PATROL ALL</button>
+          <a href="/docs" target="_blank" class="topbar-link">SWAGGER API</a>
+          <button class="btn-clear" onclick="clearChat()">RESET LOGS</button>
         </div>
       </header>
 
-      <div class="chat-container" id="chat-container">
-        <!-- Welcome Hero Card -->
-        <div class="welcome-card" id="welcome-card">
-          <div class="welcome-badge">PLATFORM v0.1.0</div>
-          <h1 class="welcome-title">Zero Personal Command Center</h1>
-          <p class="welcome-subtitle">
-            Autonomous multi-agent orchestration coordinating 13 native domain engines and 269 agency specialists.
-          </p>
-          <div class="suggestion-chips">
-            <button class="chip" onclick="sendPrompt('Give me my morning briefing')">
-              🌅 Daily Briefing
-            </button>
-            <button class="chip" onclick="sendPrompt('What is the trading bot status?')">
-              📊 Trading Bot Status
-            </button>
-            <button class="chip" onclick="sendPrompt('Build a project blueprint for AI Invoice Processing Bot')">
-              🏗️ Project Blueprint
-            </button>
-            <button class="chip" onclick="sendPrompt('Synthesize research on Vector Database indexing algorithms')">
-              🔬 Technical Research
-            </button>
-            <button class="chip" onclick="sendPrompt('Design a threat model for our REST API endpoints')">
-              🔒 Threat Modeling
-            </button>
+      <!-- Central Cockpit Grid -->
+      <div class="cockpit-grid">
+        <!-- Center Chat Stream -->
+        <div class="chat-container" id="chat-container">
+          <!-- Holographic Welcome Banner -->
+          <div class="welcome-card" id="welcome-card">
+            <div class="welcome-badge">AUTONOMOUS ORCHESTRATION</div>
+            <h1 class="welcome-title">ZERO COMMAND SYSTEM</h1>
+            <p class="welcome-subtitle">
+              Coordinating 15 native core engines and 269 deep-domain agency specialists with autonomous project patrol and Human-in-the-Loop protection.
+            </p>
+
+            <div class="suggestion-chips">
+              <button class="chip" onclick="sendPrompt('Give me my morning briefing')">
+                🌅 Daily Briefing
+              </button>
+              <button class="chip" onclick="sendPrompt('What is the trading bot status?')">
+                📊 Trading Bot Status
+              </button>
+              <button class="chip" onclick="sendPrompt('@Security Auditor: Scan all projects for credential leaks')">
+                🔒 Security Audit
+              </button>
+              <button class="chip" onclick="sendPrompt('@Autonomous Optimization Architect: Find slow functions and memory bloat')">
+                ⚡ Optimize Projects
+              </button>
+              <button class="chip" onclick="sendPrompt('@Proposal Strategist: Draft a $5k freelance pitch for 3D visualization')">
+                💼 Client Proposal
+              </button>
+              <button class="chip" style="border-color: #00f0ff; color: #00f0ff; background: rgba(0, 240, 255, 0.1);" onclick="toggleSkillTree(true)">
+                🌳 View Neural Skill Tree Map
+              </button>
+            </div>
           </div>
+
+          <!-- Live Chat Stream -->
+          <div class="messages-list" id="messages-list"></div>
         </div>
 
-        <!-- Chat Stream -->
-        <div class="messages-list" id="messages-list"></div>
+        <!-- Right-Hand Autonomous Telemetry & HITL Dock -->
+        <aside class="telemetry-dock" id="telemetry-dock">
+          <!-- HITL Approval Queue Card -->
+          <div class="hud-panel" id="hitl-panel">
+            <div class="panel-header">
+              <span class="panel-title">🛡️ PENDING APPROVALS</span>
+              <div style="display:flex; align-items:center; gap:4px;">
+                <button class="btn-panel-action" style="color:var(--emerald-neon); border-color:var(--emerald-neon);" onclick="decideAllApprovals('approve')" title="Approve All">✓ ALL</button>
+                <button class="btn-panel-action" style="color:var(--crimson-neon); border-color:var(--crimson-neon);" onclick="decideAllApprovals('reject')" title="Reject All">✕ ALL</button>
+                <span class="badge-count" id="pending-count">0</span>
+              </div>
+            </div>
+            <div class="panel-body" id="approval-queue-list">
+              <div class="empty-state">No pending approval requests. Systems operating safely.</div>
+            </div>
+          </div>
+
+          <!-- Project Patrol Status Card -->
+          <div class="hud-panel" id="patrol-panel">
+            <div class="panel-header">
+              <span class="panel-title">📡 PROJECT PATROL</span>
+              <button class="btn-panel-action" onclick="triggerPatrol()">SCAN NOW</button>
+            </div>
+            <div class="panel-body">
+              <div class="telemetry-stat">
+                <span class="stat-label">STATUS:</span>
+                <span class="stat-value text-cyan" id="patrol-status-val">READY</span>
+              </div>
+              <div class="telemetry-stat">
+                <span class="stat-label">PROJECTS GUARDED:</span>
+                <span class="stat-value" id="patrol-projects-count">-</span>
+              </div>
+              <div class="telemetry-stat">
+                <span class="stat-label">LAST AUDIT:</span>
+                <span class="stat-value" id="patrol-last-run">Just now</span>
+              </div>
+              <div class="projects-tag-list" id="projects-tag-list">
+                <!-- Injected by JS -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Active Neural Radar -->
+          <div class="hud-panel" id="radar-panel">
+            <div class="panel-header">
+              <span class="panel-title">🧠 NEURAL ACTIVITY</span>
+              <span class="status-dot pulsing"></span>
+            </div>
+            <div class="panel-body radar-container">
+              <div class="radar-sweep"></div>
+              <div class="radar-circle c1"></div>
+              <div class="radar-circle c2"></div>
+              <div class="radar-circle c3"></div>
+              <div class="radar-node n1 active" title="Trading Agent"></div>
+              <div class="radar-node n2" title="Patrol Worker"></div>
+              <div class="radar-node n3" title="Security Auditor"></div>
+              <div class="radar-node n4" title="Orchestrator"></div>
+              <div class="radar-status-text" id="radar-status">CORE AGENTS STANDBY</div>
+            </div>
+          </div>
+        </aside>
       </div>
 
       <!-- Input Area -->
@@ -122,22 +222,389 @@
           <textarea
             id="task-input"
             rows="1"
-            placeholder="Type a task, question, or query (e.g. 'check trading signals', 'build project for X')..."
+            placeholder="Instruct ZERO or assign task (e.g. '@Security Auditor: check code', 'run trading status')..."
             onkeydown="handleKeyDown(event)"
             oninput="autoResize(this)"
             required
           ></textarea>
-          <button type="submit" id="btn-send" class="btn-send" aria-label="Send Task">
-            <span>Send</span> ➔
+          <button type="submit" id="btn-send" class="btn-send" aria-label="Dispatch Task">
+            <span>DISPATCH</span> ➔
           </button>
         </form>
         <div class="input-hint">
-          <span>Press <strong>Enter</strong> to dispatch task</span> • <span><strong>Shift + Enter</strong> for newline</span>
+          <span>Press <strong>Enter</strong> to dispatch</span> • <span><strong>Shift + Enter</strong> for newline</span> • <span>Target specialists using <strong>@Agent Name</strong></span>
         </div>
       </div>
     </main>
+  <!-- Altari-Grade Cybernetic Skill Tree, 3D Dashboards & Chart Modal -->
+  <div class="skill-tree-modal" id="skill-tree-modal">
+    <!-- Top Navigation Bar -->
+    <header class="st-top-nav">
+      <div class="st-brand">
+        <div class="st-brand-logo">
+          <span style="font-size:14px;">🧠</span>
+        </div>
+        <div class="st-brand-text">ZERO NEURAL WORKFORCE</div>
+      </div>
+
+      <!-- Center Tabs Switcher: [ MAP ] [ DASHBOARDS ] [ CHART ] -->
+      <div class="st-view-switcher">
+        <button class="st-tab-btn active" id="tab-btn-map" onclick="switchNeuralTab('map')">MAP</button>
+        <button class="st-tab-btn" id="tab-btn-dashboards" onclick="switchNeuralTab('dashboards')">DASHBOARDS</button>
+        <button class="st-tab-btn" id="tab-btn-chart" onclick="switchNeuralTab('chart')">CHART</button>
+      </div>
+
+      <div class="st-top-right">
+        <div style="position: relative;">
+          <input type="text" class="st-search-input" id="st-search-input" placeholder="Search 284 agents & jobs..." oninput="searchNeuralSkills(this.value)" autocomplete="off">
+          <div class="st-search-results" id="st-search-results"></div>
+        </div>
+        <button class="btn-close-st" onclick="toggleSkillTree(false)">✕ CLOSE (ESC)</button>
+      </div>
+    </header>
+
+    <!-- VIEW 1: [ MAP ] ANIMATED NEURAL BRAIN CONSTELLATION -->
+    <div class="st-view-container active" id="st-map-view">
+      <canvas id="st-brain-canvas"></canvas>
+
+      <!-- Slide-Out Actionable Dossier Drawer (Exact Altari SkillTree Match) -->
+      <aside class="st-dossier-drawer" id="st-dossier-drawer">
+        <div class="dossier-back-btn" onclick="closeDossier()">← ALL DEPARTMENTS</div>
+
+        <div class="dossier-top">
+          <span class="dossier-badge" id="dossier-status-badge">FULLY AUTONOMOUS</span>
+          <button class="btn-close-dossier" onclick="closeDossier()">✕</button>
+        </div>
+
+        <div>
+          <h2 class="dossier-title" id="dossier-title">Social Mining</h2>
+          <div class="dossier-dept" id="dossier-dept">Sales · Lead Sourcing · 4 Jobs</div>
+        </div>
+
+        <p class="dossier-desc" id="dossier-desc">
+          Harvest engaged audiences — post commenters, followers, and active ICP profiles across social networks.
+        </p>
+
+        <!-- 1 Runnable Skill File Banner -->
+        <div class="dossier-skill-banner">
+          <div class="dossier-skill-left">
+            <span class="dossier-skill-icon">📥</span>
+            <span><strong>1 runnable skill file</strong> ships with this job</span>
+          </div>
+          <button class="dossier-skill-preview-btn" onclick="previewSkillManifest()">🔒 Preview</button>
+        </div>
+
+        <!-- Breaks Into -->
+        <div>
+          <div class="ladder-header" style="margin-bottom:6px;">BREAKS INTO</div>
+          <div class="dossier-tag-row" id="dossier-tags">
+            <span class="dossier-tag">comment-harvester</span>
+            <span class="dossier-tag">engagement-miner</span>
+            <span class="dossier-tag">profile-collector</span>
+          </div>
+        </div>
+
+        <!-- Wired Into -->
+        <div>
+          <div class="ladder-header" style="margin-bottom:6px;">WIRED INTO</div>
+          <div class="dossier-tag-row" id="dossier-tools">
+            <span class="dossier-tag">Apollo</span>
+            <span class="dossier-tag">HeyReach</span>
+            <span class="dossier-tag">LinkedIn API</span>
+          </div>
+        </div>
+
+        <!-- Your Status Segmented Control -->
+        <div>
+          <div class="ladder-header" style="margin-bottom:6px;">YOUR STATUS</div>
+          <div class="status-segmented-control">
+            <button class="status-seg-btn" id="seg-not-started" onclick="setSkillStatus('NOT STARTED')">NOT STARTED</button>
+            <button class="status-seg-btn" id="seg-in-dev" onclick="setSkillStatus('IN DEVELOPMENT')">IN DEVELOPMENT</button>
+            <button class="status-seg-btn active" id="seg-live" onclick="setSkillStatus('LIVE')">LIVE</button>
+          </div>
+        </div>
+
+        <!-- Your Notes -->
+        <div>
+          <div class="ladder-header" style="margin-bottom:6px;">YOUR NOTES</div>
+          <textarea class="dossier-notes-input" id="dossier-notes-input" placeholder="Your prompt, your tools, how you set this up — saved to your tree."></textarea>
+        </div>
+
+        <!-- Builds On -->
+        <div>
+          <div class="ladder-header" style="margin-bottom:6px;">BUILDS ON</div>
+          <div class="dossier-tag-row" id="dossier-builds-on">
+            <span class="dossier-tag">ICP Definition</span>
+          </div>
+        </div>
+
+        <!-- What It Replaces -->
+        <div>
+          <div class="ladder-header" style="margin-bottom:6px;">WHAT IT REPLACES</div>
+          <div class="dossier-replaces-box" id="dossier-replaces">
+            The list nobody builds by hand: everyone who engaged with a competitor's post is a warm prospect, but scraping them manually takes hours per post.
+          </div>
+        </div>
+
+        <!-- The Ladder Progression -->
+        <div class="ladder-box">
+          <div class="ladder-header">THE LADDER</div>
+          <div class="ladder-step">
+            <div class="ladder-step-name">HUMAN-LED</div>
+            <div class="ladder-step-desc" id="ladder-human-led">You screenshot commenters and look them up one by one.</div>
+          </div>
+          <div class="ladder-step">
+            <div class="ladder-step-name">HUMAN-ASSISTED</div>
+            <div class="ladder-step-desc" id="ladder-human-assisted">Point the agent at a post or profile; it harvests engagers, enriches, scores against ICP, and drafts the first DM.</div>
+          </div>
+          <div class="ladder-step active">
+            <div class="ladder-step-name">FULLY AUTONOMOUS (ZERO ACTIVE)</div>
+            <div class="ladder-step-desc" id="ladder-autonomous">Watched accounts and keywords feed a standing warm-prospect pool, refreshed continuously.</div>
+          </div>
+        </div>
+
+        <!-- The Human -->
+        <div>
+          <div class="ladder-header" style="margin-bottom:6px;">THE HUMAN</div>
+          <div class="dossier-human-box" id="dossier-human">
+            AI owns the work. A human audits outputs on a cadence and owns the strategy it executes · directing, not doing.
+          </div>
+        </div>
+
+        <!-- Build Notes -->
+        <div>
+          <div class="ladder-header" style="margin-bottom:6px;">BUILD NOTES</div>
+          <div class="dossier-build-notes-box" id="dossier-build-notes">
+            Highest-intent cold list you can build · these people already raised their hand on the topic. The skill below scrapes engagers, enriches profiles, ICP-scores, and writes openers in one pass.
+          </div>
+        </div>
+
+        <!-- Department-Specific Actionable Triggers -->
+        <div class="dossier-actions" id="dossier-actions">
+          <button class="btn-dossier-action primary" id="btn-primary-action" onclick="executeDossierAction('primary')">
+            <span id="txt-primary-action">🎯 Harvest Leads Now</span> ➔
+          </button>
+          <button class="btn-dossier-action" id="btn-secondary-action" onclick="executeDossierAction('secondary')">
+            <span id="txt-secondary-action">✉️ Draft Personalized DM</span> ➔
+          </button>
+          <button class="btn-dossier-action" id="btn-tertiary-action" onclick="executeDossierAction('tertiary')">
+            <span id="txt-tertiary-action">🔍 Run ICP Score</span> ➔
+          </button>
+        </div>
+
+        <!-- Live Streaming Output Feed -->
+        <div class="dossier-output-feed" id="dossier-output-feed"></div>
+      </aside>
+
+      <!-- Altari Bottom-Right Zoom & Fit Controls -->
+      <div class="st-zoom-controls">
+        <button class="btn-st-zoom" title="Help">?</button>
+        <button class="btn-st-zoom" onclick="zoomCanvas(-0.15)">−</button>
+        <span class="st-zoom-val" id="st-zoom-val">100%</span>
+        <button class="btn-st-zoom" onclick="zoomCanvas(0.15)">+</button>
+        <button class="btn-st-zoom btn-st-fit" onclick="resetCanvasZoom()">Fit</button>
+      </div>
+    </div>
+
+    <!-- VIEW 2: [ DASHBOARDS ] 3D COVERFLOW COMMAND CENTERS -->
+    <div class="st-view-container" id="st-dashboards-view">
+      <div class="cf-header">
+        <div class="cf-subtitle">THE OUTPUT LAYER</div>
+        <h1 class="cf-title">Command Centers</h1>
+        <div style="font-size:0.85rem; color:#94a3b8; margin-top:2px;">What each department looks like when the work runs itself</div>
+      </div>
+
+      <div class="cf-deck" id="cf-deck">
+        <!-- Card 1: Meta Ads & Paid Acquisition -->
+        <div class="cf-card" data-index="0" onclick="selectCoverflowCard(0)">
+          <div class="cf-card-header">
+            <div class="cf-card-title"><span>📢</span> META ADS · PAID ACQUISITION</div>
+            <span class="dossier-badge" style="color:#38bdf8; border-color:#38bdf8;">LIVE FEED</span>
+          </div>
+          <div class="cf-kpi-grid">
+            <div class="cf-kpi-box"><div class="cf-kpi-label">30d Spend</div><div class="cf-kpi-val">$31,587</div></div>
+            <div class="cf-kpi-box"><div class="cf-kpi-label">Leads</div><div class="cf-kpi-val">1,049</div></div>
+            <div class="cf-kpi-box"><div class="cf-kpi-label">Cost/Lead</div><div class="cf-kpi-val">$30.12</div></div>
+            <div class="cf-kpi-box"><div class="cf-kpi-label">CTR</div><div class="cf-kpi-val">0.94%</div></div>
+            <div class="cf-kpi-box"><div class="cf-kpi-label">Freq</div><div class="cf-kpi-val">1.93</div></div>
+          </div>
+          <div class="cf-chart-area">
+            <div class="cf-bar-row"><div class="cf-bar-label">Instagram Feed</div><div class="cf-bar-track"><div class="cf-bar-fill" style="width:72%;"></div></div><div>$14.2k</div></div>
+            <div class="cf-bar-row"><div class="cf-bar-label">IG Stories/Reels</div><div class="cf-bar-track"><div class="cf-bar-fill" style="width:58%;"></div></div><div>$9.8k</div></div>
+            <div class="cf-bar-row"><div class="cf-bar-label">FB Mobile Feed</div><div class="cf-bar-track"><div class="cf-bar-fill" style="width:42%;"></div></div><div>$5.4k</div></div>
+          </div>
+          <div class="cf-card-footer">
+            <span>Signals: Fatigue frequency at 2.3 on Video A • Reallocation recommended</span>
+            <div style="display:flex; gap:6px; align-items:center;">
+              <button class="btn-dossier-action" style="padding:4px 10px; font-size:0.7rem;" onclick="event.stopPropagation(); executeCustomPrompt('@Marketing Agent: Audit Meta Ads creative fatigue and generate 3 fresh video angles')">⚡ Optimize Ads</button>
+              <button class="btn-dossier-action cf-open-page-btn" onclick="event.stopPropagation(); navigateToDashboardPage(0)">🚀 Open Portal ↗</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: HubSpot Sales Pipeline -->
+        <div class="cf-card" data-index="1" onclick="selectCoverflowCard(1)">
+          <div class="cf-card-header">
+            <div class="cf-card-title"><span>💼</span> HUBSPOT · SALES PIPELINE</div>
+            <span class="dossier-badge" style="color:#10b981; border-color:#10b981;">SYNCED</span>
+          </div>
+          <div class="cf-kpi-grid">
+            <div class="cf-kpi-box"><div class="cf-kpi-label">Open Pipeline</div><div class="cf-kpi-val">$277,500</div></div>
+            <div class="cf-kpi-box"><div class="cf-kpi-label">Weighted</div><div class="cf-kpi-val">$175,900</div></div>
+            <div class="cf-kpi-box"><div class="cf-kpi-label">Won This Qtr</div><div class="cf-kpi-val">$86,500</div></div>
+            <div class="cf-kpi-box"><div class="cf-kpi-label">Win Rate</div><div class="cf-kpi-val">27%</div></div>
+            <div class="cf-kpi-box"><div class="cf-kpi-label">Avg Cycle</div><div class="cf-kpi-val">47d</div></div>
+          </div>
+          <div class="cf-chart-area">
+            <div class="cf-bar-row"><div class="cf-bar-label">Contract Sent</div><div class="cf-bar-track"><div class="cf-bar-fill" style="width:85%; background:#10b981;"></div></div><div>$92k</div></div>
+            <div class="cf-bar-row"><div class="cf-bar-label">Presentation</div><div class="cf-bar-track"><div class="cf-bar-fill" style="width:64%; background:#fbbf24;"></div></div><div>$68k</div></div>
+            <div class="cf-bar-row"><div class="cf-bar-label">Qualified To Buy</div><div class="cf-bar-track"><div class="cf-bar-fill" style="width:48%;"></div></div><div>$54k</div></div>
+          </div>
+          <div class="cf-card-footer">
+            <span>Open Deals: 14 active • 3 deals stalled > 14 days • AI follow-ups queued</span>
+            <div style="display:flex; gap:6px; align-items:center;">
+              <button class="btn-dossier-action" style="padding:4px 10px; font-size:0.7rem;" onclick="event.stopPropagation(); executeCustomPrompt('@Proposal Strategist: Draft customized follow-up proposals for all stalled sales deals')">⚡ Nudge Deals</button>
+              <button class="btn-dossier-action cf-open-page-btn" onclick="event.stopPropagation(); navigateToDashboardPage(1)">🚀 Open Pipeline ↗</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3: Quant Trading Terminal (MT5 SMC) -->
+        <div class="cf-card" data-index="2" onclick="selectCoverflowCard(2)">
+          <div class="cf-card-header">
+            <div class="cf-card-title"><span>📈</span> QUANT TRADING TERMINAL · MT5 SMC</div>
+            <span class="dossier-badge" style="color:#38bdf8; border-color:#38bdf8;">ACTIVE M5</span>
+          </div>
+          <div class="cf-kpi-grid">
+            <div class="cf-kpi-box"><div class="cf-kpi-label">Setup Score</div><div class="cf-kpi-val">4 / 5</div></div>
+            <div class="cf-kpi-box"><div class="cf-kpi-label">Daily Guard</div><div class="cf-kpi-val">$30.00</div></div>
+            <div class="cf-kpi-box"><div class="cf-kpi-label">Win Rate</div><div class="cf-kpi-val">68.4%</div></div>
+            <div class="cf-kpi-box"><div class="cf-kpi-label">Trailing Stop</div><div class="cf-kpi-val">BE+0.50R</div></div>
+            <div class="cf-kpi-box"><div class="cf-kpi-label">Engine</div><div class="cf-kpi-val">Paper Live</div></div>
+          </div>
+          <div class="cf-chart-area">
+            <div class="cf-bar-row"><div class="cf-bar-label">Liquidity Sweeps</div><div class="cf-bar-track"><div class="cf-bar-fill" style="width:90%; background:#38bdf8;"></div></div><div>CONFIRMED</div></div>
+            <div class="cf-bar-row"><div class="cf-bar-label">Bullish MSS</div><div class="cf-bar-track"><div class="cf-bar-fill" style="width:100%; background:#10b981;"></div></div><div>LOCKED</div></div>
+            <div class="cf-bar-row"><div class="cf-bar-label">FVG Retest</div><div class="cf-bar-track"><div class="cf-bar-fill" style="width:75%; background:#c084fc;"></div></div><div>VALIDATED</div></div>
+          </div>
+          <div class="cf-card-footer">
+            <span>Circuit Breaker: Active • Max 3 trades/day • Zero overnight slippage</span>
+            <div style="display:flex; gap:6px; align-items:center;">
+              <button class="btn-dossier-action" style="padding:4px 10px; font-size:0.7rem;" onclick="event.stopPropagation(); executeCustomPrompt('@Trading Agent: Summarize current setup score, open positions, and trailing stop levels')">⚡ Trading Audit</button>
+              <button class="btn-dossier-action cf-open-page-btn" onclick="event.stopPropagation(); navigateToDashboardPage(2)">🚀 Live Signals ↗</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 4: HR Recruitment Assistant ATS -->
+        <div class="cf-card" data-index="3" onclick="selectCoverflowCard(3)">
+          <div class="cf-card-header">
+            <div class="cf-card-title"><span>🧠</span> HR RECRUITMENT ASSISTANT · ATS</div>
+            <span class="dossier-badge" style="color:#c084fc; border-color:#c084fc;">STREAMLIT 8501</span>
+          </div>
+          <div class="cf-kpi-grid">
+            <div class="cf-kpi-box"><div class="cf-kpi-label">Open Roles</div><div class="cf-kpi-val">6</div></div>
+            <div class="cf-kpi-box"><div class="cf-kpi-label">Candidates</div><div class="cf-kpi-val">142</div></div>
+            <div class="cf-kpi-box"><div class="cf-kpi-label">RAG Match</div><div class="cf-kpi-val">91.2%</div></div>
+            <div class="cf-kpi-box"><div class="cf-kpi-label">Interviews</div><div class="cf-kpi-val">18</div></div>
+            <div class="cf-kpi-box"><div class="cf-kpi-label">Blind Mode</div><div class="cf-kpi-val">ENABLED</div></div>
+          </div>
+          <div class="cf-chart-area">
+            <div class="cf-bar-row"><div class="cf-bar-label">Public Careers</div><div class="cf-bar-track"><div class="cf-bar-fill" style="width:80%; background:#c084fc;"></div></div><div>Active</div></div>
+            <div class="cf-bar-row"><div class="cf-bar-label">Self-Booking</div><div class="cf-bar-track"><div class="cf-bar-fill" style="width:65%; background:#10b981;"></div></div><div>Synced</div></div>
+            <div class="cf-bar-row"><div class="cf-bar-label">Offer Generator</div><div class="cf-bar-track"><div class="cf-bar-fill" style="width:90%; background:#38bdf8;"></div></div><div>E-Sign Ready</div></div>
+          </div>
+          <div class="cf-card-footer">
+            <span>GDPR Compliance: 1-Click PII Purge active • Candidate Anonymizer ready</span>
+            <div style="display:flex; gap:6px; align-items:center;">
+              <button class="btn-dossier-action" style="padding:4px 10px; font-size:0.7rem;" onclick="event.stopPropagation(); executeCustomPrompt('@AI Recruiter: Score top 5 candidate matches for Senior Full-Stack Engineer')">⚡ Match Candidates</button>
+              <button class="btn-dossier-action cf-open-page-btn" onclick="event.stopPropagation(); navigateToDashboardPage(3)">🚀 Open Careers ↗</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Controls & Drag Hint -->
+      <div class="cf-controls">
+        <button class="cf-arrow" onclick="rotateCoverflow(-1)">‹</button>
+        <button class="cf-arrow" onclick="rotateCoverflow(1)">›</button>
+      </div>
+      <div class="cf-hint">DRAG TO SPIN · CLICK FRONT CARD TO INTERACT</div>
+    </div>
+
+    <!-- VIEW 3: [ CHART ] FULL WORKFORCE TAXONOMY & ROLLOUT MATRIX -->
+    <div class="st-view-container" id="st-chart-view">
+      <!-- Department Sub-Tabs (Altari Style) -->
+      <div class="chart-dept-subtabs">
+        <button class="chart-subtab-btn active" onclick="switchChartDept('sales')">Sales</button>
+        <button class="chart-subtab-btn" onclick="switchChartDept('deals')">Deals</button>
+        <button class="chart-subtab-btn" onclick="switchChartDept('marketing')">Marketing</button>
+        <button class="chart-subtab-btn" onclick="switchChartDept('operations')">Operations</button>
+        <button class="chart-subtab-btn" onclick="switchChartDept('intelligence')">Intelligence</button>
+        <button class="chart-subtab-btn" onclick="switchChartDept('customer')">Customer</button>
+        <button class="chart-subtab-btn" onclick="switchChartDept('back_office')">Back Office</button>
+      </div>
+
+      <!-- Real Agent Dynamic Feature Bar for Selected Department -->
+      <div class="chart-action-bar" id="chart-action-bar"></div>
+
+      <!-- Rollout Meta & Legend -->
+      <div class="chart-rollout-meta">
+        <div class="chart-meta-left">
+          <h2 class="chart-rollout-title" id="chart-rollout-title">Sales · the AI rollout</h2>
+          <div class="chart-rollout-subtitle" id="chart-rollout-subtitle">
+            <span class="highlight-cyan">19 of 22 jobs</span> run autonomously · <span class="highlight-orange">3 assisted</span> · the rest stay human.
+          </div>
+        </div>
+
+        <div class="chart-legend-bar">
+          <div class="legend-pill"><span class="legend-dot human-led"></span> Human-led</div>
+          <div class="legend-pill"><span class="legend-dot human-assisted"></span> Human-assisted</div>
+          <div class="legend-pill"><span class="legend-dot autonomous"></span> Fully autonomous</div>
+        </div>
+      </div>
+
+      <!-- 4 Stages Header Row -->
+      <div class="chart-stages-header">
+        <div class="chart-row-label-header">ROLLOUT ORDER<br><small>first ➔ last</small></div>
+        <div class="stage-col-header">
+          <span class="stage-num">1</span>
+          <div>
+            <div class="stage-name">Foundation</div>
+            <div class="stage-desc">Data + the company brain</div>
+          </div>
+        </div>
+        <div class="stage-col-header">
+          <span class="stage-num">2</span>
+          <div>
+            <div class="stage-name">Capture</div>
+            <div class="stage-desc">Classify, extract, score</div>
+          </div>
+        </div>
+        <div class="stage-col-header">
+          <span class="stage-num">3</span>
+          <div>
+            <div class="stage-name">Generate</div>
+            <div class="stage-desc">Produce work, take action</div>
+          </div>
+        </div>
+        <div class="stage-col-header">
+          <span class="stage-num">4</span>
+          <div>
+            <div class="stage-name">Orchestrate</div>
+            <div class="stage-desc">Agents, monitoring, loops</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dynamic Matrix Rows Rendered by app.js -->
+      <div class="chart-matrix-body" id="chart-matrix-body">
+        <!-- Rendered dynamically by app.js -->
+      </div>
+    </div>
   </div>
 
-  <script src="/static/app.js"></script>
+  <script src="/static/app.js?v=20260829_16"></script>
 </body>
 </html>
+

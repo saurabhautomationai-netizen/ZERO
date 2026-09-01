@@ -256,25 +256,23 @@ class AgentRegistry:
         return self._native.get(slug) or self.agency.get(slug)
 
     def resolve(self, task: str, top_k: int = 3) -> RegistryMatch:
-        """Native agents get first refusal (ZERO owns its own domains);
-        Agency-agents fills any remaining slots, ranked by relevance.
+        """Explicit @agent mentions get top absolute priority, followed by native
+        agents for domain keywords, and Agency-agents specialists for deep tasks."""
+        clean_task = task.strip(" \"'")
+        # 1. Direct explicit mention check (@Agent Name: or @slug: or @A, @B, and @C:)
+        mention_match = re.match(r"^@([^:]+?):", clean_task)
+        if mention_match:
+            raw_str = mention_match.group(1)
+            targets = [t.strip().lstrip("@").strip().lower() for t in re.split(r"[,&]|\band\b", raw_str) if t.strip()]
+            for target in targets:
+                for spec in list(self._native.values()) + list(self.agency.index()):
+                    if (
+                        spec.name.lower() == target
+                        or spec.slug.lower() == target
+                        or spec.slug.split("/")[-1].lower() == target.replace(" ", "-")
+                    ):
+                        return RegistryMatch(task=clean_task, candidates=[spec])
 
-        Native matching stays plain substring on curated keyword phrases
-        (e.g. "subscription") — those lists are short and hand-picked, so
-        substring is fine and needed to catch plurals ("subscriptions").
-
-        Agency matching is exact-token overlap, not substring: task words
-        are compared against the whole-word vocabulary of each spec's
-        name/description/when_to_use/division, then specs are ranked by
-        how many distinct task words they match. This exists specifically
-        because plain substring search picked "Anthropologist" for a
-        "design a threat model" task — its when_to_use text contains
-        "Designing culturally coherent societies", and "design" is a
-        substring of "designing". Token matching doesn't have that failure
-        mode. It also doesn't stem ("issues" won't match "issue") — that's
-        a deliberate Phase 1 trade-off, not an oversight; proper stemming/
-        embeddings is Memory/RAG's job in a later phase, not this router's.
-        """
         task_lower = task.lower()
         native_candidates: list[tuple[int, int, AgentSpec]] = []
 

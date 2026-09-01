@@ -1,25 +1,7 @@
-"""Read-only Trading bot status adapter — Phase 1.5.
+"""Read-only Trading bot status adapter.
 
-Scope, as confirmed: reads trade_state.json / trade_state_buy.json /
-trade_state_sell.json / last_signal_time.txt only. Nothing else.
-
-Important finding from actually inspecting these files before writing this
-(worth stating plainly rather than assuming): they hold *signal-detection*
-state — last candle processed, an `active_buy_trade` flag, and pending
-SMC-pattern memory (sweep/MSS/retest-zone/displacement) — not a position
-ledger. There is no entry price, lot size, stop/target, or live P&L in any
-of these four files. `synced_deals.json` (checked too) is just a list of
-already-synced MT5 deal IDs, not position data either. Real-time position
-detail almost certainly requires a live MT5 query via mt5_bridge.py — a
-separate, bigger scope decision (this adapter deliberately does NOT import
-mt5_bridge, mt5_executor, or anything execution-capable). If you want that
-later, treat it as its own reviewed change, not a quiet addition here.
-
-Field names on BotStateSnapshot intentionally mirror the raw JSON keys
-rather than being renamed into new terminology — this adapter doesn't have
-enough context on your SMC strategy internals (structure_engine.py,
-entry_engine.py, etc.) to safely reinterpret field meaning. `raw` carries
-the full parsed JSON for anything not explicitly modeled.
+Reads trade_state.json / trade_state_buy.json / trade_state_sell.json / last_signal_time.txt.
+Maintains pure file-based read-only architecture without importing MT5.
 """
 
 from __future__ import annotations
@@ -82,11 +64,6 @@ class TradingStatus:
 
 
 class TradingStatusAdapter:
-    """Read-only. Imports nothing from the Trading bot codebase itself —
-    only reads its state files off disk. Never imports mt5_bridge,
-    mt5_executor, or anything execution-capable.
-    """
-
     def __init__(self, root: Path = config.SIBLING_PROJECTS["trading_bot"]):
         self.root = Path(root)
 
@@ -138,9 +115,3 @@ class TradingStatusAdapter:
             last_signal_time=last_signal_time,
             last_demo_signal_id=last_demo_signal_id,
         )
-
-
-if __name__ == "__main__":
-    # Manual check: python -m zero_core.trading_status
-    status = TradingStatusAdapter().get_status()
-    print(status.summary())

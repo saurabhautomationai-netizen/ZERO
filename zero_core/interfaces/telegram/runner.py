@@ -94,6 +94,21 @@ class TelegramBotRunner:
         )
         return bool(res and res.get("ok"))
 
+    def download_file(self, file_id: str) -> Optional[bytes]:
+        """Downloads a file (such as a voice note) from Telegram servers."""
+        res = self._api_call("getFile", {"file_id": file_id})
+        if not res or not res.get("ok"):
+            return None
+        file_path = res.get("result", {}).get("file_path")
+        if not file_path:
+            return None
+        file_url = f"https://api.telegram.org/file/bot{self.token}/{file_path}"
+        try:
+            with urllib.request.urlopen(file_url, timeout=30) as resp:
+                return resp.read()
+        except Exception:
+            return None
+
     def answer_callback_query(self, callback_query_id: str, text: str = "") -> bool:
         """Acknowledges a button callback in Telegram."""
         res = self._api_call(
@@ -149,6 +164,20 @@ class TelegramBotRunner:
 
                 if self.allowed_user_ids and from_id not in self.allowed_user_ids:
                     self.send_message(chat_id, "⛔ *Unauthorized*: Your Telegram User ID is not on the ZERO access whitelist.")
+                    continue
+
+                # Process Voice Note / Audio
+                if "voice" in msg or "audio" in msg:
+                    voice_obj = msg.get("voice") or msg.get("audio", {})
+                    file_id = voice_obj.get("file_id")
+                    if file_id:
+                        self.send_message(chat_id, "🎙️ _Processing your voice message..._")
+                        audio_data = self.download_file(file_id)
+                        if audio_data:
+                            reply = self.handler.handle_voice_note(audio_bytes=audio_data, audio_format="ogg", user_id=from_id)
+                            self.send_message(chat_id, reply)
+                        else:
+                            self.send_message(chat_id, "❌ Could not download voice message from Telegram.")
                     continue
 
                 if text:

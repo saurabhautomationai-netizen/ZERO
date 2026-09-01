@@ -1,0 +1,433 @@
+{
+  "checkpoint_id": "ckpt_ef267abbd4",
+  "project_id": "proj_hr_recruitment_ai_assistant",
+  "phase": "COMPLETED",
+  "milestone": "M4_FRONTEND_UI",
+  "description": "Autonomous Engineering Sweep Completed (100% Verified)",
+  "timestamp": "2026-08-23T22:15:31.334571+00:00",
+  "manifest_snapshot": {
+    "project_id": "proj_hr_recruitment_ai_assistant",
+    "project_name": "HR Recruitment AI Assistant",
+    "project_type": "EXISTING_PROJECT",
+    "description": "ZERO, improve my existing HR Recruitment AI Assistant",
+    "repository_path": "F:\\AI Automation\\Projects\\HR Recruitment Assistant\\Dashboard\\ai-recruitment-dashboard",
+    "repository_url": null,
+    "project_status": "COMPLETED",
+    "current_phase": "COMPLETED",
+    "current_milestone": "M4_FRONTEND_UI",
+    "current_task": null,
+    "overall_progress": 100,
+    "feature_scope": {
+      "must_have": [
+        "Bi-directional webhook synchronization with Autonomous Talent Lead Gen Agent (port 8005)",
+        "AI-powered dynamic candidate interview question generator based on resume ATS score",
+        "Automated candidate ranking scorecard & structured evaluation rubrics in Supabase",
+        "Robust error handling & offline fallback for recruitment pipeline operations",
+        "Comprehensive automated integration tests for candidate ingest & stage progression"
+      ],
+      "should_have": [
+        "Real-time Kanban stage transition triggers & candidate drawer UI enhancements",
+        "Structured communication audit logging for candidate outreach",
+        "Role-based access control (RBAC) for recruiters vs hiring managers"
+      ],
+      "nice_to_have": [
+        "Instant WhatsApp / Telegram interview schedule alerts to candidates",
+        "Predictive candidate offer acceptance probability scoring",
+        "One-click containerized deployment setup (Docker / Cloud Run)"
+      ],
+      "future": [
+        "Multi-tenant SaaS subscription billing",
+        "Advanced recruitment analytics export"
+      ]
+    },
+    "approved_features": [
+      "Bi-directional webhook synchronization with Autonomous Talent Lead Gen Agent (port 8005)",
+      "AI-powered dynamic candidate interview question generator based on resume ATS score",
+      "Automated candidate ranking scorecard & structured evaluation rubrics in Supabase",
+      "Robust error handling & offline fallback for recruitment pipeline operations",
+      "Comprehensive automated integration tests for candidate ingest & stage progression",
+      "Real-time Kanban stage transition triggers & candidate drawer UI enhancements",
+      "Structured communication audit logging for candidate outreach",
+      "Role-based access control (RBAC) for recruiters vs hiring managers"
+    ],
+    "rejected_features": [],
+    "pending_features": [
+      "Bi-directional webhook synchronization with Autonomous Talent Lead Gen Agent (port 8005)",
+      "AI-powered dynamic candidate interview question generator based on resume ATS score",
+      "Automated candidate ranking scorecard & structured evaluation rubrics in Supabase",
+      "Robust error handling & offline fallback for recruitment pipeline operations",
+      "Comprehensive automated integration tests for candidate ingest & stage progression",
+      "Real-time Kanban stage transition triggers & candidate drawer UI enhancements",
+      "Structured communication audit logging for candidate outreach",
+      "Role-based access control (RBAC) for recruiters vs hiring managers",
+      "Instant WhatsApp / Telegram interview schedule alerts to candidates",
+      "Predictive candidate offer acceptance probability scoring",
+      "One-click containerized deployment setup (Docker / Cloud Run)"
+    ],
+    "requirements_status": "COMPLETED",
+    "architecture_status": "COMPLETED",
+    "uiux_status": "COMPLETED",
+    "implementation_status": "PENDING",
+    "database_status": "COMPLETED",
+    "backend_status": "COMPLETED",
+    "frontend_status": "COMPLETED",
+    "agent_status": "COMPLETED",
+    "tool_status": "COMPLETED",
+    "integration_status": "PENDING",
+    "testing_status": "COMPLETED",
+    "security_status": "COMPLETED",
+    "credential_status": "PENDING",
+    "deployment_status": "COMPLETED",
+    "documentation_status": "COMPLETED",
+    "approval_history": [
+      {
+        "gate": "GATE_1_FEATURE_SCOPE",
+        "approver": "user",
+        "status": "APPROVED",
+        "notes": "Approved 8 core features.",
+        "phase": "PHASE_1_DISCOVERY",
+        "timestamp": "2026-08-23T16:08:18.351576+00:00"
+      },
+      {
+        "gate": "GATE_2_UIUX",
+        "approver": "user",
+        "status": "APPROVED",
+        "notes": "Approved UI/UX design specifications.",
+        "phase": "PHASE_5_UIUX",
+        "timestamp": "2026-08-23T16:08:18.539842+00:00"
+      },
+      {
+        "gate": "GATE_3_SECURITY",
+        "approver": "user",
+        "status": "APPROVED",
+        "notes": "Security audit and least-privilege permissions approved.",
+        "phase": "PHASE_14_SECURITY",
+        "timestamp": "2026-08-23T16:08:18.557968+00:00"
+      },
+      {
+        "gate": "GATE_2_UIUX",
+        "approver": "user",
+        "status": "APPROVED",
+        "notes": "Approved UI/UX design specifications.",
+        "phase": "PHASE_1_DISCOVERY",
+        "timestamp": "2026-08-23T17:19:39.697194+00:00"
+      },
+      {
+        "gate": "GATE_3_SECURITY",
+        "approver": "user",
+        "status": "APPROVED",
+        "notes": "Security audit and least-privilege permissions approved.",
+        "phase": "PHASE_14_SECURITY",
+        "timestamp": "2026-08-23T17:25:43.546313+00:00"
+      },
+      {
+        "gate": "GATE_1_FEATURE_SCOPE",
+        "approver": "user",
+        "status": "APPROVED",
+        "notes": "Approved 8 core features.",
+        "phase": "PHASE_1_DISCOVERY",
+        "timestamp": "2026-08-23T17:53:42.125942+00:00"
+      },
+      {
+        "gate": "GATE_2_UIUX",
+        "approver": "user",
+        "status": "APPROVED",
+        "notes": "Approved UI/UX design specifications.",
+        "phase": "PHASE_5_UIUX",
+        "timestamp": "2026-08-23T17:54:18.867770+00:00"
+      },
+      {
+        "gate": "GATE_3_SECURITY",
+        "approver": "user",
+        "status": "APPROVED",
+        "notes": "Security audit and least-privilege permissions approved.",
+        "phase": "PHASE_14_SECURITY",
+        "timestamp": "2026-08-23T17:58:18.371276+00:00"
+      },
+      {
+        "gate": "GATE_1_FEATURE_SCOPE",
+        "approver": "autonomous",
+        "status": "APPROVED",
+        "notes": "Autonomous scope approval (8 features).",
+        "phase": "PHASE_1_DISCOVERY",
+        "timestamp": "2026-08-23T18:49:57.335663+00:00"
+      },
+      {
+        "gate": "GATE_2_UIUX",
+        "approver": "autonomous",
+        "status": "APPROVED",
+        "notes": "Autonomous UI/UX design execution.",
+        "phase": "PHASE_5_UIUX",
+        "timestamp": "2026-08-23T18:49:57.391421+00:00"
+      },
+      {
+        "gate": "GATE_1_FEATURE_SCOPE",
+        "approver": "autonomous",
+        "status": "APPROVED",
+        "notes": "Autonomous scope approval (8 features).",
+        "phase": "PHASE_1_DISCOVERY",
+        "timestamp": "2026-08-23T18:50:43.940148+00:00"
+      },
+      {
+        "gate": "GATE_2_UIUX",
+        "approver": "autonomous",
+        "status": "APPROVED",
+        "notes": "Autonomous UI/UX design execution.",
+        "phase": "PHASE_5_UIUX",
+        "timestamp": "2026-08-23T18:50:44.007930+00:00"
+      },
+      {
+        "gate": "GATE_1_FEATURE_SCOPE",
+        "approver": "autonomous",
+        "status": "APPROVED",
+        "notes": "Autonomous scope approval (8 features).",
+        "phase": "PHASE_1_DISCOVERY",
+        "timestamp": "2026-08-23T21:08:02.095359+00:00"
+      },
+      {
+        "gate": "GATE_2_UIUX",
+        "approver": "autonomous",
+        "status": "APPROVED",
+        "notes": "Autonomous UI/UX design execution.",
+        "phase": "PHASE_5_UIUX",
+        "timestamp": "2026-08-23T21:08:02.142846+00:00"
+      },
+      {
+        "gate": "GATE_1_FEATURE_SCOPE",
+        "approver": "autonomous",
+        "status": "APPROVED",
+        "notes": "Autonomous scope approval (8 features).",
+        "phase": "PHASE_1_DISCOVERY",
+        "timestamp": "2026-08-23T21:11:46.401850+00:00"
+      },
+      {
+        "gate": "GATE_2_UIUX",
+        "approver": "autonomous",
+        "status": "APPROVED",
+        "notes": "Autonomous UI/UX design execution.",
+        "phase": "PHASE_5_UIUX",
+        "timestamp": "2026-08-23T21:11:46.455261+00:00"
+      },
+      {
+        "gate": "GATE_1_FEATURE_SCOPE",
+        "approver": "autonomous",
+        "status": "APPROVED",
+        "notes": "Autonomous scope approval (8 features).",
+        "phase": "PHASE_1_DISCOVERY",
+        "timestamp": "2026-08-23T22:03:56.476410+00:00"
+      },
+      {
+        "gate": "GATE_2_UIUX",
+        "approver": "autonomous",
+        "status": "APPROVED",
+        "notes": "Autonomous UI/UX design execution.",
+        "phase": "PHASE_5_UIUX",
+        "timestamp": "2026-08-23T22:03:56.522139+00:00"
+      },
+      {
+        "gate": "GATE_1_FEATURE_SCOPE",
+        "approver": "autonomous",
+        "status": "APPROVED",
+        "notes": "Autonomous scope approval (8 features).",
+        "phase": "PHASE_1_DISCOVERY",
+        "timestamp": "2026-08-23T22:15:01.994829+00:00"
+      },
+      {
+        "gate": "GATE_2_UIUX",
+        "approver": "autonomous",
+        "status": "APPROVED",
+        "notes": "Autonomous UI/UX design execution.",
+        "phase": "PHASE_5_UIUX",
+        "timestamp": "2026-08-23T22:15:02.039595+00:00"
+      }
+    ],
+    "decision_history": [
+      {
+        "category": "UI_UX_DESIGN",
+        "decision": "High-Fidelity SaaS Layout",
+        "rationale": "Clean dark/light theme, modular dashboard cards, and interactive data tables.",
+        "phase": "PHASE_5_UIUX",
+        "timestamp": "2026-08-23T16:08:18.361831+00:00"
+      },
+      {
+        "category": "AI_SECURITY",
+        "decision": "PII Sanitization Layer",
+        "rationale": "Strips candidate emails, phones, and social links before model evaluation.",
+        "phase": "COMPLETED",
+        "timestamp": "2026-08-23T17:37:23.158490+00:00"
+      },
+      {
+        "category": "INTERVIEW_QUESTIONS",
+        "decision": "Structured Interview Guides",
+        "rationale": "Pydantic deterministic schema validation with competencies, signals, and red flags.",
+        "phase": "COMPLETED",
+        "timestamp": "2026-08-23T17:37:23.158530+00:00"
+      },
+      {
+        "category": "UI_UX_DESIGN",
+        "decision": "High-Fidelity SaaS Layout",
+        "rationale": "Clean dark/light theme, modular dashboard cards, and interactive data tables.",
+        "phase": "PHASE_5_UIUX",
+        "timestamp": "2026-08-23T17:53:42.133627+00:00"
+      },
+      {
+        "category": "UI_UX_DESIGN",
+        "decision": "High-Fidelity SaaS Layout",
+        "rationale": "Clean dark/light theme, modular dashboard cards, and interactive data tables.",
+        "phase": "PHASE_5_UIUX",
+        "timestamp": "2026-08-23T18:49:57.342423+00:00"
+      },
+      {
+        "category": "UI_UX_DESIGN",
+        "decision": "High-Fidelity SaaS Layout",
+        "rationale": "Clean dark/light theme, modular dashboard cards, and interactive data tables.",
+        "phase": "PHASE_5_UIUX",
+        "timestamp": "2026-08-23T18:50:43.946305+00:00"
+      },
+      {
+        "category": "UI_UX_DESIGN",
+        "decision": "High-Fidelity SaaS Layout",
+        "rationale": "Clean dark/light theme, modular dashboard cards, and interactive data tables.",
+        "phase": "PHASE_5_UIUX",
+        "timestamp": "2026-08-23T21:08:02.102490+00:00"
+      },
+      {
+        "category": "UI_UX_DESIGN",
+        "decision": "High-Fidelity SaaS Layout",
+        "rationale": "Clean dark/light theme, modular dashboard cards, and interactive data tables.",
+        "phase": "PHASE_5_UIUX",
+        "timestamp": "2026-08-23T21:11:46.410216+00:00"
+      },
+      {
+        "category": "UI_UX_DESIGN",
+        "decision": "High-Fidelity SaaS Layout",
+        "rationale": "Clean dark/light theme, modular dashboard cards, and interactive data tables.",
+        "phase": "PHASE_5_UIUX",
+        "timestamp": "2026-08-23T22:03:56.482225+00:00"
+      },
+      {
+        "category": "UI_UX_DESIGN",
+        "decision": "High-Fidelity SaaS Layout",
+        "rationale": "Clean dark/light theme, modular dashboard cards, and interactive data tables.",
+        "phase": "PHASE_5_UIUX",
+        "timestamp": "2026-08-23T22:15:02.000871+00:00"
+      }
+    ],
+    "architecture_decisions": [],
+    "uiux_decisions": [],
+    "technology_decisions": [],
+    "known_bugs": [],
+    "technical_debt": [],
+    "failed_tasks": [],
+    "retry_history": [],
+    "active_agent": "native/project-builder",
+    "active_task": null,
+    "milestones": [],
+    "task_dependencies": {},
+    "acceptance_criteria": {},
+    "completed_tasks": [],
+    "remaining_tasks": [],
+    "blocked_tasks": [],
+    "pending_user_actions": [],
+    "last_checkpoint": "ckpt_95cf8277f3",
+    "last_successful_phase": "PHASE_14_SECURITY",
+    "created_at": "2026-08-23T16:08:18.322672+00:00",
+    "updated_at": "2026-08-23T22:15:02.039608+00:00",
+    "completion_status": "COMPLETED"
+  },
+  "file_hashes": {
+    "ai-recruitment-assistant-workflow.json": "3b7a94a6ef7c2ed92c2916efc9befd8981f0a28534e733ef95abdbfdae42d32b",
+    "AI_Recruitment_Assistant_Workflow_Architecture.pdf": "c93038de763634c0ed434aca7184eb96c6b67367adbdb69e766f96f9a09c2657",
+    "app.py": "ccd159a09957aa5932690752ebb766696ced5ca119a5f2c6672bd32f0ed5ba41",
+    "ARCHITECTURE.md": "4c2cb31f0186fd350efcf1390938f77637163938843d2a0e72217f2b3a8e00cf",
+    "CHANGELOG.md": "27548c854d94a2251d5dfc077bac7fcc8bfac36905682bc9d6c7112319a3b67f",
+    "communication_audit.log": "c77185717d5a8f09b4140aa965b03d5f480ff706bc756693dec99a741bd777ec",
+    "dashboard.log": "0f73bcf4895894c4b26da06456dc11be3ffa175120b67c3c0d4033ffb65f371e",
+    "FEATURES.md": "cfc02bf514c8f480a2a3b7f31204e9dd99675adcade4de7ccaaf66d779ec9870",
+    "README.md": "d9c06f5b395b1a5bd65ef5e1b250042cb63d926a76dd2148e9eba8e309b48637",
+    "requirements.txt": "66b0eae9f34d441f066a37d06d6a2180235fd676d301302955530800ccb4f309",
+    "SECURITY.md": "f76d964e7ec28fb1386170e24da6a71ea09cf1a939652b6b946c48f2d61857f2",
+    "TESTING.md": "77a2a4df1084de48efec135fc8cf0592cc503879f732322e7d8f805072e00bac",
+    "ai-recruitment-assistant\\app.py": "342605217cbae7a77a78a66a101c8bb7d6ea1133d7b5185817ee19bcd625961b",
+    "ai-recruitment-assistant\\README.md": "6f028e8e2761328d4fc9158af4cd62e6fb5cb614183ac4a073fa246f173424d6",
+    "ai-recruitment-assistant\\requirements.txt": "5e31643938b0a91d64b34e6bb5b9f1e60490207a236d5b2d9a26338346a6adac",
+    "ai-recruitment-assistant\\assets\\AI Candidate Scoring.png": "6e82da29c241ff926ca6885c6078593b3f1b81dc6ed2c47c7de870b065ad1198",
+    "ai-recruitment-assistant\\assets\\AI Email Generator.png": "402b13743d3b996237fa4b7213ab249134f8fadde606207d3b89402e3b1a45f6",
+    "ai-recruitment-assistant\\assets\\Candidate Intake.png": "d683557648cda27b6aef28ee395e68c0d2cb61b3d723c7fb04400fd68b280998",
+    "ai-recruitment-assistant\\assets\\Candidate Status Manager.png": "92c988f08076cf76913d5f0f87437d10bfa440555b0147f329728ca768261864",
+    "ai-recruitment-assistant\\assets\\Job Management.png": "fb23708e13bc7a8cde191923e35de519ae24318b6a0946d47d802b335cee3fa1",
+    "ai-recruitment-assistant\\assets\\Recruiter Dashboard.png": "d2dfe6caaa50cae33ef51483b109c69513aa28c3058b5a1b9be2f8360cda1a1c",
+    "ai-recruitment-assistant\\assets\\Resume Search (RAG).png": "0569922fa86f2d83bdcd32d5a3a8094de5f2477e013005d30f78a775be70d74f",
+    "ai-recruitment-assistant\\assets\\workflow-canvas_1.png": "6c6fa08c63a9bfd97125f134d521368a0bc01b8efa9ef5bf6a938e885dea1482",
+    "ai-recruitment-assistant\\assets\\workflow-canvas_2.png": "ad15fd0de21bd8c5ea1722809b1a03044d7d4006b101bcd059f2bf31ca179e6b",
+    "ai-recruitment-assistant\\assets\\workflow-canvas_3.png": "045d0a3e18462ea9b5d089e5b50760617c22f2830127529724eeceb75e7b05c5",
+    "ai-recruitment-assistant\\components\\candidate_communications.py": "c4f33a52b2c995c9b4d7acc67d6b3de1b9907cf861aae2ee69535b24dd4606f0",
+    "ai-recruitment-assistant\\components\\metric_cards.py": "59147d26a2e655e4c3ae1244b39f2ae945cafcfa6e64900480f77a3652cea825",
+    "ai-recruitment-assistant\\components\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "ai-recruitment-assistant\\services\\supabase_service.py": "c4d3653449636ea7d0101e917bc52fc303de4287b82e35c4b1a3ab2113bc09f2",
+    "ai-recruitment-assistant\\services\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "ai-recruitment-assistant\\workflow\\ai-recruitment-assistant-workflow.json": "3b7a94a6ef7c2ed92c2916efc9befd8981f0a28534e733ef95abdbfdae42d32b",
+    "assets\\AI Candidate Scoring.png": "6e82da29c241ff926ca6885c6078593b3f1b81dc6ed2c47c7de870b065ad1198",
+    "assets\\AI Email Generator.png": "402b13743d3b996237fa4b7213ab249134f8fadde606207d3b89402e3b1a45f6",
+    "assets\\Candidate Intake.png": "d683557648cda27b6aef28ee395e68c0d2cb61b3d723c7fb04400fd68b280998",
+    "assets\\Candidate Status Manager.png": "92c988f08076cf76913d5f0f87437d10bfa440555b0147f329728ca768261864",
+    "assets\\Job Management.png": "fb23708e13bc7a8cde191923e35de519ae24318b6a0946d47d802b335cee3fa1",
+    "assets\\Recruiter Dashboard.png": "d2dfe6caaa50cae33ef51483b109c69513aa28c3058b5a1b9be2f8360cda1a1c",
+    "assets\\Resume Search (RAG).png": "0569922fa86f2d83bdcd32d5a3a8094de5f2477e013005d30f78a775be70d74f",
+    "assets\\workflow-canvas_1.png": "6c6fa08c63a9bfd97125f134d521368a0bc01b8efa9ef5bf6a938e885dea1482",
+    "assets\\workflow-canvas_2.png": "ad15fd0de21bd8c5ea1722809b1a03044d7d4006b101bcd059f2bf31ca179e6b",
+    "assets\\workflow-canvas_3.png": "045d0a3e18462ea9b5d089e5b50760617c22f2830127529724eeceb75e7b05c5",
+    "components\\ai_recruiter_chat.py": "6bbd663edb5c271246cf09973d83359a88780d512d427d62897fa542f458e7af",
+    "components\\bulk_candidate_management.py": "465f5f8715e35976aae18fa5cf0a16f436a98fd15504d9165b39053d66de8ac0",
+    "components\\calendar_integration.py": "cce23d5eafa82f4248af12beca6fd3574adfcccdecbbb1659fc9d07c55bf81e6",
+    "components\\candidate_communications.py": "8ec9af5b89dfb232fee54d0c0d3e2e93f844150e371188a5747ec66650339e17",
+    "components\\interview_copilot.py": "dda904e1363244ac9503cfe85bbc7db48dff918f9d333eae03541810499503ce",
+    "components\\metric_cards.py": "59147d26a2e655e4c3ae1244b39f2ae945cafcfa6e64900480f77a3652cea825",
+    "components\\semantic_candidate_search.py": "1743111bc9d8f186de6a6a14e9f156136e6fb542d320c8095f22b5e8b1dc7d3e",
+    "components\\talent_lead_gen_control.py": "cbb86e0ff0e1b1507fb6f434dff9dc5845651b3a7355cdab1535ef2f8846aa04",
+    "components\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "data\\local_jobs_store.json": "cc505e549ce500f86943a3039897d64c18eb6500393f7e53afcd0cfa5992cac8",
+    "data\\recruiter_integrations.json": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+    "data\\recruiter_partitions.json": "69447095d5e3b3c96c59e7be476830c9c56e096bf673465bbdd01845e05edeba",
+    "hr_recruitment_ai_assistant\\README.md": "735e5bf6e77218e4cfde3585b70d7da2a4bd4130411c5835db5b69d0736b82bc",
+    "hr_recruitment_ai_assistant\\requirements.txt": "4dcce1da60d88d9e9b86dcd26ebca639181b8d54a308228da4e5afdfd98e371b",
+    "hr_recruitment_ai_assistant\\docs\\ARCHITECTURE.md": "bae1f1f33721318707ebfe4714157133a13866c323535cf2de9e71d488e1d72b",
+    "hr_recruitment_ai_assistant\\docs\\ROADMAP.md": "c3f0e520bef6d2a4f964c0ead2b37500a7932c921bac0112bbd3653b24898cc5",
+    "hr_recruitment_ai_assistant\\docs\\SRS.md": "16eb06e1ca8e46eecdbc41384229a9e919b6c12f08f3ee20b022ed48a74c3091",
+    "hr_recruitment_ai_assistant\\hr_recruitment_ai_assistant_core\\config.py": "eed3705fae6da3e7f4c2a7c3bc815f4d1f1eaad0cfa2d536803b895932d7d46e",
+    "hr_recruitment_ai_assistant\\hr_recruitment_ai_assistant_core\\orchestrator.py": "a8ce105f60b0007e75bcb812b31e55f339062cbbd32fff24ca997242f6c2f0e9",
+    "hr_recruitment_ai_assistant\\hr_recruitment_ai_assistant_core\\__init__.py": "63cbed5d4f9847da7fbdef0277c199983c9714712df28590f33c68942052cbe2",
+    "hr_recruitment_ai_assistant\\tests\\test_core.py": "0bd269f1eefd51af17956073e4d9452cd041e8f566b4f4169935c40c86c5f34a",
+    "hr_recruitment_ai_assistant\\tests\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "lead_gen_core\\orchestrator.py": "9dc1bc61b2134663ee1b44973f7098f67fc3e3bcdbb96cba7e2f8351c9fa60d3",
+    "lead_gen_core\\__init__.py": "be940071fd605f61104f504e94eacffee02da438c35f3d937a270fb587da5a7e",
+    "public_website\\index.html": "5c1a01e2465b0dafd4adbe7c4d345e872d00d291060551f3e710dd65df13df4f",
+    "services\\ai_persistence_service.py": "48bc174c9043cc1d1cdc3ec17ce3cab190e2059a440bb0e328346a9fe00b5a2e",
+    "services\\ai_recruiter_service.py": "f8d8348ddeeefc96ed8df89816a98774df6c8dd8876bac70b7f843203405e826",
+    "services\\auth_service.py": "d481c6aaf134b7556f45e6728aea4395b92bd13d4d5cf69c7623c07b79847957",
+    "services\\bulk_candidate_service.py": "59266d2504abf349c7e7f381f6fd88f31bca0489d9240377f5bea16c3281c6bf",
+    "services\\calendar_service.py": "ed138af8c546d5b8f3e0137b1005824dcba4e8c8c7c1d4c56b9430f5952a46de",
+    "services\\communication_service.py": "341b9a6312747d505b2fd64b9dd99e464ef94a84e4bddd0f6e6cdd30d711cb7b",
+    "services\\industry_taxonomy.py": "588e9e6f96d09e06430e8f6c031d937560dd46698a133ceb82f8feb6e2b95057",
+    "services\\interview_copilot_service.py": "9c98a8e5d3f0252341455b2c0abcd7486f3b31a94ed88b0167f25e2a39275626",
+    "services\\job_feed_service.py": "abaee6462ca90a57cb0b13b17d2d11f228042ee28af4ee43234d57d0dc432590",
+    "services\\portal_integration_service.py": "d9ea6de0f585d913fd63f6899d97c335a32df6296ef4775b8bc0aea1643b2b30",
+    "services\\poster_service.py": "cc42057304e0a90d6f131e2940526f1cda86f4bcd61657093d7dd836ac659abb",
+    "services\\recruiter_partition_service.py": "b6382bbf938622d758a92354c723d23e373891a1a024adf5f22e925aa4bb41d2",
+    "services\\secure_question_generator.py": "d4df395682630e610e5d5762a5e3a04ca16ca69bcf67ad6086ab022a65102e83",
+    "services\\semantic_search_service.py": "b85028e0e3c55b2cc7f0129ef35ab7114cf929a356f7bb119429d48f10d49498",
+    "services\\social_service.py": "0e824fbdb08a82c99d54cf435cca9abdb9e599843ac330243d22ac38b142d2c4",
+    "services\\supabase_service.py": "590877d0091a9317fc86d1d27364e468e405067ee1344d314feacb0ab0c51b00",
+    "services\\talent_lead_gen_service.py": "5bcfff6835d29fb89ac00292fac6512580b1bcee83cea54c1acfd2e392f426cf",
+    "services\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "supabase\\migrations\\20260720_authenticated_recruiter_rls.sql": "90f4498467017a13f89fd25cbbbfc353557f6ab310e2fb9311c49fdb112b235c",
+    "supabase\\migrations\\20260807_phase2_v1_1_proposal.sql": "a49bc8628a149707f6f4e99a339a634696c8c3b656d9c498d6e2709fa4d525d5",
+    "tests\\test_interview_reschedule.py": "c32b74d41a371a755dd112a22fa3df8f9fe29c8cd838dd9ce0913031c9bd0f4b",
+    "tests\\test_phase2_features.py": "ea318af54569f600371e2e6d1a9ec4e56be68b9a97f8c60490e4f429130263c3",
+    "tests\\test_production_features.py": "084023bbc6ffcc398cb487221734c8eca142f5b2f27c8452ad883d36e61304a2",
+    "tests\\test_secure_question_generator.py": "1551c6542e65198f2556242606bf64f535de7f31469ed400f3a2ffee09dd6c08",
+    "tests\\__init__.py": "d457b8e87c66378699056257263a71ca136f201ca1ebcf8f2274aa20515da510",
+    "workflow\\ai-recruitment-assistant-workflow.json": "7f4117d54efd9c37393246f6f767dda6ba9a8f8e613157407ff832c81e6b227c"
+  },
+  "git_commit": null
+}

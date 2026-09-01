@@ -25,10 +25,18 @@ class Message:
 class SessionMemory:
     """Manages short-term conversation state for a specific session."""
 
-    def __init__(self, session_id: str, max_messages: int = 50):
+    def __init__(self, session_id: str = "default_session", max_messages: int = 50):
         self.session_id = session_id
         self.max_messages = max_messages
         self._messages: List[Message] = []
+
+    def add_turn(self, role: str, content: str, metadata: Optional[Dict[str, Any]] = None) -> Message:
+        """Alias for add_message."""
+        return self.add_message(role=role, content=content, metadata=metadata)
+
+    def get_history(self, limit: Optional[int] = None) -> List[Message]:
+        """Alias for get_messages."""
+        return self.get_messages(limit=limit)
 
     def add_message(
         self,
@@ -85,3 +93,7 @@ class SessionMemory:
             )
             for item in data
         ]
+
+
+# Global singleton instance
+DEFAULT_SESSION_MEMORY = SessionMemory(session_id="global_session")

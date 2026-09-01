@@ -93,6 +93,8 @@ class CalendarAgent:
         description: str = "",
     ) -> Dict[str, Any]:
         """Schedules a new event, checking for conflicts."""
+        from zero_core.adapters.google_workspace import DEFAULT_CALENDAR_LIVE_ADAPTER
+
         conflicts = self.detect_conflicts(start_time, end_time)
         event_id = f"evt_{uuid.uuid4().hex[:8]}"
         new_event = CalendarEvent(
@@ -105,11 +107,24 @@ class CalendarAgent:
             description=description,
         )
         self.add_event(new_event)
+
+        google_res = None
+        if DEFAULT_CALENDAR_LIVE_ADAPTER.is_configured():
+            google_res = DEFAULT_CALENDAR_LIVE_ADAPTER.create_event(
+                summary=title,
+                start_time=start_time,
+                end_time=end_time,
+                location=location,
+                description=description,
+                attendees=attendees,
+            )
+
         return {
             "success": True,
             "event": new_event.to_dict(),
             "has_conflicts": len(conflicts) > 0,
             "conflicting_events": [c.to_dict() for c in conflicts],
+            "google_calendar_sync": google_res,
         }
 
     def prepare_meeting_brief(self, event_id: str) -> str:

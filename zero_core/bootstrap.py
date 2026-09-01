@@ -8,11 +8,16 @@ from __future__ import annotations
 from zero_core.agent_registry import AgencyAgentsAdapter, AgentRegistry
 from zero_core.native_agents import ALL_NATIVE_AGENTS
 from zero_core.orchestrator import Orchestrator
+from zero_core.tools import ToolRegistry, build_default_tool_registry
 
 
 def build_registry() -> AgentRegistry:
     adapter = AgencyAgentsAdapter()
     return AgentRegistry(agency_adapter=adapter, native_agents=ALL_NATIVE_AGENTS)
+
+
+def build_tool_registry() -> ToolRegistry:
+    return build_default_tool_registry()
 
 
 def build_orchestrator() -> Orchestrator:

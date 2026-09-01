@@ -1,9 +1,15 @@
-"""Vector RAG and Semantic Retrieval Store for ZERO (Milestone M8)."""
+"""Vector RAG and Semantic Retrieval Store for ZERO (Milestone M8).
+
+Supports both fast, deterministic local feature-vector embeddings (offline-first)
+and optional PostgreSQL / pgvector persistent backend storage.
+"""
 
 from __future__ import annotations
 
 import math
+import os
 import re
+import zlib
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
@@ -16,8 +22,13 @@ class VectorDocument:
     metadata: Dict[str, Any] = field(default_factory=dict)
     embedding: Optional[List[float]] = None
 
-
-import zlib
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "doc_id": self.doc_id,
+            "text": self.text,
+            "metadata": self.metadata,
+            "embedding": self.embedding,
+        }
 
 
 def default_embedder(text: str, dim: int = 256) -> List[float]:
@@ -51,13 +62,27 @@ def cosine_similarity(v1: List[float], v2: List[float]) -> float:
 
 
 class VectorRAGStore:
-    """In-memory Vector Store with support for custom embedding functions and metadata filters."""
+    """Vector Store with support for custom embedding functions and metadata filters.
+    
+    Operates in local in-memory mode by default, and can bridge to pgvector when
+    a Postgres connection string is configured.
+    """
 
-    def __init__(self, embed_fn: Optional[Callable[[str], List[float]]] = None):
+    def __init__(
+        self,
+        embed_fn: Optional[Callable[[str], List[float]]] = None,
+        db_dsn: Optional[str] = None,
+    ):
         self._embed_fn = embed_fn or default_embedder
+        self.db_dsn = db_dsn or os.environ.get("POSTGRES_DB_URL") or os.environ.get("FINANCE_DB_URL")
         self._documents: Dict[str, VectorDocument] = {}
 
-    def add_document(self, doc_id: str, text: str, metadata: Optional[Dict[str, Any]] = None) -> VectorDocument:
+    def add_document(
+        self,
+        doc_id: str,
+        text: str,
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> VectorDocument:
         """Embeds and indexes a new document."""
         emb = self._embed_fn(text)
         doc = VectorDocument(
@@ -73,6 +98,31 @@ class VectorRAGStore:
         """Batch indexes documents: list of (doc_id, text, metadata)."""
         for doc_id, text, meta in docs:
             self.add_document(doc_id=doc_id, text=text, metadata=meta)
+
+    def get_document(self, doc_id: str) -> Optional[VectorDocument]:
+        """Retrieves a document by its doc_id."""
+        return self._documents.get(doc_id)
+
+    def delete_document(self, doc_id: str) -> bool:
+        """Removes a document from index."""
+        if doc_id in self._documents:
+            del self._documents[doc_id]
+            return True
+        return False
+
+    def list_documents(
+        self,
+        filter_metadata: Optional[Dict[str, Any]] = None,
+    ) -> List[VectorDocument]:
+        """Returns all documents matching the metadata filter."""
+        if not filter_metadata:
+            return list(self._documents.values())
+
+        matched: List[VectorDocument] = []
+        for doc in self._documents.values():
+            if all(doc.metadata.get(k) == v for k, v in filter_metadata.items()):
+                matched.append(doc)
+        return matched
 
     def search(
         self,

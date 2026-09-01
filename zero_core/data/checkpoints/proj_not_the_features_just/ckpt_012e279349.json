@@ -1,0 +1,101 @@
+{
+  "checkpoint_id": "ckpt_012e279349",
+  "project_id": "proj_not_the_features_just",
+  "phase": "PHASE_1_DISCOVERY",
+  "milestone": null,
+  "description": "Phase 1: Discovery Completed -> Awaiting Scope Approval",
+  "timestamp": "2026-08-23T22:15:31.978828+00:00",
+  "manifest_snapshot": {
+    "project_id": "proj_not_the_features_just",
+    "project_name": "Not The Features Just",
+    "project_type": "NEW_PROJECT",
+    "description": "not the features just the UI/UX",
+    "repository_path": "f:\\AI Automation\\Projects\\Not The Features Just",
+    "repository_url": null,
+    "project_status": "APPROVAL_PENDING",
+    "current_phase": "PHASE_1_DISCOVERY",
+    "current_milestone": null,
+    "current_task": null,
+    "overall_progress": 5,
+    "feature_scope": {
+      "must_have": [
+        "Core domain orchestration & workflows for Not The Features Just",
+        "Deterministic business logic handlers & error boundaries",
+        "Persistent database storage & data models",
+        "Multi-channel API / Webhook integration interfaces",
+        "Comprehensive automated test suite with 100% test reliability"
+      ],
+      "should_have": [
+        "Interactive Web Command Center dashboard",
+        "Audit logging & structured observability metrics",
+        "Role-based access control (RBAC) & security sanitization"
+      ],
+      "nice_to_have": [
+        "AI-powered predictive recommendations & insights",
+        "Instant Telegram / WhatsApp alerts & notifications",
+        "One-click containerized deployment setup"
+      ],
+      "future": [
+        "Multi-tenant SaaS subscription billing",
+        "Advanced recruitment analytics export"
+      ]
+    },
+    "approved_features": [],
+    "rejected_features": [],
+    "pending_features": [
+      "Core domain orchestration & workflows for Not The Features Just",
+      "Deterministic business logic handlers & error boundaries",
+      "Persistent database storage & data models",
+      "Multi-channel API / Webhook integration interfaces",
+      "Comprehensive automated test suite with 100% test reliability",
+      "Interactive Web Command Center dashboard",
+      "Audit logging & structured observability metrics",
+      "Role-based access control (RBAC) & security sanitization",
+      "AI-powered predictive recommendations & insights",
+      "Instant Telegram / WhatsApp alerts & notifications",
+      "One-click containerized deployment setup"
+    ],
+    "requirements_status": "PENDING",
+    "architecture_status": "PENDING",
+    "uiux_status": "PENDING",
+    "implementation_status": "PENDING",
+    "database_status": "PENDING",
+    "backend_status": "PENDING",
+    "frontend_status": "PENDING",
+    "agent_status": "PENDING",
+    "tool_status": "PENDING",
+    "integration_status": "PENDING",
+    "testing_status": "PENDING",
+    "security_status": "PENDING",
+    "credential_status": "PENDING",
+    "deployment_status": "PENDING",
+    "documentation_status": "PENDING",
+    "approval_history": [],
+    "decision_history": [],
+    "architecture_decisions": [],
+    "uiux_decisions": [],
+    "technology_decisions": [],
+    "known_bugs": [],
+    "technical_debt": [],
+    "failed_tasks": [],
+    "retry_history": [],
+    "active_agent": "native/research-agent",
+    "active_task": null,
+    "milestones": [],
+    "task_dependencies": {},
+    "acceptance_criteria": {},
+    "completed_tasks": [],
+    "remaining_tasks": [],
+    "blocked_tasks": [],
+    "pending_user_actions": [
+      "Approve feature scope to begin SRS & Architecture specification"
+    ],
+    "last_checkpoint": "ckpt_5d8bcb7961",
+    "last_successful_phase": "PHASE_0_INTAKE",
+    "created_at": "2026-08-23T22:15:31.976967+00:00",
+    "updated_at": "2026-08-23T22:15:31.976981+00:00",
+    "completion_status": "IN_PROGRESS"
+  },
+  "file_hashes": {},
+  "git_commit": null
+}

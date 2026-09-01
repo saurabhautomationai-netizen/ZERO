@@ -114,6 +114,20 @@ class ProjectKnowledgeStore:
 
         self.add_project(
             ProjectProfile(
+                project_id="talent_lead_gen_agent",
+                name="Autonomous Candidate Lead Generation Agent",
+                purpose="Autonomous talent sourcing and lead enrichment engine working alongside HR Recruitment AI Assistant.",
+                tech_stack=["Python", "FastAPI", "Supabase", "Gemini 3.6", "Pytest"],
+                current_status="Built & Operational (8 tests passing)",
+                architecture_overview="Webhook receiver (/api/v1/trigger-sourcing), recruitment-specialist evaluator, GitHub scraper, Supabase candidates ingestion, and Telegram alerts.",
+                roadmap=["M1 Architecture & Core (Done)", "M2 Live Supabase Integration (Done)", "M3 Multi-platform scrapers (Done)"],
+                git_repo_or_path="f:/AI Automation/Projects/Talent Lead Gen Agent",
+                deployment_info="FastAPI service on port 8005 with shared Supabase database.",
+            )
+        )
+
+        self.add_project(
+            ProjectProfile(
                 project_id="agency_agents",
                 name="Agency-agents Specialist Library",
                 purpose="269 specialist personas across 17 industry divisions.",

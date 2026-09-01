@@ -1,14 +1,16 @@
-"""Project Builder Agent for ZERO (Milestone M15).
+"""Project Builder Agent for ZERO (Milestone M15 & Autonomous Builder Pipeline).
 
-Orchestrates the complete software engineering inception pipeline for new AI products:
-Idea -> Requirements/SRS -> Architecture -> ADRs -> Folder Structure -> Roadmap.
+Orchestrates the complete software engineering inception & scaffolding pipeline:
+Idea -> Requirements/SRS -> Architecture -> ADRs -> Folder Structure -> Scaffold Files on Disk.
 """
 
 from __future__ import annotations
 
+import os
 import uuid
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 
@@ -70,7 +72,7 @@ class ProjectBlueprint:
 
 
 class ProjectBuilderAgent:
-    """Native Project Builder Agent executing the Idea -> Architecture -> Roadmap pipeline."""
+    """Native Project Builder Agent executing the Idea -> Architecture -> Scaffold pipeline."""
 
     def generate_srs(self, project_name: str, idea: str) -> Dict[str, List[str]]:
         """Produces structured functional and non-functional requirements."""
@@ -115,23 +117,24 @@ class ProjectBuilderAgent:
 
     def generate_folder_structure(self, project_name: str) -> List[str]:
         """Generates standard folder layout."""
-        slug = project_name.lower().replace(" ", "_")
+        slug = project_name.lower().replace(" ", "_").replace("-", "_")
         return [
             f"{slug}/",
             f"├── {slug}_core/",
+            "│   ├── __init__.py",
             "│   ├── config.py",
             "│   ├── orchestrator.py",
             "│   ├── domain/",
             "│   ├── adapters/",
             "│   └── interfaces/",
             "├── tests/",
+            "│   └── test_core.py",
             "├── docs/",
             "│   ├── SRS.md",
             "│   ├── ARCHITECTURE.md",
             "│   └── ROADMAP.md",
             "├── scripts/",
-            "├── Dockerfile",
-            "├── docker-compose.yml",
+            "├── requirements.txt",
             "└── README.md",
         ]
 
@@ -164,6 +167,101 @@ class ProjectBuilderAgent:
             folder_structure=folders,
             roadmap_milestones=roadmap,
         )
+
+    def scaffold_project(self, project_name: str, target_dir: Path, idea: str = "") -> Dict[str, Any]:
+        """Scaffolds a real project directory on disk with specification docs and starter code."""
+        slug = project_name.lower().replace(" ", "_").replace("-", "_")
+        root = target_dir / slug if target_dir.name != slug else target_dir
+        root.mkdir(parents=True, exist_ok=True)
+
+        blueprint = self.build_blueprint(project_name, idea or f"Autonomous system for {project_name}")
+
+        # 1. Write Docs
+        docs_dir = root / "docs"
+        docs_dir.mkdir(exist_ok=True)
+        (docs_dir / "SRS.md").write_text(
+            f"# Software Requirements Specification (SRS): {project_name}\n\n"
+            + "\n".join(f"- {r}" for r in blueprint.srs_requirements["functional"]),
+            encoding="utf-8",
+        )
+        (docs_dir / "ARCHITECTURE.md").write_text(
+            f"# Architecture: {project_name}\n\n"
+            + "\n".join(f"- **{l}**" for l in blueprint.architecture_layers),
+            encoding="utf-8",
+        )
+        (docs_dir / "ROADMAP.md").write_text(
+            f"# Implementation Roadmap: {project_name}\n\n"
+            + "\n".join(f"- **{m['milestone']}**: {m['description']}" for m in blueprint.roadmap_milestones),
+            encoding="utf-8",
+        )
+
+        # 2. Write README
+        (root / "README.md").write_text(
+            f"# {project_name}\n\n{blueprint.idea_summary}\n\n"
+            f"Generated autonomously by ZERO Project Builder.\n",
+            encoding="utf-8",
+        )
+
+        # 3. Write requirements.txt
+        (root / "requirements.txt").write_text("pytest>=8.0.0\npydantic>=2.0.0\n", encoding="utf-8")
+
+        # 4. Write Core Package
+        core_dir = root / f"{slug}_core"
+        core_dir.mkdir(exist_ok=True)
+        (core_dir / "__init__.py").write_text(f'"""Core package for {project_name}."""\n\n__version__ = "0.1.0"\n', encoding="utf-8")
+        (core_dir / "config.py").write_text('"""Configuration module."""\n\nimport os\n\nPROJECT_NAME = "' + project_name + '"\n', encoding="utf-8")
+        (core_dir / "orchestrator.py").write_text(
+            '"""Domain orchestrator."""\n\nclass Orchestrator:\n    def run(self, task: str) -> dict:\n        return {"task": task, "status": "completed"}\n',
+            encoding="utf-8",
+        )
+
+        # 5. Write Tests
+        tests_dir = root / "tests"
+        tests_dir.mkdir(exist_ok=True)
+        (tests_dir / "__init__.py").write_text("", encoding="utf-8")
+        (tests_dir / "test_core.py").write_text(
+            f"from {slug}_core.orchestrator import Orchestrator\n\n"
+            f"def test_{slug}_orchestrator():\n"
+            f"    orch = Orchestrator()\n"
+            f"    res = orch.run('test task')\n"
+            f"    assert res['status'] == 'completed'\n",
+            encoding="utf-8",
+        )
+
+        created_files = [str(p.relative_to(root)) for p in root.rglob("*") if p.is_file()]
+        return {
+            "success": True,
+            "project_name": project_name,
+            "root_path": str(root),
+            "blueprint_id": blueprint.blueprint_id,
+            "files_created_count": len(created_files),
+            "files": created_files,
+        }
+
+    def validate_scaffold(self, target_dir: Path) -> Dict[str, Any]:
+        """Validates that a scaffolded project satisfies completeness and syntax rules."""
+        if not target_dir.exists() or not target_dir.is_dir():
+            return {"valid": False, "error": f"Directory not found: {target_dir}"}
+
+        required_docs = ["README.md", "docs/SRS.md", "docs/ARCHITECTURE.md", "docs/ROADMAP.md"]
+        missing_docs = [doc for doc in required_docs if not (target_dir / doc).exists()]
+
+        python_files = list(target_dir.rglob("*.py"))
+        syntax_errors = []
+        import ast
+        for py_file in python_files:
+            try:
+                ast.parse(py_file.read_text(encoding="utf-8", errors="ignore"))
+            except SyntaxError as exc:
+                syntax_errors.append(f"{py_file.name}: {exc.msg} on line {exc.lineno}")
+
+        is_valid = len(missing_docs) == 0 and len(syntax_errors) == 0 and len(python_files) >= 3
+        return {
+            "valid": is_valid,
+            "missing_docs": missing_docs,
+            "python_files_count": len(python_files),
+            "syntax_errors": syntax_errors,
+        }
 
 
 # Global singleton instance

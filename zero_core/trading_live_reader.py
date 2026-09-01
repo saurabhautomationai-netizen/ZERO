@@ -102,10 +102,8 @@ class MT5ReadOnlyAdapter:
             return self._get_fallback_status(connected=False, error="Mock mode enabled")
 
         try:
-            # Connect to active MT5 terminal without tearing down IPC connection
-            init_ok = mt5.initialize()
-            if not init_ok:
-                init_ok = mt5.initialize(timeout=5000)
+            # Connect to active MT5 terminal with fast non-blocking timeout
+            init_ok = mt5.initialize(timeout=500)
             if not init_ok:
                 err = mt5.last_error() if hasattr(mt5, "last_error") else "initialize() returned False"
                 return self._get_fallback_status(connected=False, error=f"MT5 Init Error: {err}")

@@ -66,7 +66,14 @@ TRADING_AGENT = _native(
     slug="native/trading-agent",
     division="zero-native",
     description="Interfaces with your live trading system (MT5 bridge, execution/risk engines).",
-    keywords=["trade", "trading", "mt5", "position", "backtest", "strategy signal"],
+    keywords=[
+        "trade", "trading", "mt5", "position", "backtest", "strategy signal",
+        "balance", "my balance", "account balance", "trading balance", "equity",
+        "why didn't", "why did", "why no trade", "bot trade", "did the bot trade",
+        "did trading bot", "took any trade", "take a trade", "take any trade",
+        "stopped bot", "stoppe bot", "what stopped", "what stoppe", "trade today",
+        "trading status", "how is trading", "what happened today"
+    ],
     integration_note=(
         f"Wraps the existing 'Trading bot' project at {config.SIBLING_PROJECTS['trading_bot']} — "
         "a mature, standalone, LIVE trading system (mt5_bridge.py, risk_validator.py, "
@@ -87,7 +94,11 @@ TRADING_COACH = _native(
     slug="native/trading-coach",
     division="zero-native",
     description="Your trading-specific RAG — historical context over your own trades, not generic advice.",
-    keywords=["trading coach", "why did i lose", "trade review", "setup history"],
+    keywords=[
+        "trading coach", "why did i lose", "trade review", "setup history",
+        "coaching", "why trade", "trailing stop", "stop loss", "trailing",
+        "how does trailing", "gold strategy", "strategy rules", "risk rules"
+    ],
     integration_note=(
         "Depends on Memory/RAG (pgvector) being built first — see zero_core/memory. Ingests "
         "bot logs, trade data, and MT5 reports from the Trading bot project into embeddings, "
@@ -111,7 +122,7 @@ CALENDAR_AGENT = _native(
     slug="native/calendar-agent",
     division="zero-native",
     description="Calendar read/write, scheduling, conflict detection.",
-    keywords=["calendar", "schedule", "meeting", "appointment"],
+    keywords=["calendar", "my schedule", "meeting agenda", "upcoming meetings", "google calendar"],
     integration_note="DELIVERED (M13): zero_core.agents.calendar_agent.CalendarAgent.",
 )
 
@@ -124,6 +135,22 @@ RESEARCH_AGENT = _native(
     integration_note="DELIVERED (M14): zero_core.agents.research_agent.ResearchAgent.",
 )
 
+LOOP_ENGINEERING_AGENT = _native(
+    name="Loop Engineering Agent",
+    slug="native/loop-engineering-agent",
+    division="zero-native",
+    description="Autonomous AI Engineering Manager orchestrating full product engineering lifecycles (Idea -> SRS -> UI/UX -> DB -> Backend -> Frontend -> Tests -> Security -> Deploy).",
+    keywords=[
+        "loop engineering", "engineering manager", "build me a complete", "build a complete",
+        "build a new", "create a new saas", "where are we with", "continue the", "resume project",
+        "engineering manifest", "product engineering", "build hr recruitment", "engineering status",
+        "continue project", "approve feature scope", "approve ui/ux", "approve security", "engineering cockpit",
+        "improve my existing", "improve existing", "improve the", "improve hr", "improve recruitment", "upgrade project",
+        "redesign", "redesign the", "dashboard_eg", "hr dashboard", "reference design", "rebuild ui", "update ui", "ui/ux", "redesign hr"
+    ],
+    integration_note="DELIVERED (Loop v2): zero_core.agents.loop_engineering.LoopEngineeringAgent.",
+)
+
 PROJECT_BUILDER = _native(
     name="Project Builder",
     slug="native/project-builder",
@@ -132,7 +159,8 @@ PROJECT_BUILDER = _native(
     keywords=[
         "project builder", "build project", "create project", "srs",
         "architecture plan", "scaffold", "blueprint", "project blueprint",
-        "design and build", "build a complete", "build system", "system architecture"
+        "design and build", "build system", "system architecture",
+        "status of zero", "status of", "project status", "zero architecture"
     ],
     integration_note="DELIVERED (M15): zero_core.agents.project_builder.ProjectBuilderAgent.",
 )
@@ -169,7 +197,7 @@ AUTOMATION_AGENT = _native(
     slug="native/automation-agent",
     division="zero-native",
     description="Interfaces with n8n workflows and webhooks to trigger tasks and monitor automation health.",
-    keywords=["automation", "n8n", "webhook", "trigger workflow", "automation status"],
+    keywords=["n8n", "n8n workflow", "automation status", "connected automations", "automation health", "trigger n8n"],
     integration_note="DELIVERED: zero_core.agents.automation_agent.AutomationAgent.",
 )
 
@@ -208,6 +236,7 @@ ALL_NATIVE_AGENTS: list[AgentSpec] = [
     EMAIL_AGENT,
     CALENDAR_AGENT,
     RESEARCH_AGENT,
+    LOOP_ENGINEERING_AGENT,
     PROJECT_BUILDER,
     CODING_AGENT,
     GIT_AGENT,

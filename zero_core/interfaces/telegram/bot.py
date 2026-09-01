@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
+from zero_core.agents.trading_coach import DEFAULT_TRADING_COACH
 from zero_core.approval import ApprovalPolicyEngine, build_default_approval_engine
 from zero_core.bootstrap import build_orchestrator, build_registry
 from zero_core.interfaces.telegram.formatters import (
@@ -46,14 +47,15 @@ class TelegramBotHandler:
         if cleaned in GREETINGS:
             return (
                 "👋 *Hello! I am ZERO*, your personal executive AI operating system.\n\n"
-                "I coordinate 13 native domain engines and 269 agency specialists.\n\n"
+                "I coordinate 14 native domain engines and 269 agency specialists.\n\n"
                 "🎯 *Quick Prompts You Can Try*:\n"
+                "• `/coach` — Trading Coach RAG, trade reviews & performance leaks\n"
                 "• `trading status` — Live MT5 market sweep & signal check\n"
                 "• `morning briefing` — Executive agenda, finance & trading digest\n"
                 "• `finance status` — Smart finance AI & transaction summary\n"
                 "• `git status` — Repository health & branch inspection\n"
                 "• `/status` — System diagnostics & connectivity\n"
-                "• `/agents` — Browse all 282 specialized agents\n\n"
+                "• `/agents` — Browse all 283 specialized agents\n\n"
                 "Or describe any task directly!"
             )
 
@@ -63,20 +65,52 @@ class TelegramBotHandler:
             outcome.answer = DEFAULT_LLM_MANAGER.call_specialist(persona=outcome.persona, task=stripped)
         return format_task_response(outcome)
 
+    def handle_voice_note(self, audio_bytes: bytes, audio_format: str = "ogg", user_id: str = "default_user") -> str:
+        """Processes incoming voice notes via VoiceSessionCoordinator."""
+        from zero_core.interfaces.voice import DEFAULT_VOICE_SESSION_COORDINATOR
+
+        res = DEFAULT_VOICE_SESSION_COORDINATOR.handle_voice_turn(
+            audio_bytes=audio_bytes,
+            audio_format=audio_format,
+            user_id=user_id,
+        )
+        if not res.get("success"):
+            return f"❌ Voice processing failed: {res.get('error', 'Unknown error')}"
+
+        return (
+            f"🎙️ *Heard*: _{res['task_text']}_\n"
+            f"👤 *Specialist*: `{res.get('selected_agent', 'ZERO')}`\n\n"
+            f"{res['response_text']}"
+        )
+
     def handle_command(self, command: str, args: str = "") -> str:
-        """Handles slash commands (/start, /help, /agents, /status, /task)."""
+        """Handles slash commands (/start, /help, /agents, /status, /task, /coach)."""
         cmd = command.lower().strip()
 
         if cmd in ("/start", "/help"):
             return (
                 "👋 *Welcome to ZERO — Personal AI Operating System*\n\n"
                 "Available Commands:\n"
+                "• `/coach [review|rules|leaks|<question>]` — Trading Coach RAG engine\n"
                 "• `/task <prompt>` — Dispatch a task to the best specialist\n"
                 "• `/agents` — List available native and specialist agents\n"
                 "• `/status` — System status and integration diagnostics\n"
                 "• `/help` — Display this guide\n\n"
                 "You can also type any task directly in chat!"
             )
+
+        elif cmd == "/coach":
+            sub = args.strip().lower()
+            if not sub or sub == "status":
+                return DEFAULT_TRADING_COACH.get_status_overview()
+            elif sub in ("review", "reviews", "last", "recent"):
+                return DEFAULT_TRADING_COACH.review_recent_trades()
+            elif sub in ("rules", "rule", "strategy"):
+                return DEFAULT_TRADING_COACH.list_rules()
+            elif sub in ("leaks", "leak", "audit", "mistakes"):
+                return DEFAULT_TRADING_COACH.audit_performance_leaks()
+            else:
+                return DEFAULT_TRADING_COACH.answer_question(args.strip())
 
         elif cmd == "/agents":
             registry = self.orchestrator.registry
@@ -97,7 +131,8 @@ class TelegramBotHandler:
             return (
                 "🟢 *ZERO Core System Status*: Operational\n"
                 "• *Orchestrator*: Active (LangGraph + Keyword)\n"
-                "• *Agent Registry*: 282 Agents Indexed\n"
+                "• *Agent Registry*: 283 Agents Indexed\n"
+                "• *Trading Coach RAG*: Active\n"
                 "• *Security & Approval*: Active\n"
                 "• *Memory & RAG*: Online\n"
                 "• *Web Command Center*: http://127.0.0.1:8000/"
