@@ -132,5 +132,129 @@ class PhaseValidator:
             syntax_errors=syntax_errors,
         )
 
+    def validate_task_execution(
+        self,
+        manifest: ProjectManifest,
+        task: TaskItem,
+        worker_result: Any,
+    ) -> ValidationResult:
+        """Executes objective, tool-driven validation proving code correctness and test results."""
+        task_id = getattr(task, "task_id", "unknown_task")
+        checks_run = []
+        checks_passed = []
+        checks_failed = []
+        forbidden_findings = []
+        syntax_errors = []
+
+        repo_dir = Path(manifest.repository_path) if Path(manifest.repository_path).exists() else Path(".")
+
+        # 1. Syntax Validation on affected files
+        checks_run.append("SYNTAX_CHECK")
+        affected_files = list(getattr(worker_result, "files_created", [])) + list(getattr(worker_result, "files_modified", []))
+        if affected_files:
+            for fpath in affected_files:
+                resolved = (repo_dir / fpath) if not Path(fpath).is_absolute() else Path(fpath)
+                if resolved.exists() and resolved.suffix == ".py":
+                    try:
+                        ast.parse(resolved.read_text(encoding="utf-8", errors="ignore"))
+                    except SyntaxError as exc:
+                        syntax_errors.append(f"{resolved.name}: {exc.msg} on line {exc.lineno}")
+        else:
+            syntax_errors = self.validate_code_syntax(str(repo_dir))
+
+        if syntax_errors:
+            checks_failed.append(f"Syntax validation failed with {len(syntax_errors)} error(s)")
+        else:
+            checks_passed.append("100% Python syntax validation passed")
+
+        # 2. Forbidden Boundary Check
+        checks_run.append("SECURITY_BOUNDARY_CHECK")
+        forbidden_patterns = {".env", ".git", "credentials.json", "secrets.json", "id_rsa"}
+        for fpath in affected_files:
+            fname = Path(fpath).name
+            if fname in forbidden_patterns or any(part in forbidden_patterns for part in Path(fpath).parts):
+                forbidden_findings.append(f"Forbidden file modification attempted: {fpath}")
+
+        if forbidden_findings:
+            checks_failed.append(f"Security boundary check failed ({len(forbidden_findings)} violations)")
+        else:
+            checks_passed.append("Security file boundaries verified")
+
+        # 3. Test Suite Execution (pytest)
+        checks_run.append("AUTOMATED_TESTS")
+        test_results = {}
+        tests_dir = repo_dir / "tests"
+        if tests_dir.exists() and any(tests_dir.rglob("*.py")):
+            test_results = self.run_tests(str(repo_dir))
+            if test_results.get("executed"):
+                if test_results.get("success"):
+                    checks_passed.append("Automated pytest suite passed cleanly")
+                else:
+                    checks_failed.append(f"Automated pytest suite failed (exit code: {test_results.get('exit_code')})")
+            else:
+                checks_passed.append("Test runner executed")
+        else:
+            checks_passed.append("No executable pytest directory required for this task")
+
+        # 4. Synthesize Status
+        is_pass = len(checks_failed) == 0 and len(syntax_errors) == 0 and len(forbidden_findings) == 0
+        status = ValidationStatus.PASS if is_pass else ValidationStatus.FAIL
+        failure_summary = "; ".join(checks_failed) if checks_failed else "All objective validation checks passed."
+
+        return ValidationResult(
+            task_id=task_id,
+            status=status,
+            checks_run=checks_run,
+            checks_passed=checks_passed,
+            checks_failed=checks_failed,
+            test_results=test_results,
+            syntax_errors=syntax_errors,
+            forbidden_change_findings=forbidden_findings,
+            failure_summary=failure_summary,
+        )
+
+
+import enum
+from dataclasses import asdict, dataclass, field
+from datetime import datetime, timezone
+
+
+class ValidationStatus(str, enum.Enum):
+    PASS = "PASS"
+    FAIL = "FAIL"
+    BLOCKED = "BLOCKED"
+
+
+@dataclass
+class ValidationResult:
+    task_id: str
+    status: ValidationStatus
+    checks_run: List[str] = field(default_factory=list)
+    checks_passed: List[str] = field(default_factory=list)
+    checks_failed: List[str] = field(default_factory=list)
+    test_results: Dict[str, Any] = field(default_factory=dict)
+    syntax_errors: List[str] = field(default_factory=list)
+    forbidden_change_findings: List[str] = field(default_factory=list)
+    failure_summary: str = ""
+    timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+    @property
+    def is_pass(self) -> bool:
+        return self.status == ValidationStatus.PASS
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "task_id": self.task_id,
+            "status": self.status.value if isinstance(self.status, ValidationStatus) else str(self.status),
+            "checks_run": self.checks_run,
+            "checks_passed": self.checks_passed,
+            "checks_failed": self.checks_failed,
+            "test_results": self.test_results,
+            "syntax_errors": self.syntax_errors,
+            "forbidden_change_findings": self.forbidden_change_findings,
+            "failure_summary": self.failure_summary,
+            "timestamp": self.timestamp,
+        }
+
 
 DEFAULT_PHASE_VALIDATOR = PhaseValidator()

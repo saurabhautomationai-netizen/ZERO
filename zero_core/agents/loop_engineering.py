@@ -48,6 +48,10 @@ class LoopEngineeringAgent:
         coding_agent: Optional[CodingAgent] = None,
         research_agent: Optional[ResearchAgent] = None,
         approval_engine: Optional[ApprovalPolicyEngine] = None,
+        router: Optional[Any] = None,
+        reviewer: Optional[Any] = None,
+        repair_loop: Optional[Any] = None,
+        worker_registry: Optional[Any] = None,
     ):
         self.store = store or DEFAULT_PROJECT_STORE
         self.checkpoints = checkpoints or DEFAULT_CHECKPOINT_MANAGER
@@ -56,6 +60,15 @@ class LoopEngineeringAgent:
         self.coding = coding_agent or DEFAULT_CODING_AGENT
         self.research = research_agent or DEFAULT_RESEARCH_AGENT
         self.approval_engine = approval_engine or ApprovalPolicyEngine()
+
+        from zero_core.engineering.repair import DEFAULT_REPAIR_LOOP
+        from zero_core.engineering.reviewer import DEFAULT_REVIEWER_ENGINE
+        from zero_core.engineering.router import DEFAULT_TASK_ROUTER
+        self.router = router or DEFAULT_TASK_ROUTER
+        self.reviewer = reviewer or DEFAULT_REVIEWER_ENGINE
+        self.repair_loop = repair_loop or DEFAULT_REPAIR_LOOP
+        from zero_core.engineering.workers.registry import DEFAULT_WORKER_REGISTRY
+        self.worker_registry = worker_registry or getattr(self.router, "worker_registry", DEFAULT_WORKER_REGISTRY)
 
     # -------------------------------------------------------------------------
     # PHASE 0: PROJECT INTAKE
@@ -681,6 +694,133 @@ class LoopEngineeringAgent:
         result = ManualTransportManager.import_result(raw_input, task_id=task_id, worker_id=worker_id)
         self.store.save_project(manifest)
         return result
+
+    # -------------------------------------------------------------------------
+    # AUTONOMOUS TASK LIFECYCLE: ROUTE -> EXECUTE -> REVIEW -> VALIDATE -> REPAIR
+    # -------------------------------------------------------------------------
+    def run_autonomous_task_cycle(
+        self,
+        manifest: ProjectManifest,
+        task: TaskItem,
+    ) -> Dict[str, Any]:
+        """Executes the full autonomous engineering cycle for a single task."""
+        from zero_core.engineering.context_builder import DEFAULT_CONTEXT_BUILDER
+        from zero_core.engineering.workers.registry import DEFAULT_WORKER_REGISTRY
+
+        # 1. ROUTE
+        decision = self.router.route_task(task, manifest)
+        manifest.routing_history.append(decision.to_dict())
+
+        # 2. EXECUTE
+        worker = self.worker_registry.get(decision.selected_worker)
+        if not worker:
+            raise ValueError(f"Selected worker '{decision.selected_worker}' not found in registry.")
+
+        context = DEFAULT_CONTEXT_BUILDER.build_context(
+            project=manifest,
+            task=task,
+            worker=worker,
+        )
+        worker_result = worker.run_task(context)
+        manifest.worker_execution_history.append(worker_result.to_dict())
+
+        # 3. INDEPENDENT REVIEW
+        review_result = self.reviewer.review_task_execution(manifest, task, worker_result)
+        manifest.review_history.append(review_result.to_dict())
+        manifest.current_reviewer = review_result.reviewer_id
+
+        # 4. OBJECTIVE VALIDATION
+        validation_result = self.validator.validate_task_execution(manifest, task, worker_result)
+        manifest.validation_history.append(validation_result.to_dict())
+        manifest.last_validation = validation_result.to_dict()
+
+        # 5. EVALUATE PASS OR REPAIR
+        is_pass = review_result.is_pass and validation_result.is_pass
+
+        if is_pass:
+            ckpt = self.checkpoints.create_checkpoint(manifest, f"Task '{task.title}' Validated")
+            ckpt_id = ckpt.checkpoint_id if hasattr(ckpt, "checkpoint_id") else str(ckpt)
+            manifest.last_successful_checkpoint = ckpt_id
+            self.store.save_project(manifest)
+            self.router.record_performance(decision.selected_worker, decision.task_type.value, True)
+            return {
+                "status": "COMPLETED",
+                "task_id": task.task_id,
+                "worker_id": decision.selected_worker,
+                "repaired": False,
+                "attempts": 1,
+                "routing": decision.to_dict(),
+                "execution": worker_result.to_dict(),
+                "review": review_result.to_dict(),
+                "validation": validation_result.to_dict(),
+                "checkpoint": ckpt_id,
+            }
+
+        # 6. BOUNDED REPAIR LOOP
+        attempt_count = 1
+        while self.repair_loop.should_repair(task.task_id, review_result, validation_result):
+            repair_task = self.repair_loop.create_repair_task(
+                original_task=task,
+                original_worker_id=decision.selected_worker,
+                review_result=review_result,
+                validation_result=validation_result,
+                diff=worker_result.diff,
+            )
+            if not repair_task:
+                break  # Max attempts exceeded
+
+            attempt_count += 1
+            repair_worker_id = self.repair_loop.select_repair_worker(
+                decision.selected_worker, review_result, validation_result
+            )
+            worker_result = self.repair_loop.execute_repair(manifest, repair_task, repair_worker_id)
+            manifest.worker_execution_history.append(worker_result.to_dict())
+
+            # Re-review & Re-validate
+            review_result = self.reviewer.review_task_execution(manifest, task, worker_result)
+            manifest.review_history.append(review_result.to_dict())
+
+            validation_result = self.validator.validate_task_execution(manifest, task, worker_result)
+            manifest.validation_history.append(validation_result.to_dict())
+            manifest.last_validation = validation_result.to_dict()
+
+            if review_result.is_pass and validation_result.is_pass:
+                ckpt = self.checkpoints.create_checkpoint(manifest, f"Task '{task.title}' Repaired & Validated")
+                ckpt_id = ckpt.checkpoint_id if hasattr(ckpt, "checkpoint_id") else str(ckpt)
+                manifest.last_successful_checkpoint = ckpt_id
+                self.store.save_project(manifest)
+                self.router.record_performance(repair_worker_id, decision.task_type.value, True)
+                return {
+                    "status": "COMPLETED",
+                    "task_id": task.task_id,
+                    "worker_id": repair_worker_id,
+                    "repaired": True,
+                    "attempts": self.repair_loop.get_attempt_count(task.task_id),
+                    "routing": decision.to_dict(),
+                    "execution": worker_result.to_dict(),
+                    "review": review_result.to_dict(),
+                    "validation": validation_result.to_dict(),
+                    "checkpoint": ckpt_id,
+                }
+
+        # 7. ESCALATION TO HITL IF REPAIR EXHAUSTED
+        manifest.last_failure = {
+            "task_id": task.task_id,
+            "review": review_result.to_dict(),
+            "validation": validation_result.to_dict(),
+        }
+        manifest.pending_user_actions.append(f"HITL resolution required for task '{task.task_id}': Repair attempts exhausted.")
+        self.store.save_project(manifest)
+        self.router.record_performance(decision.selected_worker, decision.task_type.value, False)
+
+        return {
+            "status": "ESCALATED_TO_HITL",
+            "task_id": task.task_id,
+            "attempts": self.repair_loop.get_attempt_count(task.task_id),
+            "reason": "Max repair attempts exhausted or blocked by policy",
+            "review": review_result.to_dict(),
+            "validation": validation_result.to_dict(),
+        }
 
     def _extract_project_name(self, text: str) -> str:
         """Extracts a clean project title from a conversational prompt."""

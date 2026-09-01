@@ -160,7 +160,19 @@ class ProjectManifest(BaseModel):
     uiux_revision_count: int = 0
     uiux_approval: Optional[Dict[str, Any]] = None
     approved_design_version: Optional[str] = None
-    artifacts: Dict[str, str] = Field(default_factory=dict)
+    artifacts: List[str] = Field(default_factory=list)
+
+    # Phase 5: Autonomous Routing, Review, Validation & Repair Tracking
+    routing_history: List[Dict[str, Any]] = Field(default_factory=list)
+    worker_execution_history: List[Dict[str, Any]] = Field(default_factory=list)
+    review_history: List[Dict[str, Any]] = Field(default_factory=list)
+    validation_history: List[Dict[str, Any]] = Field(default_factory=list)
+    repair_history: List[Dict[str, Any]] = Field(default_factory=list)
+    repair_attempt_count: int = 0
+    current_reviewer: Optional[str] = None
+    last_validation: Optional[Dict[str, Any]] = None
+    last_failure: Optional[Dict[str, Any]] = None
+    last_successful_checkpoint: Optional[str] = None
 
     # History & Decision Logs
     approval_history: List[Dict[str, Any]] = Field(default_factory=list)

@@ -321,6 +321,34 @@
       "selected_plan": "GROWTH_199",
       "notes": [],
       "created_at": "2026-09-01T07:43:34.598123+00:00"
+    },
+    {
+      "lead_id": "lead_3bd8834a",
+      "name": "Marcus Vance",
+      "email": "marcus@vance.io",
+      "phone": "",
+      "company": "Vance AI",
+      "recruiters_count": 8,
+      "icp_type": "ICP_2_MID_SIZED_AGENCY",
+      "status": "NEW_LEAD",
+      "source": "WEBSITE",
+      "selected_plan": "GROWTH_199",
+      "notes": [],
+      "created_at": "2026-09-01T08:01:12.859386+00:00"
+    },
+    {
+      "lead_id": "lead_15d86fdb",
+      "name": "David Kim",
+      "email": "david@kimtalent.com",
+      "phone": "",
+      "company": "Kim Talent",
+      "recruiters_count": 1,
+      "icp_type": "ICP_1_BOUTIQUE_AGENCY",
+      "status": "TRIAL_ACTIVE",
+      "source": "30_DAY_TRIAL_SIGNUP",
+      "selected_plan": "GROWTH_199",
+      "notes": [],
+      "created_at": "2026-09-01T08:01:12.874231+00:00"
     }
   ],
   "demos": [
@@ -444,6 +472,17 @@
       "requested_time": "11:00 AM",
       "status": "CONFIRMED",
       "created_at": "2026-09-01T07:43:34.590645+00:00"
+    },
+    {
+      "booking_id": "demo_3143dd64",
+      "name": "Elena Rostova",
+      "email": "elena@globalhr.com",
+      "company": "Global HR",
+      "recruiters_count": 1,
+      "requested_date": "2026-09-01",
+      "requested_time": "11:00 AM",
+      "status": "CONFIRMED",
+      "created_at": "2026-09-01T08:01:12.866911+00:00"
     }
   ],
   "trials": [
@@ -625,6 +664,23 @@
       "plan": "GROWTH_199",
       "trial_start": "2026-09-01T07:43:34.604430+00:00",
       "trial_end": "2026-10-01T07:43:34.604451+00:00",
+      "is_active": true,
+      "converted": false,
+      "usage_stats": {
+        "resumes_parsed": 0,
+        "interviews_copiloted": 0,
+        "candidates_added": 0,
+        "ai_queries_run": 0
+      }
+    },
+    {
+      "trial_id": "trial_7bf0b1cf",
+      "lead_id": "lead_15d86fdb",
+      "email": "david@kimtalent.com",
+      "company": "Kim Talent",
+      "plan": "GROWTH_199",
+      "trial_start": "2026-09-01T08:01:12.875398+00:00",
+      "trial_end": "2026-10-01T08:01:12.875409+00:00",
       "is_active": true,
       "converted": false,
       "usage_stats": {
