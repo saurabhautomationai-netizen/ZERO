@@ -297,7 +297,7 @@ class ProjectBuilderAgent:
             stack.append("Web Frontend")
 
         # Classify components
-        reuse = [f for f in files_on_disk if any(k in f for k in ("core", "domain", "model", "config"))]
+        reuse = [f for f in files_on_disk if any(k in f for k in ("core", "domain", "model", "config", "service"))]
         modify = [f for f in files_on_disk if any(k in f for k in ("orchestrator", "app.py", "routes", "api"))]
         missing = []
         if not (target_dir / "docs" / "SRS.md").exists():

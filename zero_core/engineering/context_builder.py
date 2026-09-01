@@ -590,6 +590,33 @@ class ProjectContextBuilder:
             truncated_files=truncated_files,
         )
 
+    def build_context_package(
+        self,
+        manifest: ProjectManifest,
+        task_id: str,
+        task_title: str,
+        task_description: str,
+        relevant_files: Optional[List[str]] = None,
+        worker: Optional[Any] = None,
+        **kwargs,
+    ) -> ProjectContextPackage:
+        """Alias for build_context taking a ProjectManifest and task parameters."""
+        task = TaskItem(
+            task_id=task_id,
+            milestone_id=kwargs.get("milestone_id", "M_DEFAULT"),
+            phase=manifest.current_phase,
+            title=task_title,
+            description=task_description,
+            target_files=relevant_files or [],
+        )
+        return self.build_context(
+            project=manifest,
+            task=task,
+            worker=worker or "worker_chatgpt",
+            target_files=relevant_files,
+            **kwargs,
+        )
+
 
 # Global singleton instances
 DEFAULT_SECRET_SANITIZER = SecretSanitizer()

@@ -238,6 +238,15 @@ def handle_get_project_owner_briefing(project_id: str) -> dict[str, Any]:
     return json.loads(sanitized_str)
 
 
+def handle_get_project_release_candidate(project_id: str) -> dict[str, Any]:
+    """Returns formal release candidate report with secret redaction."""
+    import json
+    from zero_core.engineering.context_builder import DEFAULT_SECRET_SANITIZER
+    report = DEFAULT_LOOP_ENGINEERING_AGENT.get_release_candidate_report(project_id)
+    sanitized_str, _ = DEFAULT_SECRET_SANITIZER.sanitize(json.dumps(report))
+    return json.loads(sanitized_str)
+
+
 def handle_list_engineering_workers() -> dict[str, Any]:
     """Returns list of registered workers with live health."""
     from zero_core.engineering.workers.registry import DEFAULT_WORKER_REGISTRY, bootstrap_all_workers

@@ -124,6 +124,11 @@ def get_engineering_project_owner_briefing(project_id: str):
     return handlers.handle_get_project_owner_briefing(project_id)
 
 
+@app.get("/api/v1/engineering/projects/{project_id}/release-candidate")
+def get_engineering_project_release_candidate(project_id: str):
+    return handlers.handle_get_project_release_candidate(project_id)
+
+
 @app.get("/engineering/workers")
 @app.get("/api/v1/engineering/workers")
 def list_engineering_workers():

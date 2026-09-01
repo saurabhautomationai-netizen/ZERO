@@ -215,7 +215,7 @@ class ProjectLifecycleController:
 
         elif phase == PhaseEnum.COMPLETED:
             if manifest.deployment_status != "COMPLETED" and manifest.deployment_status != "SKIPPED":
-                reasons.append("Production deployment verification or explicit skip required to complete project.")
+                reasons.append("Production deployment verification (GATE 8) or explicit skip required to complete project.")
             if manifest.testing_status != "COMPLETED":
                 reasons.append("Automated test verification required before project completion.")
 

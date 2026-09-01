@@ -935,6 +935,11 @@ class LoopEngineeringAgent:
         from zero_core.engineering.multi_project import DEFAULT_MULTI_PROJECT_MANAGER
         return DEFAULT_MULTI_PROJECT_MANAGER.get_blocked_projects()
 
+    def get_release_candidate_report(self, project_id: str, feature_name: str = "AI Candidate Insights") -> Dict[str, Any]:
+        """Returns the formal release candidate report for a project."""
+        from zero_core.engineering.multi_project import DEFAULT_MULTI_PROJECT_MANAGER
+        return DEFAULT_MULTI_PROJECT_MANAGER.generate_release_candidate_report(project_id, feature_name)
+
     def _extract_project_name(self, text: str) -> str:
         """Extracts a clean project title from a conversational prompt."""
         t = text.strip(" .?!:;\"'")

@@ -148,26 +148,29 @@ class PhaseValidator:
 
         repo_dir = Path(manifest.repository_path) if Path(manifest.repository_path).exists() else Path(".")
 
-        # 1. Syntax Validation on affected files
+        # 1. Polyglot Syntax & Schema Validation on affected files
         checks_run.append("SYNTAX_CHECK")
         affected_files = list(getattr(worker_result, "files_created", [])) + list(getattr(worker_result, "files_modified", []))
+        
+        from zero_core.engineering.polyglot_validators import DEFAULT_POLYGLOT_REGISTRY
+        from zero_core.engineering.repository_guard import DEFAULT_REPOSITORY_GUARD
+
         if affected_files:
             for fpath in affected_files:
                 resolved = (repo_dir / fpath) if not Path(fpath).is_absolute() else Path(fpath)
-                if resolved.exists() and resolved.suffix == ".py":
-                    try:
-                        ast.parse(resolved.read_text(encoding="utf-8", errors="ignore"))
-                    except SyntaxError as exc:
-                        syntax_errors.append(f"{resolved.name}: {exc.msg} on line {exc.lineno}")
+                if resolved.exists():
+                    ok, errs = DEFAULT_POLYGLOT_REGISTRY.validate_file(resolved)
+                    if not ok:
+                        syntax_errors.extend(errs)
         else:
             syntax_errors = self.validate_code_syntax(str(repo_dir))
 
         if syntax_errors:
-            checks_failed.append(f"Syntax validation failed with {len(syntax_errors)} error(s)")
+            checks_failed.append(f"Syntax/schema validation failed with {len(syntax_errors)} error(s)")
         else:
-            checks_passed.append("100% Python syntax validation passed")
+            checks_passed.append("100% Polyglot syntax and schema validation passed")
 
-        # 2. Forbidden Boundary Check
+        # 2. Security & Repository Boundary Check
         checks_run.append("SECURITY_BOUNDARY_CHECK")
         forbidden_patterns = {".env", ".git", "credentials.json", "secrets.json", "id_rsa"}
         for fpath in affected_files:
@@ -175,10 +178,15 @@ class PhaseValidator:
             if fname in forbidden_patterns or any(part in forbidden_patterns for part in Path(fpath).parts):
                 forbidden_findings.append(f"Forbidden file modification attempted: {fpath}")
 
+        # Check repository containment
+        is_safe, repo_violations = DEFAULT_REPOSITORY_GUARD.audit_affected_files(repo_dir, affected_files)
+        if not is_safe:
+            forbidden_findings.extend(repo_violations)
+
         if forbidden_findings:
             checks_failed.append(f"Security boundary check failed ({len(forbidden_findings)} violations)")
         else:
-            checks_passed.append("Security file boundaries verified")
+            checks_passed.append("Security file boundaries and repository containment verified")
 
         # 3. Test Suite Execution (pytest)
         checks_run.append("AUTOMATED_TESTS")

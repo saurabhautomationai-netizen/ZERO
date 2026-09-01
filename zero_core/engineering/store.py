@@ -124,4 +124,9 @@ class EngineeringProjectStore:
         return False
 
 
+# Global singleton instances
+DEFAULT_PROJECT_STORE = EngineeringProjectStore()
+DEFAULT_ENGINEERING_PROJECT_STORE = DEFAULT_PROJECT_STORE
+
+
 DEFAULT_PROJECT_STORE = EngineeringProjectStore()

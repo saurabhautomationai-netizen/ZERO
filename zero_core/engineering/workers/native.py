@@ -52,7 +52,14 @@ class ProjectBuilderWorker(EngineeringWorker):
 
         # 1. Project Discovery & Existing Project Audit
         if any(k in full_text for k in ("discovery", "audit", "existing project", "inspect project", "analyze repo")):
-            repo_path = Path(context.project_id) if Path(context.project_id).exists() else Path(".")
+            from zero_core.engineering.store import DEFAULT_ENGINEERING_PROJECT_STORE
+            manifest = DEFAULT_ENGINEERING_PROJECT_STORE.get_project(context.project_id)
+            if manifest and Path(manifest.repository_path).exists():
+                repo_path = Path(manifest.repository_path)
+            elif Path(context.project_id).exists():
+                repo_path = Path(context.project_id)
+            else:
+                repo_path = Path(".")
             # Also check if any relevant files provide repo path hints
             audit = self.builder.audit_existing_project(repo_path, relevant_files=context.relevant_files)
             classification = audit.get("classification", {})
