@@ -237,6 +237,62 @@
       "selected_plan": "GROWTH_199",
       "notes": [],
       "created_at": "2026-09-01T00:17:45.105717+00:00"
+    },
+    {
+      "lead_id": "lead_b25e1298",
+      "name": "Marcus Vance",
+      "email": "marcus@vance.io",
+      "phone": "",
+      "company": "Vance AI",
+      "recruiters_count": 8,
+      "icp_type": "ICP_2_MID_SIZED_AGENCY",
+      "status": "NEW_LEAD",
+      "source": "WEBSITE",
+      "selected_plan": "GROWTH_199",
+      "notes": [],
+      "created_at": "2026-09-01T00:27:38.332524+00:00"
+    },
+    {
+      "lead_id": "lead_49d08247",
+      "name": "David Kim",
+      "email": "david@kimtalent.com",
+      "phone": "",
+      "company": "Kim Talent",
+      "recruiters_count": 1,
+      "icp_type": "ICP_1_BOUTIQUE_AGENCY",
+      "status": "TRIAL_ACTIVE",
+      "source": "30_DAY_TRIAL_SIGNUP",
+      "selected_plan": "GROWTH_199",
+      "notes": [],
+      "created_at": "2026-09-01T00:27:38.349218+00:00"
+    },
+    {
+      "lead_id": "lead_d0799624",
+      "name": "Marcus Vance",
+      "email": "marcus@vance.io",
+      "phone": "",
+      "company": "Vance AI",
+      "recruiters_count": 8,
+      "icp_type": "ICP_2_MID_SIZED_AGENCY",
+      "status": "NEW_LEAD",
+      "source": "WEBSITE",
+      "selected_plan": "GROWTH_199",
+      "notes": [],
+      "created_at": "2026-09-01T00:29:19.772283+00:00"
+    },
+    {
+      "lead_id": "lead_d0895162",
+      "name": "David Kim",
+      "email": "david@kimtalent.com",
+      "phone": "",
+      "company": "Kim Talent",
+      "recruiters_count": 1,
+      "icp_type": "ICP_1_BOUTIQUE_AGENCY",
+      "status": "TRIAL_ACTIVE",
+      "source": "30_DAY_TRIAL_SIGNUP",
+      "selected_plan": "GROWTH_199",
+      "notes": [],
+      "created_at": "2026-09-01T00:29:19.783833+00:00"
     }
   ],
   "demos": [
@@ -327,6 +383,28 @@
       "requested_time": "11:00 AM",
       "status": "CONFIRMED",
       "created_at": "2026-09-01T00:17:45.099739+00:00"
+    },
+    {
+      "booking_id": "demo_f27f2efb",
+      "name": "Elena Rostova",
+      "email": "elena@globalhr.com",
+      "company": "Global HR",
+      "recruiters_count": 1,
+      "requested_date": "2026-09-01",
+      "requested_time": "11:00 AM",
+      "status": "CONFIRMED",
+      "created_at": "2026-09-01T00:27:38.340847+00:00"
+    },
+    {
+      "booking_id": "demo_e45e85f2",
+      "name": "Elena Rostova",
+      "email": "elena@globalhr.com",
+      "company": "Global HR",
+      "recruiters_count": 1,
+      "requested_date": "2026-09-01",
+      "requested_time": "11:00 AM",
+      "status": "CONFIRMED",
+      "created_at": "2026-09-01T00:29:19.778415+00:00"
     }
   ],
   "trials": [
@@ -457,6 +535,40 @@
       "plan": "GROWTH_199",
       "trial_start": "2026-09-01T00:17:45.106678+00:00",
       "trial_end": "2026-10-01T00:17:45.106689+00:00",
+      "is_active": true,
+      "converted": false,
+      "usage_stats": {
+        "resumes_parsed": 0,
+        "interviews_copiloted": 0,
+        "candidates_added": 0,
+        "ai_queries_run": 0
+      }
+    },
+    {
+      "trial_id": "trial_a3c0bef8",
+      "lead_id": "lead_49d08247",
+      "email": "david@kimtalent.com",
+      "company": "Kim Talent",
+      "plan": "GROWTH_199",
+      "trial_start": "2026-09-01T00:27:38.350559+00:00",
+      "trial_end": "2026-10-01T00:27:38.350587+00:00",
+      "is_active": true,
+      "converted": false,
+      "usage_stats": {
+        "resumes_parsed": 0,
+        "interviews_copiloted": 0,
+        "candidates_added": 0,
+        "ai_queries_run": 0
+      }
+    },
+    {
+      "trial_id": "trial_324baea1",
+      "lead_id": "lead_d0895162",
+      "email": "david@kimtalent.com",
+      "company": "Kim Talent",
+      "plan": "GROWTH_199",
+      "trial_start": "2026-09-01T00:29:19.784804+00:00",
+      "trial_end": "2026-10-01T00:29:19.784815+00:00",
       "is_active": true,
       "converted": false,
       "usage_stats": {

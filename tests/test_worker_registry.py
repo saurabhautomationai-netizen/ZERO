@@ -122,7 +122,7 @@ def test_bootstrap_native_workers():
     reg = WorkerRegistry()
     bootstrap_native_workers(reg)
     workers = reg.list_workers()
-    assert len(workers) == 3
+    assert len(workers) == 4
 
     builder = reg.get("worker_project_builder")
     assert builder is not None
@@ -138,9 +138,14 @@ def test_bootstrap_native_workers():
     assert research is not None
     assert research.has_capability(WorkerCapability.RESEARCH)
 
+    uiux = reg.get("worker_uiux_designer")
+    assert uiux is not None
+    assert uiux.has_capability(WorkerCapability.UI_DESIGN)
+
     health = reg.health_check_all()
     assert health["worker_project_builder"] == WorkerStatus.AVAILABLE
     assert health["worker_coding_agent"] == WorkerStatus.AVAILABLE
+    assert health["worker_uiux_designer"] == WorkerStatus.AVAILABLE
 
 
 def test_native_project_builder_worker_execution():

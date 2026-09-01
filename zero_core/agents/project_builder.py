@@ -264,5 +264,73 @@ class ProjectBuilderAgent:
         }
 
 
+    def audit_existing_project(
+        self,
+        target_dir: Path,
+        relevant_files: Optional[Dict[str, str]] = None,
+    ) -> Dict[str, Any]:
+        """Audits an existing project and classifies components into REUSE, MODIFY, EXTEND, DEPRECATE, MISSING."""
+        if not target_dir.exists():
+            return {
+                "success": False,
+                "error": f"Target directory does not exist: {target_dir}",
+                "classification": {"reuse": [], "modify": [], "extend": [], "deprecate": [], "missing": []},
+            }
+
+        files_on_disk = [
+            str(p.relative_to(target_dir)).replace("\\", "/")
+            for p in target_dir.rglob("*")
+            if p.is_file() and not any(part.startswith((".", "__pycache__", "venv")) for part in p.parts)
+        ]
+
+        # Detect stack
+        stack = []
+        if any(f.endswith(".py") for f in files_on_disk):
+            stack.append("Python")
+        if any("fastapi" in f or "app.py" in f for f in files_on_disk):
+            stack.append("FastAPI")
+        if any("requirements.txt" in f for f in files_on_disk):
+            stack.append("pip/requirements")
+        if any("test" in f for f in files_on_disk):
+            stack.append("Pytest")
+        if any(f.endswith((".html", ".js", ".css")) for f in files_on_disk):
+            stack.append("Web Frontend")
+
+        # Classify components
+        reuse = [f for f in files_on_disk if any(k in f for k in ("core", "domain", "model", "config"))]
+        modify = [f for f in files_on_disk if any(k in f for k in ("orchestrator", "app.py", "routes", "api"))]
+        missing = []
+        if not (target_dir / "docs" / "SRS.md").exists():
+            missing.append("docs/SRS.md")
+        if not (target_dir / "docs" / "ARCHITECTURE.md").exists():
+            missing.append("docs/ARCHITECTURE.md")
+        if not (target_dir / "docs" / "ROADMAP.md").exists():
+            missing.append("docs/ROADMAP.md")
+        if not any("test" in f for f in files_on_disk):
+            missing.append("tests/test_core.py")
+
+        extend = ["domain/new_feature", "adapters/integration"]
+        deprecate = [f for f in files_on_disk if any(k in f for k in ("old", "legacy", "bak", "temp"))]
+
+        return {
+            "success": True,
+            "project_path": str(target_dir),
+            "files_count": len(files_on_disk),
+            "detected_stack": stack,
+            "classification": {
+                "reuse": reuse,
+                "modify": modify,
+                "extend": extend,
+                "deprecate": deprecate,
+                "missing": missing,
+            },
+            "summary": (
+                f"Audit of existing project: {len(files_on_disk)} files inspected. "
+                f"Identified {len(reuse)} reusable core files, {len(modify)} modification targets, "
+                f"and {len(missing)} missing architecture/spec files."
+            ),
+        }
+
+
 # Global singleton instance
 DEFAULT_PROJECT_BUILDER = ProjectBuilderAgent()

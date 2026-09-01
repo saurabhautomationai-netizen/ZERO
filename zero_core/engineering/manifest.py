@@ -150,6 +150,18 @@ class ProjectManifest(BaseModel):
     deployment_status: str = "PENDING"
     documentation_status: str = "PENDING"
 
+    # Project Builder & UI/UX Department Tracking
+    project_builder_status: str = "PENDING"
+    project_builder_worker: Optional[str] = "worker_project_builder"
+    project_builder_artifacts: List[str] = Field(default_factory=list)
+    uiux_worker_assignments: Dict[str, str] = Field(default_factory=dict)
+    uiux_artifacts: List[str] = Field(default_factory=list)
+    uiux_review_status: str = "PENDING"
+    uiux_revision_count: int = 0
+    uiux_approval: Optional[Dict[str, Any]] = None
+    approved_design_version: Optional[str] = None
+    artifacts: Dict[str, str] = Field(default_factory=dict)
+
     # History & Decision Logs
     approval_history: List[Dict[str, Any]] = Field(default_factory=list)
     decision_history: List[Dict[str, Any]] = Field(default_factory=list)

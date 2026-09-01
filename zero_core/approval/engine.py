@@ -74,3 +74,7 @@ class ApprovalPolicyEngine:
     def is_action_permitted(self, request_id: str) -> bool:
         req = self.get_request(request_id)
         return req is not None and req.is_approved
+
+
+# Global singleton instance
+DEFAULT_APPROVAL_ENGINE = ApprovalPolicyEngine()

@@ -141,6 +141,7 @@ DEFAULT_WORKER_REGISTRY = WorkerRegistry()
 def bootstrap_native_workers(registry: Optional[WorkerRegistry] = None) -> WorkerRegistry:
     """Instantiates and registers native ZERO engineering workers."""
     reg = registry or DEFAULT_WORKER_REGISTRY
+    from zero_core.engineering.departments.uiux import DEFAULT_UIUX_COORDINATOR
     from zero_core.engineering.workers.native import (
         CodingAgentWorker,
         ProjectBuilderWorker,
@@ -149,4 +150,5 @@ def bootstrap_native_workers(registry: Optional[WorkerRegistry] = None) -> Worke
     reg.register(ProjectBuilderWorker())
     reg.register(CodingAgentWorker())
     reg.register(ResearchWorker())
+    reg.register(DEFAULT_UIUX_COORDINATOR)
     return reg

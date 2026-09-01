@@ -65,6 +65,7 @@ class LoopEngineeringAgent:
         idea: str,
         name: Optional[str] = None,
         target_dir: Optional[str] = None,
+        repo_path: Optional[str] = None,
     ) -> ProjectManifest:
         """Initializes a new or existing project engineering state manifest."""
         import re
@@ -76,7 +77,8 @@ class LoopEngineeringAgent:
         project_id = f"proj_{project_slug}"
         
         project_type = "NEW_PROJECT"
-        repo_path = target_dir
+        resolved_repo_path = repo_path or target_dir
+        repo_path = resolved_repo_path
 
         # Auto-detect existing project directories
         if not repo_path:
@@ -321,6 +323,9 @@ class LoopEngineeringAgent:
             target_dir=repo_dir,
             idea=manifest.description,
         )
+        if scaffold_res.get("root_path"):
+            manifest.repository_path = scaffold_res["root_path"]
+            repo_dir = Path(manifest.repository_path)
 
         manifest.requirements_status = "COMPLETED"
         manifest.architecture_status = "COMPLETED"
@@ -330,7 +335,44 @@ class LoopEngineeringAgent:
         manifest.current_phase = PhaseEnum.PHASE_5_UIUX
         manifest.uiux_status = "APPROVAL_PENDING"
         manifest.project_status = ProjectStatus.APPROVAL_PENDING
-        
+
+        # Build sanitized context package for UI/UX Department via Phase 2 Context Builder
+        from zero_core.engineering.context_builder import DEFAULT_CONTEXT_BUILDER
+        from zero_core.engineering.departments.uiux import DEFAULT_UIUX_COORDINATOR
+
+        uiux_task = TaskItem(
+            task_id=f"t_uiux_{manifest.project_id[:8]}",
+            milestone_id="M_UIUX_DESIGN",
+            title=f"Design UI/UX Experience for {manifest.project_name}",
+            description=f"Create page inventory, design system tokens, and interactive prototype for {manifest.description}",
+            acceptance_criteria=[
+                "Page inventory defined",
+                "Design system tokens formulated",
+                "Interactive HTML prototype generated",
+                "Accessibility and commercial finish reviews passed",
+            ],
+        )
+
+        uiux_context = DEFAULT_CONTEXT_BUILDER.build_context(
+            project=manifest,
+            task=uiux_task,
+            worker=DEFAULT_UIUX_COORDINATOR,
+        )
+
+        uiux_worker_res = DEFAULT_UIUX_COORDINATOR.run_task(uiux_context)
+
+        manifest.uiux_worker_assignments["lead"] = DEFAULT_UIUX_COORDINATOR.worker_id
+        manifest.uiux_artifacts = uiux_worker_res.artifacts_created
+        manifest.uiux_review_status = "PASS" if uiux_worker_res.is_success else "NEEDS_REVISION"
+        manifest.uiux_revision_count = DEFAULT_UIUX_COORDINATOR.revision_counter.get(manifest.project_id, 1)
+        manifest.approved_design_version = uiux_worker_res.execution_metadata.get("version", "v1.0.0")
+
+        # Persist design docs on disk
+        docs_dir = repo_dir / "docs"
+        docs_dir.mkdir(parents=True, exist_ok=True)
+        if uiux_worker_res.analysis:
+            (docs_dir / "UIUX_SPEC.md").write_text(uiux_worker_res.analysis, encoding="utf-8")
+
         uiux_spec = self._generate_uiux_specification(manifest)
         manifest.record_decision("UI_UX_DESIGN", "High-Fidelity SaaS Layout", "Clean dark/light theme, modular dashboard cards, and interactive data tables.")
         manifest.pending_user_actions = ["Approve UI/UX Specification (Gate 2)"]
