@@ -52,6 +52,7 @@ class LoopEngineeringAgent:
         reviewer: Optional[Any] = None,
         repair_loop: Optional[Any] = None,
         worker_registry: Optional[Any] = None,
+        lifecycle: Optional[Any] = None,
     ):
         self.store = store or DEFAULT_PROJECT_STORE
         self.checkpoints = checkpoints or DEFAULT_CHECKPOINT_MANAGER
@@ -61,13 +62,16 @@ class LoopEngineeringAgent:
         self.research = research_agent or DEFAULT_RESEARCH_AGENT
         self.approval_engine = approval_engine or ApprovalPolicyEngine()
 
+        from zero_core.engineering.lifecycle import DEFAULT_LIFECYCLE_CONTROLLER
         from zero_core.engineering.repair import DEFAULT_REPAIR_LOOP
         from zero_core.engineering.reviewer import DEFAULT_REVIEWER_ENGINE
         from zero_core.engineering.router import DEFAULT_TASK_ROUTER
+        from zero_core.engineering.workers.registry import DEFAULT_WORKER_REGISTRY
+
+        self.lifecycle = lifecycle or DEFAULT_LIFECYCLE_CONTROLLER
         self.router = router or DEFAULT_TASK_ROUTER
         self.reviewer = reviewer or DEFAULT_REVIEWER_ENGINE
         self.repair_loop = repair_loop or DEFAULT_REPAIR_LOOP
-        from zero_core.engineering.workers.registry import DEFAULT_WORKER_REGISTRY
         self.worker_registry = worker_registry or getattr(self.router, "worker_registry", DEFAULT_WORKER_REGISTRY)
 
     # -------------------------------------------------------------------------
@@ -821,6 +825,115 @@ class LoopEngineeringAgent:
             "review": review_result.to_dict(),
             "validation": validation_result.to_dict(),
         }
+
+    # -------------------------------------------------------------------------
+    # PHASE 6: AUTONOMOUS PROJECT LIFECYCLE & MULTI-PROJECT CONTROLLER
+    # -------------------------------------------------------------------------
+    def advance_project_lifecycle(self, manifest: ProjectManifest) -> Dict[str, Any]:
+        """Advances a project through its lifecycle phases, stopping strictly at HITL gates or blockers."""
+        from zero_core.engineering.lifecycle import TaskState
+        from zero_core.engineering.multi_project import DEFAULT_MULTI_PROJECT_MANAGER
+
+        # Check if project is paused
+        if manifest.project_status == ProjectStatus.PAUSED or manifest.project_id in DEFAULT_MULTI_PROJECT_MANAGER.paused_projects:
+            return {"status": "PAUSED", "phase": manifest.current_phase.value, "message": "Project is paused by human command."}
+
+        # Check entry criteria for current phase
+        can_enter, entry_reasons = self.lifecycle.check_phase_entry(manifest, manifest.current_phase)
+        if not can_enter:
+            manifest.project_status = ProjectStatus.APPROVAL_PENDING
+            manifest.pending_user_actions = entry_reasons
+            self.store.save_project(manifest)
+            return {"status": "APPROVAL_PENDING", "phase": manifest.current_phase.value, "blockers": entry_reasons}
+
+        # Get or populate DAG
+        dag = self.lifecycle.get_or_create_dag(manifest)
+        ready_tasks = dag.get_ready_tasks()
+
+        # If there are ready tasks in the DAG, execute them through Phase 5 autonomous cycle
+        for dag_task in ready_tasks:
+            task_item = TaskItem(
+                task_id=dag_task.task_id,
+                milestone_id="M_DAG",
+                title=dag_task.title,
+                description=dag_task.description,
+                acceptance_criteria=dag_task.acceptance_criteria,
+                modified_files=dag_task.target_files,
+            )
+            dag_task.state = TaskState.RUNNING
+            res = self.run_autonomous_task_cycle(manifest, task_item)
+            if res.get("status") == "COMPLETED":
+                dag.mark_completed(dag_task.task_id, res.get("execution", {}).get("summary", "Complete"))
+                manifest.completed_tasks.append(dag_task.task_id)
+            else:
+                dag_task.state = TaskState.BLOCKED
+                manifest.project_status = ProjectStatus.BLOCKED
+                self.store.save_project(manifest)
+                return {"status": "BLOCKED", "task_id": dag_task.task_id, "detail": res}
+
+        # Check exit criteria for current phase
+        can_exit, exit_reasons = self.lifecycle.check_phase_exit(manifest, manifest.current_phase)
+        if not can_exit:
+            manifest.project_status = ProjectStatus.APPROVAL_PENDING
+            manifest.pending_user_actions = exit_reasons
+            self.store.save_project(manifest)
+            return {"status": "APPROVAL_PENDING", "phase": manifest.current_phase.value, "blockers": exit_reasons}
+
+        # Advance to next phase
+        next_ph = self.lifecycle.get_next_phase(manifest.current_phase)
+        if next_ph:
+            logger.info("Project '%s' advancing from %s to %s", manifest.project_name, manifest.current_phase.value, next_ph.value)
+            manifest.current_phase = next_ph
+            manifest.last_successful_phase = manifest.current_phase
+            manifest.pending_user_actions.clear()
+            if next_ph == PhaseEnum.COMPLETED:
+                manifest.project_status = ProjectStatus.COMPLETED
+                manifest.completion_status = "COMPLETED"
+
+            ckpt = self.checkpoints.create_checkpoint(manifest, f"Phase {manifest.current_phase.value} Completed")
+            manifest.last_successful_checkpoint = ckpt.checkpoint_id if hasattr(ckpt, "checkpoint_id") else str(ckpt)
+            self.store.save_project(manifest)
+
+            if next_ph == PhaseEnum.COMPLETED:
+                return {"status": "COMPLETED", "phase": "COMPLETED", "message": f"{manifest.project_name} successfully completed!"}
+
+            # Recursively advance next phase if no gate prevents it
+            return self.advance_project_lifecycle(manifest)
+
+        return {"status": manifest.project_status.value, "phase": manifest.current_phase.value}
+
+    def get_owner_briefing(self, project_id: str) -> Dict[str, Any]:
+        """Returns structured executive briefing for the project owner."""
+        from zero_core.engineering.multi_project import DEFAULT_MULTI_PROJECT_MANAGER
+        return DEFAULT_MULTI_PROJECT_MANAGER.generate_owner_briefing(project_id)
+
+    def pause_project(self, project_id: str) -> Dict[str, Any]:
+        """Pauses execution of a project."""
+        from zero_core.engineering.multi_project import DEFAULT_MULTI_PROJECT_MANAGER
+        return DEFAULT_MULTI_PROJECT_MANAGER.pause_project(project_id)
+
+    def resume_project(self, project_id: str) -> Dict[str, Any]:
+        """Resumes execution of a project."""
+        from zero_core.engineering.multi_project import DEFAULT_MULTI_PROJECT_MANAGER
+        res = DEFAULT_MULTI_PROJECT_MANAGER.resume_project(project_id)
+        manifest = self.store.load_project(project_id) or self.store.find_by_name(project_id)
+        if manifest:
+            return self.advance_project_lifecycle(manifest)
+        return res
+
+    def prioritize_project(self, project_id: str, priority_str: str) -> bool:
+        """Sets project scheduling priority."""
+        from zero_core.engineering.multi_project import DEFAULT_MULTI_PROJECT_MANAGER, ProjectPriority
+        try:
+            prio = ProjectPriority[priority_str.upper()]
+        except KeyError:
+            prio = ProjectPriority.NORMAL
+        return DEFAULT_MULTI_PROJECT_MANAGER.set_project_priority(project_id, prio)
+
+    def get_blocked_projects(self) -> List[Dict[str, Any]]:
+        """Returns all projects currently awaiting human input or approvals."""
+        from zero_core.engineering.multi_project import DEFAULT_MULTI_PROJECT_MANAGER
+        return DEFAULT_MULTI_PROJECT_MANAGER.get_blocked_projects()
 
     def _extract_project_name(self, text: str) -> str:
         """Extracts a clean project title from a conversational prompt."""

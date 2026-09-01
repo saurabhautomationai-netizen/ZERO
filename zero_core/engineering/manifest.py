@@ -20,6 +20,7 @@ class ProjectStatus(str, enum.Enum):
     BLOCKED = "BLOCKED"
     COMPLETED = "COMPLETED"
     FAILED = "FAILED"
+    PAUSED = "PAUSED"
 
 
 class PhaseEnum(str, enum.Enum):
@@ -158,7 +159,10 @@ class ProjectManifest(BaseModel):
     uiux_artifacts: List[str] = Field(default_factory=list)
     uiux_review_status: str = "PENDING"
     uiux_revision_count: int = 0
+    scope_approval: Optional[Any] = None
     uiux_approval: Optional[Dict[str, Any]] = None
+    security_approval: Optional[Dict[str, Any]] = None
+    deployment_approval: Optional[Dict[str, Any]] = None
     approved_design_version: Optional[str] = None
     artifacts: List[str] = Field(default_factory=list)
 

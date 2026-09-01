@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZERO — Autonomous AI Engineering Cockpit</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    :root {
+      --cockpit-bg: #0b0f19;
+      --cockpit-card: #131b2e;
+      --cockpit-border: #1e293b;
+      --cockpit-accent: #38bdf8;
+      --cockpit-success: #10b981;
+      --cockpit-warning: #f59e0b;
+      --cockpit-danger: #ef4444;
+      --cockpit-text: #f8fafc;
+      --cockpit-muted: #94a3b8;
+    }
+    body {
+      background: var(--cockpit-bg);
+      color: var(--cockpit-text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 24px;
+    }
+    .cockpit-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--cockpit-border);
+      padding-bottom: 16px;
+      margin-bottom: 24px;
+    }
+    .cockpit-title {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .badge {
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 9999px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .badge-active { background: rgba(16, 185, 129, 0.2); color: var(--cockpit-success); border: 1px solid var(--cockpit-success); }
+    .badge-hitl { background: rgba(245, 158, 11, 0.2); color: var(--cockpit-warning); border: 1px solid var(--cockpit-warning); }
+    .badge-paused { background: rgba(148, 163, 184, 0.2); color: var(--cockpit-muted); border: 1px solid var(--cockpit-muted); }
+    .badge-critical { background: rgba(239, 68, 68, 0.2); color: var(--cockpit-danger); border: 1px solid var(--cockpit-danger); }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .metric-card {
+      background: var(--cockpit-card);
+      border: 1px solid var(--cockpit-border);
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .metric-card .label { font-size: 12px; color: var(--cockpit-muted); text-transform: uppercase; margin-bottom: 6px; }
+    .metric-card .value { font-size: 28px; font-weight: 700; color: var(--cockpit-accent); }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 24px;
+    }
+    .card {
+      background: var(--cockpit-card);
+      border: 1px solid var(--cockpit-border);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    .card-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-top: 0;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--cockpit-border);
+      padding-bottom: 10px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    th, td {
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--cockpit-border);
+    }
+    th { color: var(--cockpit-muted); font-weight: 600; }
+    .btn {
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #f8fafc;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.2s;
+    }
+    .btn:hover { background: #334155; }
+    .btn-primary { background: #0284c7; border-color: #0369a1; }
+    .btn-primary:hover { background: #0369a1; }
+    .btn-success { background: #059669; border-color: #047857; }
+    .btn-danger { background: #dc2626; border-color: #b91c1c; }
+
+    .worker-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--cockpit-border);
+      font-size: 13px;
+    }
+    .worker-name { font-weight: 600; }
+    .worker-status { font-size: 11px; padding: 2px 6px; border-radius: 4px; }
+    .status-available { background: rgba(16, 185, 129, 0.2); color: var(--cockpit-success); }
+    .status-not-configured { background: rgba(148, 163, 184, 0.2); color: var(--cockpit-muted); }
+
+    .briefing-box {
+      background: #0f172a;
+      border: 1px solid #1e293b;
+      border-radius: 6px;
+      padding: 12px;
+      font-family: monospace;
+      font-size: 12px;
+      white-space: pre-wrap;
+      max-height: 280px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="cockpit-header">
+    <div class="cockpit-title">
+      <span>ZERO</span>
+      <span style="color: var(--cockpit-muted); font-size: 18px;">/ Engineering Cockpit</span>
+    </div>
+    <div>
+      <button class="btn" onclick="refreshData()">↻ Refresh</button>
+      <a href="/" class="btn btn-primary" style="text-decoration: none;">Executive Console</a>
+    </div>
+  </div>
+
+  <div class="metrics-grid">
+    <div class="metric-card">
+      <div class="label">Total Projects</div>
+      <div class="value" id="kpi-total">0</div>
+    </div>
+    <div class="metric-card">
+      <div class="label">Active Projects</div>
+      <div class="value" id="kpi-active" style="color: var(--cockpit-success);">0</div>
+    </div>
+    <div class="metric-card">
+      <div class="label">Waiting HITL</div>
+      <div class="value" id="kpi-hitl" style="color: var(--cockpit-warning);">0</div>
+    </div>
+    <div class="metric-card">
+      <div class="label">Blocked / Limit</div>
+      <div class="value" id="kpi-blocked" style="color: var(--cockpit-danger);">0</div>
+    </div>
+    <div class="metric-card">
+      <div class="label">Completed</div>
+      <div class="value" id="kpi-completed">0</div>
+    </div>
+  </div>
+
+  <div class="main-grid">
+    <div>
+      <div class="card">
+        <div class="card-title">
+          <span>Active & Queued Engineering Projects</span>
+          <span style="font-size: 12px; color: var(--cockpit-muted);">Sorted by Priority</span>
+        </div>
+        <table id="projects-table">
+          <thead>
+            <tr>
+              <th>Project</th>
+              <th>Priority</th>
+              <th>Status</th>
+              <th>Phase</th>
+              <th>Progress</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="projects-tbody">
+            <tr><td colspan="6" style="text-align: center; color: var(--cockpit-muted);">Loading projects...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <span>Pending Human-in-the-Loop (HITL) Decisions</span>
+        </div>
+        <div id="hitl-container" style="font-size: 13px; color: var(--cockpit-muted);">
+          No pending approvals at this time.
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="card-title">
+          <span>AI Engineering Workers</span>
+        </div>
+        <div id="workers-container">
+          Loading workers...
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <span>Owner Briefing Preview</span>
+        </div>
+        <div class="briefing-box" id="briefing-container">
+          Select a project above to inspect its owner briefing.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function refreshData() {
+      try {
+        const res = await fetch('/api/v1/engineering/cockpit/overview');
+        const data = await res.json();
+
+        document.getElementById('kpi-total').textContent = data.total_projects || 0;
+        document.getElementById('kpi-active').textContent = data.active_projects || 0;
+        document.getElementById('kpi-hitl').textContent = data.waiting_hitl || 0;
+        document.getElementById('kpi-blocked').textContent = data.blocked || 0;
+        document.getElementById('kpi-completed').textContent = data.completed || 0;
+
+        // Render projects
+        const tbody = document.getElementById('projects-tbody');
+        tbody.innerHTML = '';
+        if (data.projects && data.projects.length > 0) {
+          data.projects.forEach(p => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td><strong>${p.project_name}</strong><br><small style="color: #64748b;">${p.project_id}</small></td>
+              <td><span class="badge badge-${p.priority.toLowerCase()}">${p.priority}</span></td>
+              <td><span class="badge badge-${p.status.toLowerCase()}">${p.status}</span></td>
+              <td>${p.current_phase}</td>
+              <td>${p.progress_pct}%</td>
+              <td>
+                <button class="btn btn-primary" onclick="loadBriefing('${p.project_id}')">Briefing</button>
+                <button class="btn" onclick="togglePause('${p.project_id}', '${p.status}')">${p.status === 'PAUSED' ? 'Resume' : 'Pause'}</button>
+              </td>
+            `;
+            tbody.appendChild(tr);
+          });
+        } else {
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No engineering projects found.</td></tr>';
+        }
+
+        // Render workers
+        const workersBox = document.getElementById('workers-container');
+        workersBox.innerHTML = '';
+        if (data.workers && data.workers.length > 0) {
+          data.workers.forEach(w => {
+            const row = document.createElement('div');
+            row.className = 'worker-row';
+            const isAvail = w.health === 'AVAILABLE';
+            row.innerHTML = `
+              <div>
+                <div class="worker-name">${w.name}</div>
+                <small style="color: #64748b;">${w.worker_type}</small>
+              </div>
+              <div class="worker-status ${isAvail ? 'status-available' : 'status-not-configured'}">${w.health}</div>
+            `;
+            workersBox.appendChild(row);
+          });
+        }
+
+        // Render approvals
+        const hitlBox = document.getElementById('hitl-container');
+        const blocked = data.projects.filter(p => p.blockers && p.blockers.length > 0);
+        if (blocked.length > 0) {
+          hitlBox.innerHTML = blocked.map(b => `
+            <div style="background:#1e293b; padding:12px; border-radius:6px; margin-bottom:8px;">
+              <strong>${b.project_name}</strong>: ${b.blockers.join(', ')}
+            </div>
+          `).join('');
+        } else {
+          hitlBox.innerHTML = 'No pending approvals required.';
+        }
+
+      } catch (err) {
+        console.error('Failed to load cockpit data', err);
+      }
+    }
+
+    async function loadBriefing(projectId) {
+      try {
+        const res = await fetch(`/api/v1/engineering/projects/${projectId}/owner-briefing`);
+        const briefing = await res.json();
+        document.getElementById('briefing-container').textContent = JSON.stringify(briefing, null, 2);
+      } catch (err) {
+        document.getElementById('briefing-container').textContent = 'Error loading briefing.';
+      }
+    }
+
+    async function togglePause(projectId, currentStatus) {
+      const endpoint = currentStatus === 'PAUSED' ? 'resume' : 'pause';
+      await fetch(`/api/v1/engineering/projects/${projectId}/${endpoint}`, { method: 'POST' });
+      refreshData();
+    }
+
+    refreshData();
+  </script>
+</body>
+</html>

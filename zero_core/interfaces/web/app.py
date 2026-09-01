@@ -29,6 +29,15 @@ def get_index():
     return {"message": "ZERO Core API is active. See /docs for OpenAPI specifications."}
 
 
+@app.get("/cockpit")
+@app.get("/engineering/cockpit")
+def get_cockpit_page():
+    cockpit_file = STATIC_DIR / "cockpit.html"
+    if cockpit_file.is_file():
+        return FileResponse(str(cockpit_file))
+    return {"message": "Cockpit HTML not found"}
+
+
 @app.post("/task")
 @app.post("/api/task")
 def post_task(body: TaskRequest):
@@ -55,6 +64,16 @@ class ProjectActionRequest(BaseModel):
     payload: Optional[dict] = None
 
 
+class ProjectPriorityRequest(BaseModel):
+    priority: str
+
+
+@app.get("/engineering/cockpit/overview")
+@app.get("/api/v1/engineering/cockpit/overview")
+def get_cockpit_overview():
+    return handlers.handle_cockpit_overview()
+
+
 @app.get("/engineering/projects")
 @app.get("/api/v1/engineering/projects")
 def list_engineering_projects():
@@ -68,6 +87,53 @@ def get_engineering_project(project_id: str):
     if result is None:
         raise HTTPException(status_code=404, detail=f"No project found for ID '{project_id}'")
     return result
+
+
+@app.post("/api/v1/engineering/projects/{project_id}/pause")
+def pause_engineering_project(project_id: str):
+    return handlers.handle_pause_engineering_project(project_id)
+
+
+@app.post("/api/v1/engineering/projects/{project_id}/resume")
+def resume_engineering_project(project_id: str):
+    return handlers.handle_resume_engineering_project(project_id)
+
+
+@app.post("/api/v1/engineering/projects/{project_id}/priority")
+def priority_engineering_project(project_id: str, body: ProjectPriorityRequest):
+    return handlers.handle_priority_engineering_project(project_id, body.priority)
+
+
+@app.get("/api/v1/engineering/projects/{project_id}/tasks")
+def get_engineering_project_tasks(project_id: str):
+    return handlers.handle_get_project_tasks(project_id)
+
+
+@app.get("/api/v1/engineering/projects/{project_id}/activity")
+def get_engineering_project_activity(project_id: str):
+    return handlers.handle_get_project_activity(project_id)
+
+
+@app.get("/api/v1/engineering/projects/{project_id}/artifacts")
+def get_engineering_project_artifacts(project_id: str):
+    return handlers.handle_get_project_artifacts(project_id)
+
+
+@app.get("/api/v1/engineering/projects/{project_id}/owner-briefing")
+def get_engineering_project_owner_briefing(project_id: str):
+    return handlers.handle_get_project_owner_briefing(project_id)
+
+
+@app.get("/engineering/workers")
+@app.get("/api/v1/engineering/workers")
+def list_engineering_workers():
+    return handlers.handle_list_engineering_workers()
+
+
+@app.get("/engineering/approvals")
+@app.get("/api/v1/engineering/approvals")
+def list_engineering_approvals():
+    return handlers.handle_list_engineering_approvals()
 
 
 @app.post("/engineering/projects/{project_id}/action")

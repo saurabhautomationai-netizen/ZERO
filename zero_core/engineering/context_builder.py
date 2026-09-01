@@ -591,5 +591,6 @@ class ProjectContextBuilder:
         )
 
 
-# Global singleton instance
+# Global singleton instances
+DEFAULT_SECRET_SANITIZER = SecretSanitizer()
 DEFAULT_CONTEXT_BUILDER = ProjectContextBuilder()

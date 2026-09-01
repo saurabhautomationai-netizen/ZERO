@@ -106,19 +106,163 @@ from zero_core.agents.loop_engineering import DEFAULT_LOOP_ENGINEERING_AGENT
 
 def handle_list_engineering_projects() -> dict[str, Any]:
     """Returns list of all active and completed engineering projects."""
-    projects = DEFAULT_LOOP_ENGINEERING_AGENT.store.list_projects()
+    from zero_core.engineering.multi_project import DEFAULT_MULTI_PROJECT_MANAGER
+    summaries = DEFAULT_MULTI_PROJECT_MANAGER.list_projects_overview()
     return {
-        "count": len(projects),
-        "projects": [p.model_dump() for p in projects],
+        "count": len(summaries),
+        "projects": summaries,
     }
 
 
 def handle_get_engineering_project(project_id: str) -> Optional[dict[str, Any]]:
-    """Returns detailed manifest and history for a specific project."""
+    """Returns detailed manifest and history for a specific project with secret redaction."""
+    import json
+    from zero_core.engineering.context_builder import DEFAULT_SECRET_SANITIZER
     manifest = DEFAULT_LOOP_ENGINEERING_AGENT.store.get_project(project_id)
     if not manifest:
         manifest = DEFAULT_LOOP_ENGINEERING_AGENT.store.find_by_name(project_id)
-    return manifest.model_dump() if manifest else None
+    if not manifest:
+        return None
+    raw_json = manifest.model_dump_json()
+    sanitized_json, _ = DEFAULT_SECRET_SANITIZER.sanitize(raw_json)
+    return json.loads(sanitized_json)
+
+
+def handle_pause_engineering_project(project_id: str) -> dict[str, Any]:
+    """Pauses execution of a project."""
+    return DEFAULT_LOOP_ENGINEERING_AGENT.pause_project(project_id)
+
+
+def handle_resume_engineering_project(project_id: str) -> dict[str, Any]:
+    """Resumes execution of a project."""
+    return DEFAULT_LOOP_ENGINEERING_AGENT.resume_project(project_id)
+
+
+def handle_priority_engineering_project(project_id: str, priority: str) -> dict[str, Any]:
+    """Sets project scheduling priority."""
+    success = DEFAULT_LOOP_ENGINEERING_AGENT.prioritize_project(project_id, priority)
+    return {"status": "SUCCESS" if success else "FAILED", "project_id": project_id, "priority": priority}
+
+
+def handle_cockpit_overview() -> dict[str, Any]:
+    """Returns aggregated high-level visibility across all engineering projects and workers."""
+    from zero_core.engineering.multi_project import DEFAULT_MULTI_PROJECT_MANAGER
+    from zero_core.engineering.workers.registry import DEFAULT_WORKER_REGISTRY, bootstrap_all_workers
+
+    if not DEFAULT_WORKER_REGISTRY.list_workers():
+        bootstrap_all_workers(DEFAULT_WORKER_REGISTRY)
+
+    projects = DEFAULT_MULTI_PROJECT_MANAGER.list_projects_overview()
+    active_count = sum(1 for p in projects if p["status"] == "ACTIVE")
+    waiting_hitl_count = sum(1 for p in projects if p["status"] in ("WAITING_HITL", "WAITING_CREDENTIALS", "WAITING_EXTERNAL_INPUT"))
+    blocked_count = sum(1 for p in projects if p["status"] == "BLOCKED")
+    completed_count = sum(1 for p in projects if p["status"] == "COMPLETE")
+
+    # Worker health
+    workers_info = []
+    for w in DEFAULT_WORKER_REGISTRY.list_workers():
+        health = w.health_check()
+        workers_info.append({
+            "worker_id": w.worker_id,
+            "name": w.name,
+            "worker_type": w.worker_type.value,
+            "health": health.value,
+        })
+
+    return {
+        "total_projects": len(projects),
+        "active_projects": active_count,
+        "waiting_hitl": waiting_hitl_count,
+        "blocked": blocked_count,
+        "completed": completed_count,
+        "projects": projects,
+        "workers": workers_info,
+    }
+
+
+def handle_get_project_tasks(project_id: str) -> dict[str, Any]:
+    """Returns task DAG nodes and states for a project."""
+    manifest = DEFAULT_LOOP_ENGINEERING_AGENT.store.get_project(project_id) or DEFAULT_LOOP_ENGINEERING_AGENT.store.find_by_name(project_id)
+    if not manifest:
+        return {"error": f"Project '{project_id}' not found"}
+    dag = DEFAULT_LOOP_ENGINEERING_AGENT.lifecycle.get_or_create_dag(manifest)
+    return {
+        "project_id": manifest.project_id,
+        "task_count": len(dag.nodes),
+        "tasks": [n.to_dict() for n in dag.nodes.values()],
+    }
+
+
+def handle_get_project_activity(project_id: str) -> dict[str, Any]:
+    """Returns chronological activity history across execution, review, and repairs."""
+    manifest = DEFAULT_LOOP_ENGINEERING_AGENT.store.get_project(project_id) or DEFAULT_LOOP_ENGINEERING_AGENT.store.find_by_name(project_id)
+    if not manifest:
+        return {"error": f"Project '{project_id}' not found"}
+
+    events = []
+    for r in manifest.routing_history:
+        events.append({"type": "ROUTING", "timestamp": r.get("created_at", ""), "detail": r})
+    for ex in manifest.worker_execution_history:
+        events.append({"type": "EXECUTION", "timestamp": ex.get("created_at", ""), "detail": ex})
+    for rev in manifest.review_history:
+        events.append({"type": "REVIEW", "timestamp": rev.get("reviewed_at", ""), "detail": rev})
+    for val in manifest.validation_history:
+        events.append({"type": "VALIDATION", "timestamp": val.get("validated_at", ""), "detail": val})
+    for rep in manifest.repair_history:
+        events.append({"type": "REPAIR", "timestamp": rep.get("created_at", ""), "detail": rep})
+
+    return {
+        "project_id": manifest.project_id,
+        "event_count": len(events),
+        "events": events,
+    }
+
+
+def handle_get_project_artifacts(project_id: str) -> dict[str, Any]:
+    """Returns map of generated project artifacts safely without credentials."""
+    manifest = DEFAULT_LOOP_ENGINEERING_AGENT.store.get_project(project_id) or DEFAULT_LOOP_ENGINEERING_AGENT.store.find_by_name(project_id)
+    if not manifest:
+        return {"error": f"Project '{project_id}' not found"}
+    return {
+        "project_id": manifest.project_id,
+        "artifacts": manifest.artifacts,
+    }
+
+
+def handle_get_project_owner_briefing(project_id: str) -> dict[str, Any]:
+    """Returns concise executive status briefing for project owner with secret redaction."""
+    import json
+    from zero_core.engineering.context_builder import DEFAULT_SECRET_SANITIZER
+    briefing = DEFAULT_LOOP_ENGINEERING_AGENT.get_owner_briefing(project_id)
+    sanitized_str, _ = DEFAULT_SECRET_SANITIZER.sanitize(json.dumps(briefing))
+    return json.loads(sanitized_str)
+
+
+def handle_list_engineering_workers() -> dict[str, Any]:
+    """Returns list of registered workers with live health."""
+    from zero_core.engineering.workers.registry import DEFAULT_WORKER_REGISTRY, bootstrap_all_workers
+    if not DEFAULT_WORKER_REGISTRY.list_workers():
+        bootstrap_all_workers(DEFAULT_WORKER_REGISTRY)
+    workers = []
+    for w in DEFAULT_WORKER_REGISTRY.list_workers():
+        workers.append({
+            "worker_id": w.worker_id,
+            "name": w.name,
+            "worker_type": w.worker_type.value,
+            "health": w.health_check().value,
+            "capabilities": [c.value for c in w.capabilities],
+        })
+    return {"count": len(workers), "workers": workers}
+
+
+def handle_list_engineering_approvals() -> dict[str, Any]:
+    """Returns all pending human approvals across all engineering projects."""
+    from zero_core.engineering.multi_project import DEFAULT_MULTI_PROJECT_MANAGER
+    blocked = DEFAULT_MULTI_PROJECT_MANAGER.get_blocked_projects()
+    return {
+        "count": len(blocked),
+        "pending_approvals": blocked,
+    }
 
 
 def handle_engineering_project_action(project_id: str, action: str, payload: Optional[dict[str, Any]] = None) -> dict[str, Any]:
