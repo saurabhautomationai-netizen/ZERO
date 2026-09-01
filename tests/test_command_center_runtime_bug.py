@@ -79,7 +79,7 @@ def test_handle_task_never_crashes_on_failing_executor(monkeypatch):
     """Confirms handle_task catches internal executor errors and returns valid JSON response."""
     from zero_core.orchestrator import Orchestrator
     
-    def mock_broken_execute(self, task):
+    def mock_broken_execute(self, *args, **kwargs):
         raise RuntimeError("Simulated internal subsystem crash: DB connection dropped")
 
     monkeypatch.setattr(Orchestrator, "execute", mock_broken_execute)

@@ -182,7 +182,8 @@ def _execute_loop_engineering(task: str) -> str:
     # 2. Project Continuation Queries
     continuation_prefixes = (
         "continue the", "resume project", "continue project", "resume the",
-        "continue development of", "continue development", "continue my", "resume development"
+        "continue development of", "continue development", "continue my", "resume development",
+        "resume my existing project", "resume my project", "resume my existing", "resume my"
     )
     if any(k in t_lower for k in continuation_prefixes):
         q = task

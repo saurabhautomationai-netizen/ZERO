@@ -39,8 +39,12 @@ class OrchestratorResult:
     task: str
     selected: Optional[AgentSpec]
     alternatives: list[AgentSpec] = field(default_factory=list)
+    error: Optional[str] = None
+    target_requested: Optional[str] = None
 
     def explain(self) -> str:
+        if self.error == "AGENT_NOT_FOUND":
+            return f"Agent not found: {self.target_requested!r} for task {self.task!r}"
         if self.selected is None:
             return f"No specialist matched: {self.task!r}"
         alt = ", ".join(a.name for a in self.alternatives) or "none"
@@ -71,26 +75,42 @@ class Orchestrator:
         return graph.compile()
 
     # -- Fallback path (no langgraph installed) -----------------------------
-    def _run_fallback(self, task: str) -> ZeroState:
-        match = self.registry.resolve(task)
+    def _run_fallback(self, task: str, explicit_slug: Optional[str] = None) -> ZeroState:
+        match = self.registry.resolve(task, explicit_slug=explicit_slug)
         return {"task": task, "match": match, "selected": match.best}
 
-    def run(self, task: str) -> OrchestratorResult:
+    def run(self, task: str, agent_slug: Optional[str] = None) -> OrchestratorResult:
         if self._graph is not None:  # pragma: no cover
-            final_state = self._graph.invoke({"task": task})
+            final_state = self._graph.invoke({"task": task, "explicit_slug": agent_slug})
         else:
-            final_state = self._run_fallback(task)
+            final_state = self._run_fallback(task, explicit_slug=agent_slug)
 
         match: RegistryMatch = final_state["match"]
         selected = final_state["selected"]
 
         from zero_core.observability import DEFAULT_LOGGER
+
+        if match.error == "AGENT_NOT_FOUND":
+            DEFAULT_LOGGER.warning(
+                event_type="agent_not_found",
+                message=f"Explicit target '{match.target_requested}' not found in registry",
+                task=task[:100],
+                target_requested=match.target_requested,
+            )
+            return OrchestratorResult(
+                task=task,
+                selected=None,
+                alternatives=match.suggestions,
+                error="AGENT_NOT_FOUND",
+                target_requested=match.target_requested,
+            )
+
         DEFAULT_LOGGER.info(
             event_type="routing_decision_created",
             message=f"Task routed to {selected.name if selected else 'None'}",
             task=task[:100],
             selected_agent=selected.slug if selected else None,
-            routing_reason="Direct intent match / keyword resolution",
+            routing_reason="Explicit target override" if match.is_explicit else "Direct intent match / keyword resolution",
         )
 
         return OrchestratorResult(
@@ -99,14 +119,30 @@ class Orchestrator:
             alternatives=[c for c in match.candidates if c != selected],
         )
 
-    def execute(self, task: str) -> ExecutionResult:
+    def execute(self, task: str, agent_slug: Optional[str] = None) -> ExecutionResult:
         """`run()` only decides. This actually produces an answer where ZERO
         can (native agents backed by a real adapter) and hands off a persona
         for an external LLM call otherwise (Agency-agents specialists) —
         see zero_core/executors.py for why those two cases are handled
         differently rather than both being faked into "an answer."
         """
-        decision = self.run(task)
+        decision = self.run(task, agent_slug=agent_slug)
+        if decision.error == "AGENT_NOT_FOUND":
+            suggestions_str = ""
+            if decision.alternatives:
+                suggestions_str = "\n\n**Did you mean one of these valid specialists?**\n" + "\n".join(
+                    f"- **{s.name}** (`{s.slug}`)" for s in decision.alternatives[:5]
+                )
+            return ExecutionResult(
+                spec=None,
+                answer=(
+                    f"⚠️ **AGENT_NOT_FOUND**: Explicit target `@{decision.target_requested}` does not exist in ZERO.\n"
+                    f"ZERO will not silently route to another specialist when an explicit target is requested."
+                    f"{suggestions_str}"
+                ),
+                needs_llm=False,
+            )
+
         if decision.selected is None:
             return ExecutionResult(spec=None, answer="No specialist matched this task.", needs_llm=False)
         try:

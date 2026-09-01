@@ -42,7 +42,11 @@ def _spec_to_dict(spec: Optional[AgentSpec]) -> Optional[dict[str, Any]]:
 from zero_core.llm import DEFAULT_LLM_MANAGER
 
 
-def handle_task(task: str, auto_invoke_llm: bool = True) -> dict[str, Any]:
+def handle_task(
+    task: str,
+    agent_slug: Optional[str] = None,
+    auto_invoke_llm: bool = True,
+) -> dict[str, Any]:
     if not task or not task.strip():
         return {"error": "task must be a non-empty string"}
 
@@ -53,7 +57,7 @@ def handle_task(task: str, auto_invoke_llm: bool = True) -> dict[str, Any]:
         lines = [l.strip() for l in task.strip().splitlines() if l.strip()]
         at_lines = [l for l in lines if l.startswith("@")]
 
-        if len(at_lines) > 1:
+        if len(at_lines) > 1 and not agent_slug:
             sub_results = []
             for line in at_lines:
                 decision = orch.run(line)
@@ -73,8 +77,20 @@ def handle_task(task: str, auto_invoke_llm: bool = True) -> dict[str, Any]:
                 "persona": None,
             }
 
-        decision = orch.run(task)
-        outcome = orch.execute(task)
+        decision = orch.run(task, agent_slug=agent_slug)
+        outcome = orch.execute(task, agent_slug=agent_slug)
+
+        if decision.error == "AGENT_NOT_FOUND":
+            return {
+                "task": task,
+                "selected": None,
+                "alternatives": [_spec_to_dict(a) for a in decision.alternatives],
+                "needs_llm": False,
+                "answer": outcome.answer,
+                "persona": None,
+                "status": "AGENT_NOT_FOUND",
+                "error": f"Agent '@{decision.target_requested}' not found",
+            }
 
         answer = outcome.answer
         if outcome.needs_llm and outcome.persona and auto_invoke_llm and answer is None:
@@ -91,6 +107,7 @@ def handle_task(task: str, auto_invoke_llm: bool = True) -> dict[str, Any]:
             "needs_llm": outcome.needs_llm,
             "answer": answer,
             "persona": outcome.persona if outcome.needs_llm else None,
+            "status": "SUCCESS" if decision.selected else "NO_MATCH",
         }
     except Exception as exc:
         logger.exception("handle_task failed: %s", exc)

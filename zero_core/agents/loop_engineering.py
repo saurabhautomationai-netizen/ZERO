@@ -116,6 +116,9 @@ class LoopEngineeringAgent:
                     repo_path = str(finance_path)
                     project_type = "EXISTING_PROJECT"
                     project_name = "Personal Finance Tracker"
+                    clean_name = re.sub(r'[^a-zA-Z0-9_ ]', '', project_name).strip()
+                    project_slug = clean_name.lower().replace(" ", "_").strip("_")
+                    project_id = f"proj_{project_slug}"
 
             if not repo_path:
                 # Check direct match in sibling projects
@@ -951,6 +954,17 @@ class LoopEngineeringAgent:
     def _extract_project_name(self, text: str) -> str:
         """Extracts a clean project title from a conversational prompt."""
         t = text.strip(" .?!:;\"'")
+
+        # Strip leading @mention
+        if t.startswith("@"):
+            if "\n" in t:
+                t = t.split("\n", 1)[1].strip()
+            elif ":" in t:
+                t = t.split(":", 1)[1].strip()
+            else:
+                parts = t.split(None, 3)
+                if len(parts) > 1:
+                    t = parts[-1]
         
         # Strip UI prompt prefix like "Ask Loop Engineering Agent:"
         if ":" in t and any(t.lower().startswith(p) for p in ("ask ", "talk to ", "agent:")):
@@ -962,11 +976,12 @@ class LoopEngineeringAgent:
                 t = t[len(lead):].strip(" ,:.-")
 
         for prefix in (
+            "resume my existing project", "resume my project", "resume my existing",
+            "resume my", "resume project", "resume the", "resume development of", "resume development", "resume",
             "continue development of my existing", "continue development of the existing",
             "continue development of my", "continue development of the", "continue development of",
             "continue development", "continue my existing", "continue the existing",
             "continue my", "continue the", "continue project", "continue",
-            "resume development of", "resume project", "resume the", "resume",
             "inspect the existing", "inspect project", "inspect",
             "build me a complete independent", "build me a complete", "build a complete independent",
             "build a complete", "build me a new", "build me a", "build a new", "build a",
@@ -974,14 +989,14 @@ class LoopEngineeringAgent:
             "improve my existing", "improve the", "improve"
         ):
             if t.lower().startswith(prefix):
-                t = t[len(prefix):].strip(" ,:.-")
+                t = t[len(prefix):].strip(" ,:.- \t\r\n")
                 break
         
         # Isolate project title before trailing instruction clauses
-        first_clause = t.split(".")[0].split("\n")[0].split(",")[0].strip()
+        first_clause = t.split(".")[0].split("\n")[0].split(",")[0].split("/")[0].strip(" ,:.- \t\r\n")
         for suffix in ("in read-only mode", "in read only mode", "read-only", "read only", "project"):
             if first_clause.lower().endswith(suffix):
-                first_clause = first_clause[:-len(suffix)].strip(" ,:.-")
+                first_clause = first_clause[:-len(suffix)].strip(" ,:.- \t\r\n")
 
         words = [w.capitalize() for w in first_clause.split()[:5]]
         return " ".join(words) if words else "Autonomous AI Project"

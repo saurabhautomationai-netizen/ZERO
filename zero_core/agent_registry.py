@@ -23,6 +23,7 @@ swap this for `yaml.safe_load`.
 
 from __future__ import annotations
 
+import difflib
 import json
 import logging
 import re
@@ -74,6 +75,10 @@ class AgentSpec:
 class RegistryMatch:
     task: str
     candidates: list[AgentSpec] = field(default_factory=list)
+    is_explicit: bool = False
+    error: Optional[str] = None
+    target_requested: Optional[str] = None
+    suggestions: list[AgentSpec] = field(default_factory=list)
 
     @property
     def best(self) -> Optional[AgentSpec]:
@@ -255,30 +260,178 @@ class AgentRegistry:
     def get(self, slug: str) -> Optional[AgentSpec]:
         return self._native.get(slug) or self.agency.get(slug)
 
-    def resolve(self, task: str, top_k: int = 3) -> RegistryMatch:
-        """Explicit @agent mentions get top absolute priority, followed by native
-        agents for domain keywords, and Agency-agents specialists for deep tasks."""
-        clean_task = task.strip(" \"'")
-        # 1. Direct explicit mention check (@Agent Name: or @slug: or @A, @B, and @C:)
-        mention_match = re.match(r"^@([^:]+?):", clean_task)
-        if mention_match:
-            raw_str = mention_match.group(1)
-            targets = [t.strip().lstrip("@").strip().lower() for t in re.split(r"[,&]|\band\b", raw_str) if t.strip()]
-            for target in targets:
-                for spec in list(self._native.values()) + list(self.agency.index()):
-                    if (
-                        spec.name.lower() == target
-                        or spec.slug.lower() == target
-                        or spec.slug.split("/")[-1].lower() == target.replace(" ", "-")
-                    ):
-                        return RegistryMatch(task=clean_task, candidates=[spec])
+    def lookup_agent(self, target: str) -> Optional[AgentSpec]:
+        """Canonical lookup of an agent spec by name, full slug, short slug, or normalized slug."""
+        if not target:
+            return None
+        t = target.strip().lower()
+        if t.startswith("@"):
+            t = t[1:].strip()
+        if not t:
+            return None
 
-        task_lower = task.lower()
+        all_specs = list(self._native.values()) + list(self.agency.index())
+        # 1. Exact slug match (e.g. 'native/loop-engineering-agent')
+        for s in all_specs:
+            if s.slug.lower() == t:
+                return s
+        # 2. Short slug match (e.g. 'loop-engineering-agent')
+        for s in all_specs:
+            if s.slug.split("/")[-1].lower() == t:
+                return s
+        # 3. Exact name match (e.g. 'Loop Engineering Agent')
+        for s in all_specs:
+            if s.name.lower() == t:
+                return s
+        # 4. Slugified name match (e.g. 'loop-engineering-agent' for 'Loop Engineering Agent')
+        t_slug = t.replace(" ", "-")
+        for s in all_specs:
+            if s.slug.split("/")[-1].lower() == t_slug:
+                return s
+        # 5. Normalized name match (e.g. 'loop engineering agent' for 'loop-engineering-agent')
+        t_name = t.replace("-", " ")
+        for s in all_specs:
+            if s.name.lower() == t_name:
+                return s
+        return None
+
+    def find_close_matches(self, target: str, limit: int = 5) -> list[AgentSpec]:
+        """Returns closest valid agent matches for an invalid target."""
+        q = target.strip().lower().lstrip("@")
+        all_specs = list(self._native.values()) + list(self.agency.index())
+        if not q:
+            return all_specs[:limit]
+
+        # 1. Substring containment
+        substr_matches = [s for s in all_specs if q in s.name.lower() or q in s.slug.lower()]
+        if substr_matches:
+            return substr_matches[:limit]
+
+        # 2. Fuzzy difflib matching
+        names = {s.name.lower(): s for s in all_specs}
+        slugs = {s.slug.lower(): s for s in all_specs}
+        short_slugs = {s.slug.split("/")[-1].lower(): s for s in all_specs}
+        keys = list(names.keys()) + list(slugs.keys()) + list(short_slugs.keys())
+        close_keys = difflib.get_close_matches(q, keys, n=limit, cutoff=0.25)
+        matched: list[AgentSpec] = []
+        for k in close_keys:
+            spec = names.get(k) or slugs.get(k) or short_slugs.get(k)
+            if spec and spec not in matched:
+                matched.append(spec)
+        return matched[:limit] if matched else all_specs[:limit]
+
+    def extract_leading_mention(self, task: str) -> Optional[tuple[str, str]]:
+        """Extracts leading @mention and returns (target_name_or_slug, remaining_task).
+        If task does not start with @, returns None.
+        """
+        if not task:
+            return None
+        raw = task.strip()
+        if not raw.startswith("@"):
+            return None
+
+        # Case 1: @Target:\n or @Target: <rest> (colon terminated)
+        m_colon = re.match(r"^@([^:\r\n]+):[ \t]*(.*)$", raw, re.DOTALL)
+        if m_colon:
+            target = m_colon.group(1).strip()
+            rem = m_colon.group(2).strip()
+            return (target, rem)
+
+        # Case 2: @Target\n<rest> (newline terminated)
+        m_newline = re.match(r"^@([^\r\n]+)\r?\n+(.*)$", raw, re.DOTALL)
+        if m_newline:
+            target = m_newline.group(1).strip()
+            rem = m_newline.group(2).strip()
+            return (target, rem)
+
+        # Case 3: @Target <rest> without colon or newline
+        all_specs = list(self._native.values()) + list(self.agency.index())
+        for s in sorted(all_specs, key=lambda x: max(len(x.name), len(x.slug)), reverse=True):
+            if raw.lower().startswith("@" + s.name.lower()):
+                rem = raw[1 + len(s.name):].strip(" :.-")
+                return (s.name, rem)
+            if raw.lower().startswith("@" + s.slug.lower()):
+                rem = raw[1 + len(s.slug):].strip(" :.-")
+                return (s.slug, rem)
+            short_slug = s.slug.split("/")[-1]
+            if raw.lower().startswith("@" + short_slug.lower()):
+                rem = raw[1 + len(short_slug):].strip(" :.-")
+                return (short_slug, rem)
+
+        # Case 4: Starts with @ but single line not matching known spec (e.g. @Nonexistent Agent Do something)
+        parts = raw[1:].split(None, 2)
+        if len(parts) >= 2 and any(k in parts[1].lower() for k in ("agent", "bot", "specialist", "engineer")):
+            return (f"{parts[0]} {parts[1]}", parts[2] if len(parts) > 2 else "")
+        elif len(parts) >= 1:
+            return (parts[0], " ".join(parts[1:]))
+
+        return (raw[1:], "")
+
+    def resolve(
+        self,
+        task: str,
+        explicit_slug: Optional[str] = None,
+        top_k: int = 3,
+    ) -> RegistryMatch:
+        """Resolves task according to ZERO's strict routing priority:
+        1. Explicit structured agent ID / slug
+        2. Explicit @Agent mention in text
+        3. Active HITL/project continuation context
+        4. Strong lifecycle intent
+        5. Domain intent
+        6. Keyword/token ranking
+        7. General fallback
+        """
+        clean_task = task.strip(" \"'")
+
+        # PRIORITY 1: Explicit structured agent ID / slug
+        if explicit_slug:
+            spec = self.lookup_agent(explicit_slug)
+            if spec:
+                return RegistryMatch(task=clean_task, candidates=[spec], is_explicit=True)
+            return RegistryMatch(
+                task=clean_task,
+                candidates=[],
+                is_explicit=True,
+                error="AGENT_NOT_FOUND",
+                target_requested=explicit_slug,
+                suggestions=self.find_close_matches(explicit_slug, limit=top_k),
+            )
+
+        # PRIORITY 2: Explicit @Agent mention in text
+        mention_info = self.extract_leading_mention(clean_task)
+        if mention_info is not None:
+            target_str, remainder_task = mention_info
+            # Support comma/and joined targets if multiple specified on line
+            targets = [t.strip().lstrip("@").strip() for t in re.split(r"[,&]|\band\b", target_str) if t.strip()]
+            matched_specs: list[AgentSpec] = []
+            for tgt in targets:
+                s = self.lookup_agent(tgt)
+                if s and s not in matched_specs:
+                    matched_specs.append(s)
+
+            if matched_specs:
+                dispatch_task = remainder_task if remainder_task else clean_task
+                return RegistryMatch(task=dispatch_task, candidates=matched_specs, is_explicit=True)
+            else:
+                # Explicit mention given, but no matching agent exists in ZERO!
+                # DO NOT silently fall back to semantic routing.
+                return RegistryMatch(
+                    task=clean_task,
+                    candidates=[],
+                    is_explicit=True,
+                    error="AGENT_NOT_FOUND",
+                    target_requested=target_str,
+                    suggestions=self.find_close_matches(target_str, limit=top_k),
+                )
+
+        # PRIORITY 3-6: Semantic & Keyword Routing
+        task_lower = clean_task.lower()
         native_candidates: list[tuple[int, int, AgentSpec]] = []
 
         engineering_directives = (
             "continue development", "continue my", "continue the project", "continue project",
-            "resume development", "resume project", "resume the",
+            "resume development", "resume project", "resume the", "resume my",
             "inspect project", "inspect the existing", "read-only discovery", "discovery mode",
             "recover project state", "recover its last checkpoint", "recover last checkpoint",
             "continuation hitl gate", "hitl gate", "engineering lifecycle",
@@ -307,7 +460,7 @@ class AgentRegistry:
 
         remaining = top_k - len(candidates)
         if remaining > 0:
-            task_tokens = {w for w in _tokenize(task) if w not in _STOPWORDS and len(w) >= 3}
+            task_tokens = {w for w in _tokenize(clean_task) if w not in _STOPWORDS and len(w) >= 3}
             scored: list[tuple[int, AgentSpec]] = []
             for spec in self.agency.index():
                 spec_tokens = _tokenize(
@@ -319,4 +472,4 @@ class AgentRegistry:
             scored.sort(key=lambda pair: pair[0], reverse=True)
             candidates.extend(spec for _, spec in scored[:remaining])
 
-        return RegistryMatch(task=task, candidates=candidates[:top_k])
+        return RegistryMatch(task=clean_task, candidates=candidates[:top_k])

@@ -19,6 +19,8 @@ if STATIC_DIR.is_dir():
 
 class TaskRequest(BaseModel):
     task: str
+    agent_slug: Optional[str] = None
+    auto_invoke_llm: bool = True
 
 
 @app.get("/")
@@ -42,7 +44,11 @@ def get_cockpit_page():
 @app.post("/api/task")
 def post_task(body: TaskRequest):
     try:
-        return handlers.handle_task(body.task)
+        return handlers.handle_task(
+            task=body.task,
+            agent_slug=body.agent_slug,
+            auto_invoke_llm=body.auto_invoke_llm,
+        )
     except Exception as exc:
         return JSONResponse(
             status_code=500,

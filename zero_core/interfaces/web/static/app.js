@@ -179,12 +179,13 @@ async function handleSubmit(event) {
       };
     }
 
-    const agentName = data.selected ? data.selected.name : 'ZERO Core';
+    const isNotFound = data.status === 'AGENT_NOT_FOUND' || (!data.selected && data.error);
+    const agentName = data.selected ? data.selected.name : (isNotFound ? 'AGENT NOT FOUND' : 'ZERO Core');
     const answer = data.answer || JSON.stringify(data, null, 2);
 
     appendMessage('agent', agentName, answer);
-    if (radar) radar.textContent = `DISPATCHED: ${agentName.toUpperCase()}`;
-    playSound(res.ok ? 'approve' : 'alert');
+    if (radar) radar.textContent = isNotFound ? 'EXPLICIT TARGET NOT FOUND' : `DISPATCHED: ${agentName.toUpperCase()}`;
+    playSound(res.ok && !isNotFound ? 'approve' : 'alert');
   } catch (err) {
     appendMessage('agent', 'ERROR', `Failed to execute task: ${err.message}`);
     if (radar) radar.textContent = 'TASK ROUTING ERROR';
