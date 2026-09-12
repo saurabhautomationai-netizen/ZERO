@@ -77,6 +77,10 @@ class TaskItem(BaseModel):
     created_files: List[str] = Field(default_factory=list)
     modified_files: List[str] = Field(default_factory=list)
     test_commands: List[str] = Field(default_factory=list)
+    required_artifacts: List[str] = Field(default_factory=list)
+    required_symbols: List[str] = Field(default_factory=list)
+    required_tests: List[str] = Field(default_factory=list)
+    mutation_expected: bool = True
     failure_reason: Optional[str] = None
     retry_count: int = 0
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
@@ -133,6 +137,7 @@ class ProjectManifest(BaseModel):
     approved_features: List[str] = Field(default_factory=list)
     rejected_features: List[str] = Field(default_factory=list)
     pending_features: List[str] = Field(default_factory=list)
+    subsystems: List[str] = Field(default_factory=list)
 
     # Granular Subsystem Status
     requirements_status: str = "PENDING"
@@ -232,6 +237,14 @@ class ProjectManifest(BaseModel):
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
         self.approval_history.append(entry)
+        if any(k in gate.lower() for k in ("scope", "feature", "gate_1")):
+            self.scope_approval = entry
+        elif any(k in gate.lower() for k in ("ui", "design", "gate_2")):
+            self.uiux_approval = entry
+        elif any(k in gate.lower() for k in ("security", "gate_4")):
+            self.security_approval = entry
+        elif any(k in gate.lower() for k in ("deploy", "gate_8")):
+            self.deployment_approval = entry
         self.updated_at = datetime.now(timezone.utc).isoformat()
 
     def calculate_progress(self) -> int:

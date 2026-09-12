@@ -19,6 +19,7 @@ complexity before it's actually needed.
 from __future__ import annotations
 
 import logging
+import re
 from typing import Any, Optional
 
 from zero_core.agent_registry import AgentSpec
@@ -39,6 +40,7 @@ def _spec_to_dict(spec: Optional[AgentSpec]) -> Optional[dict[str, Any]]:
     }
 
 
+from zero_core.context import TaskExecutionContext
 from zero_core.llm import DEFAULT_LLM_MANAGER
 
 
@@ -51,38 +53,136 @@ def handle_task(
     if not task or not task.strip():
         return {"error": "task must be a non-empty string"}
 
+    # 1. Build structured execution context once
+    exec_ctx = TaskExecutionContext.from_task(
+        task=task,
+        agent_slug=agent_slug,
+        project_id=project_id,
+        source_interface="web",
+    )
+
     if project_id and "project id:" not in task.lower() and "project_id:" not in task.lower():
         task = f"Project ID: {project_id}\n{task}"
 
     try:
         orch = build_orchestrator()
 
-        # Check for multi-line multi-agent batch dispatch (@Agent1: ... \n @Agent2: ...)
-        lines = [l.strip() for l in task.strip().splitlines() if l.strip()]
-        at_lines = [l for l in lines if l.startswith("@")]
+        clean_raw = task.strip()
+        is_squad_request = False
+        squad_directives: list[tuple[AgentSpec, str]] = []
 
-        if len(at_lines) > 1 and not agent_slug:
+        first_line = clean_raw.splitlines()[0].strip() if clean_raw else ""
+
+        # Case A: Leading line specifies multiple agents, e.g. "@Research Agent + @Coding Agent"
+        if first_line.startswith("@") and not agent_slug:
+            if re.search(r"(\+|\&|,\s*@)", first_line):
+                first_line_targets = [
+                    t.strip().lstrip("@").strip()
+                    for t in re.split(r"[\+\&]|\band\b|,\s*@", first_line)
+                    if t.strip()
+                ]
+                seen_slugs = set()
+                resolved_first_line = []
+                for tgt in first_line_targets:
+                    spec = orch.registry.lookup_agent(tgt)
+                    if spec and spec.slug not in seen_slugs:
+                        seen_slugs.add(spec.slug)
+                        resolved_first_line.append(spec)
+
+                if len(resolved_first_line) > 1:
+                    is_squad_request = True
+                    remainder_body = clean_raw[len(first_line):].strip(" :-\r\n") or clean_raw
+                    prefix_headers = ""
+                    if exec_ctx.project_id and "project id:" not in remainder_body.lower():
+                        prefix_headers += f"Project ID: {exec_ctx.project_id}\n"
+                    if exec_ctx.project_name and "project name:" not in remainder_body.lower():
+                        prefix_headers += f"Project Name: {exec_ctx.project_name}\n"
+                    agent_directive = f"{prefix_headers}\n{remainder_body}".strip() if prefix_headers else remainder_body
+                    squad_directives = [(sp, agent_directive) for sp in resolved_first_line]
+                elif len(resolved_first_line) == 1:
+                    # Duplicate suppression on leading line (e.g. @Agent + @Agent)
+                    agent_slug = resolved_first_line[0].slug
+
+        # Case B: Multi-line batch dispatch format:
+        # Multiple top-level lines starting with "@AgentName: ..."
+        if not is_squad_request and not agent_slug:
+            lines = clean_raw.splitlines()
+            at_indices = []
+            for idx, line in enumerate(lines):
+                s_line = line.strip()
+                if s_line.startswith("@"):
+                    at_indices.append((idx, s_line))
+
+            if len(at_indices) > 1:
+                agent_mentions: list[tuple[AgentSpec, int, str]] = []
+                for idx, s_line in at_indices:
+                    mention_info = orch.registry.extract_leading_mention(s_line)
+                    if mention_info:
+                        target_str, _ = mention_info
+                        spec = orch.registry.lookup_agent(target_str)
+                        if spec:
+                            agent_mentions.append((spec, idx, s_line))
+
+                distinct_slugs = {sp.slug for sp, _, _ in agent_mentions}
+                if len(distinct_slugs) > 1:
+                    # Genuine multi-agent squad with distinct agents
+                    is_squad_request = True
+                    for i, (spec, line_idx, s_line) in enumerate(agent_mentions):
+                        next_line_idx = agent_mentions[i + 1][1] if i + 1 < len(agent_mentions) else len(lines)
+                        block_lines = lines[line_idx:next_line_idx]
+                        block_text = "\n".join(block_lines).strip()
+                        if block_text == s_line and len(lines) > next_line_idx:
+                            block_text = clean_raw
+                        if exec_ctx.project_id and "project id:" not in block_text.lower() and "project_id:" not in block_text.lower():
+                            block_text = f"Project ID: {exec_ctx.project_id}\n{block_text}"
+                        squad_directives.append((spec, block_text))
+                else:
+                    # DUPLICATE SUPPRESSION:
+                    # All @ lines resolve to the SAME canonical agent (e.g. 6 mentions of Loop Engineering Agent)
+                    # Collapse to that single agent and PRESERVE THE FULL DIRECTIVE INTACT!
+                    is_squad_request = False
+                    if agent_mentions:
+                        agent_slug = agent_mentions[0][0].slug
+
+        # Execute Multi-Agent Squad if legitimately requested with distinct agents
+        if is_squad_request and len(squad_directives) > 1:
+            seen_squad_slugs = set()
+            deduped_squad = []
+            for sp, d in squad_directives:
+                if sp.slug not in seen_squad_slugs:
+                    seen_squad_slugs.add(sp.slug)
+                    deduped_squad.append((sp, d))
+
             sub_results = []
-            for line in at_lines:
-                decision = orch.run(line)
-                outcome = orch.execute(line)
+            for spec, directive in deduped_squad:
+                sub_ctx = TaskExecutionContext.from_task(
+                    task=directive,
+                    agent_slug=spec.slug,
+                    project_id=exec_ctx.project_id,
+                    source_interface="web",
+                )
+                decision = orch.run(directive, agent_slug=spec.slug, context=sub_ctx)
+                outcome = orch.execute(directive, agent_slug=spec.slug, context=sub_ctx)
                 ans = outcome.answer
                 if outcome.needs_llm and outcome.persona and auto_invoke_llm and ans is None:
-                    ans = DEFAULT_LLM_MANAGER.call_specialist(persona=outcome.persona, task=line)
-                agent_name = decision.selected.name if decision.selected else "Specialist"
-                sub_results.append(f"### 🤖 {agent_name}\n**Assigned Directive**: `{line}`\n\n{ans or 'Acknowledged and processed.'}")
+                    ans = DEFAULT_LLM_MANAGER.call_specialist(persona=outcome.persona, task=directive)
+                agent_name = decision.selected.name if decision.selected else spec.name
+                dir_summary = directive.splitlines()[0] if directive else spec.name
+                sub_results.append(f"### 🤖 {agent_name}\n**Assigned Directive**: `{dir_summary}`\n\n{ans or 'Acknowledged and processed.'}")
 
             return {
                 "task": task,
-                "selected": {"name": f"Multi-Agent Squad ({len(at_lines)} Agents)", "slug": "squad", "source": "squad", "division": "orchestrated-squad"},
+                "selected": {"name": f"Multi-Agent Squad ({len(deduped_squad)} Agents)", "slug": "squad", "source": "squad", "division": "orchestrated-squad"},
                 "alternatives": [],
                 "needs_llm": False,
                 "answer": "\n\n---\n\n".join(sub_results),
                 "persona": None,
             }
 
-        decision = orch.run(task, agent_slug=agent_slug)
-        outcome = orch.execute(task, agent_slug=agent_slug)
+        # 3. SINGLE-AGENT EXECUTION (Default & Grounded Path)
+        # Passes the complete task and structured context to the single selected agent
+        decision = orch.run(task, agent_slug=agent_slug, context=exec_ctx)
+        outcome = orch.execute(task, agent_slug=agent_slug, context=exec_ctx)
 
         if decision.error == "AGENT_NOT_FOUND":
             return {

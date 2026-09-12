@@ -139,7 +139,12 @@ def _execute_deployment_agent(task: str) -> str:
     return report.to_markdown()
 
 
-def _execute_loop_engineering(task: str) -> str:
+def _execute_loop_engineering(task: str, context: Optional[Any] = None) -> str:
+    """Executes engineering tasks using the ZERO Loop Engineering Agent and Multi-Project Control Plane."""
+    from zero_core.agents.loop_engineering import (
+        DEFAULT_LOOP_ENGINEERING_AGENT,
+        ProjectStatus,
+    )
     from zero_core.engineering.resolver import (
         DEFAULT_PROJECT_RESOLVER,
         EngineeringIntent,
@@ -148,6 +153,22 @@ def _execute_loop_engineering(task: str) -> str:
     )
 
     req = DEFAULT_PROJECT_RESOLVER.parse_request(raw_instruction=task)
+
+    # Propagate structured context if provided
+    if context:
+        if getattr(context, "project_id", None) and not req.project_id:
+            req.project_id = context.project_id
+        if getattr(context, "project_name", None) and not req.project_name:
+            req.project_name = context.project_name
+        if getattr(context, "repository_path", None) and not req.repository_path:
+            req.repository_path = context.repository_path
+        if getattr(context, "target_milestone", None) and not req.target_milestone:
+            req.target_milestone = context.target_milestone
+        if getattr(context, "engineering_intent", None) and req.intent == EngineeringIntent.UNKNOWN:
+            try:
+                req.intent = EngineeringIntent(context.engineering_intent)
+            except Exception:
+                pass
 
     # Special handling for GATE_APPROVAL when user did not specify project
     if req.intent == EngineeringIntent.GATE_APPROVAL and not req.project_id and not req.repository_path and not req.project_name:
@@ -176,6 +197,79 @@ def _execute_loop_engineering(task: str) -> str:
             return f"❌ **PROJECT_BOUNDARY_VIOLATION**: {err.message}"
         else:
             return f"❌ **Resolution Error**: {err.message}"
+
+    # 0. EXECUTE_MILESTONE Intent (Authoritative Real / Dry-Run Milestone Engine)
+    if req.intent == EngineeringIntent.EXECUTE_MILESTONE:
+        return DEFAULT_LOOP_ENGINEERING_AGENT.execute_milestone(manifest, req, context=context)
+
+    # 0a. POST_MILESTONE_AUDIT / RECONCILIATION Intent (Forensic Evidence Verification)
+    if req.intent == EngineeringIntent.POST_MILESTONE_AUDIT:
+        target_ms = req.target_milestone or "M1_FOUNDATION"
+        from zero_core.engineering.reconciliation import DEFAULT_RECONCILIATION_ENGINE
+        report = DEFAULT_RECONCILIATION_ENGINE.reconcile_milestone(manifest, target_ms)
+        return report.to_markdown()
+
+    # 0b. RESET_MILESTONE Intent (Controlled Human-Authorized Reset of Phantom Milestone)
+    if req.intent == EngineeringIntent.RESET_MILESTONE:
+        return DEFAULT_LOOP_ENGINEERING_AGENT.reset_milestone(manifest, req)
+
+    # 0c. RECONCILE_MILESTONE_SCOPE & REPLAN_MILESTONE Intents (Repository-Backed Scope Audit & Prescriptive Replan)
+    if req.intent in (EngineeringIntent.RECONCILE_MILESTONE_SCOPE, EngineeringIntent.REPLAN_MILESTONE):
+        from zero_core.engineering.lifecycle import get_authoritative_lifecycle_state
+        l_state = get_authoritative_lifecycle_state(manifest.project_id, manifest=manifest)
+
+        target_ms = (req.target_milestone or "M2_WORKFLOW_REFACTOR").upper()
+        if target_ms in ("M2", "MILESTONE 2", "MILESTONE_2"):
+            target_ms = "M2_WORKFLOW_REFACTOR"
+        elif target_ms in ("M1", "MILESTONE 1", "MILESTONE_1"):
+            target_ms = "M1_FOUNDATION"
+        elif target_ms in ("M3", "MILESTONE 3", "MILESTONE_3"):
+            target_ms = "M3_AGENT_RAG"
+        elif target_ms in ("M4", "MILESTONE 4", "MILESTONE_4"):
+            target_ms = "M4_DASHBOARD_RELEASE"
+
+        if target_ms == "M2_WORKFLOW_REFACTOR":
+            if not l_state.is_gate_1_approved:
+                return (
+                    f"❌ **CONTROL_PLANE_STATE_MISMATCH**: Cannot reconcile M2 scope for `{manifest.project_id}`.\n"
+                    f"- Gate 1 (Feature Scope) status is `{l_state.scope_gate_status}`.\n"
+                    f"- Gate 1 approval is mandatory before proceeding to Milestone 2 scope reconciliation."
+                )
+            if not l_state.is_m1_completed:
+                return (
+                    f"❌ **CONTROL_PLANE_STATE_MISMATCH**: Cannot reconcile M2 scope for `{manifest.project_id}`.\n"
+                    f"- Milestone `M1_FOUNDATION` has not been completed.\n"
+                    f"- Milestone 1 completion is mandatory before proceeding to Milestone 2 scope reconciliation."
+                )
+
+        from zero_core.engineering.milestone_scope_reconciler import DEFAULT_SCOPE_RECONCILER
+        report = DEFAULT_SCOPE_RECONCILER.reconcile_scope(manifest, target_ms, request=req)
+        return report.to_markdown()
+
+    # 0d. DEEP_DISCOVERY & CONTINUATION_PLAN Intents (Read-Only Audit & Master Planning)
+    if req.intent in (EngineeringIntent.DEEP_DISCOVERY, EngineeringIntent.CONTINUATION_PLAN):
+        from zero_core.engineering.lifecycle import get_authoritative_lifecycle_state
+        l_state = get_authoritative_lifecycle_state(manifest.project_id, manifest=manifest)
+
+        target_ms = (req.target_milestone or "").upper()
+        raw_upper = req.raw_instruction.upper()
+        is_m2_preflight = "M2" in target_ms or "M2_WORKFLOW_REFACTOR" in raw_upper or "M2 PREFLIGHT" in raw_upper or "MILESTONE 2" in raw_upper
+
+        if is_m2_preflight:
+            if not l_state.is_gate_1_approved:
+                return (
+                    f"❌ **CONTROL_PLANE_STATE_MISMATCH**: Cannot generate M2 continuation plan for `{manifest.project_id}`.\n"
+                    f"- Gate 1 (Feature Scope) status is `{l_state.scope_gate_status}`.\n"
+                    f"- Gate 1 approval is mandatory before proceeding to Milestone 2 planning."
+                )
+            if not l_state.is_m1_completed:
+                return (
+                    f"❌ **CONTROL_PLANE_STATE_MISMATCH**: Cannot generate M2 continuation plan for `{manifest.project_id}`.\n"
+                    f"- Milestone `M1_FOUNDATION` has not been completed.\n"
+                    f"- Milestone 1 completion is mandatory before proceeding to Milestone 2 planning."
+                )
+
+        return DEFAULT_LOOP_ENGINEERING_AGENT.execute_deep_discovery(manifest, req)
 
     # 1. DIAGNOSTIC Intent (Strictly Read-Only)
     if req.intent == EngineeringIntent.DIAGNOSTIC:
@@ -234,7 +328,19 @@ def _execute_loop_engineering(task: str) -> str:
         gate_name = req.requested_gate or ""
         if "scope" in gate_name.lower() or "feature" in gate_name.lower() or "gate_1" in gate_name.lower():
             res = DEFAULT_LOOP_ENGINEERING_AGENT.approve_feature_scope(manifest.project_id)
-            return f"✅ **Feature Scope Approved**\n- **Project**: `{manifest.project_name}`\n- **Phase**: `{res.get('current_phase')}`\n- **Message**: {res.get('message')}"
+            ckpt_str = f"\n- **Checkpoint**: `{res.get('checkpoint_id')}`" if res.get("checkpoint_id") else ""
+            return (
+                f"# ✅ Gate Approval: GATE 1 (Feature Scope) — Feature Scope Approved\n"
+                f"- **Project**: `{manifest.project_name}`\n"
+                f"- **Project ID**: `{manifest.project_id}`\n"
+                f"- **Gate Status**: `APPROVED`\n"
+                f"- **Phase**: `{res.get('current_phase', manifest.current_phase)}`"
+                f"{ckpt_str}\n"
+                f"- **Message**: {res.get('message', 'Feature scope and continuation plan approved.')}\n\n"
+                f"> [!TIP]\n"
+                f"> **Next Step**: You can now execute Milestone 1 by issuing:\n"
+                f"> `@Loop Engineering Agent execute milestone M1_FOUNDATION`"
+            )
         elif "ui" in gate_name.lower() or "design" in gate_name.lower() or "gate_2" in gate_name.lower():
             res = DEFAULT_LOOP_ENGINEERING_AGENT.approve_uiux_and_build(manifest.project_id)
             return (
@@ -257,13 +363,37 @@ def _execute_loop_engineering(task: str) -> str:
     if req.intent == EngineeringIntent.PLAN:
         dag = DEFAULT_LOOP_ENGINEERING_AGENT.lifecycle.get_or_create_dag(manifest)
         tasks = dag.list_all_tasks()
-        task_md = "\n".join(f"- `[{t.state.value}]` **{t.title}** ({t.task_id})" for t in tasks)
+        if tasks:
+            task_content = "### Task DAG:\n" + "\n".join(f"- `[{t.state.value}]` **{t.title}** ({t.task_id})" for t in tasks)
+        else:
+            must_list = "\n".join(f"  - {f}" for f in manifest.feature_scope.get("must_have", [])[:6])
+            should_list = "\n".join(f"  - {f}" for f in manifest.feature_scope.get("should_have", [])[:4])
+            next_gate = "GATE 1 (Feature Scope)" if manifest.scope_approval is None else ("GATE 2 (UI/UX Design)" if manifest.uiux_approval is None else "GATE 3 (Security)")
+            task_content = (
+                f"### Proposed Feature Scope:\n**Must-Have**:\n{must_list or '  - Core domain capabilities'}\n\n"
+                f"**Should-Have**:\n{should_list or '  - Advanced reporting and observability'}\n\n"
+                f"### Subsystem Status:\n"
+                f"- **Requirements**: `{manifest.requirements_status}`\n"
+                f"- **Architecture**: `{manifest.architecture_status}`\n"
+                f"- **UI/UX Design**: `{manifest.uiux_status}`\n"
+                f"- **Database**: `{manifest.database_status}`\n"
+                f"- **Backend API**: `{manifest.backend_status}`\n"
+                f"- **Frontend UI**: `{manifest.frontend_status}`\n"
+                f"- **Security**: `{manifest.security_status}`\n\n"
+                f"### Required Next Human Gate:\n"
+                f"- **Gate Required**: `{next_gate}`\n"
+                f"- **Action**: Review and approve required gate to transition to task execution."
+            )
         return (
-            f"# 📋 Engineering Plan: {manifest.project_name}\n"
+            f"# 📋 Engineering Continuation Plan: {manifest.project_name}\n"
             f"- **Project ID**: `{manifest.project_id}`\n"
+            f"- **Repository**: `{manifest.repository_path}`\n"
             f"- **Current Phase**: `{manifest.current_phase.value if hasattr(manifest.current_phase, 'value') else manifest.current_phase}`\n"
-            f"- **Total Tasks**: {len(tasks)}\n\n"
-            f"### Task DAG:\n{task_md or 'No tasks registered yet.'}"
+            f"- **Project Status**: `{manifest.project_status.value if hasattr(manifest.project_status, 'value') else manifest.project_status}`\n"
+            f"- **Active Milestone**: `{manifest.current_milestone or 'M1_DISCOVERY'}`\n"
+            f"- **Total Registered Tasks**: {len(tasks)}\n\n"
+            f"{task_content}\n\n"
+            f"*(Zero Planning Mode: Read-only master plan. No files were mutated, no gates were approved.)*"
         )
 
     # 7. AUTONOMOUS_BUILD Intent (Explicit Mutation)
@@ -337,6 +467,7 @@ def execute(
     spec: AgentSpec,
     task: str,
     agency_adapter: Optional[AgencyAgentsAdapter] = None,
+    context: Optional[Any] = None,
 ) -> ExecutionResult:
     if spec.source == "native":
         fn = NATIVE_EXECUTORS.get(spec.slug)
@@ -348,7 +479,11 @@ def execute(
                 needs_llm=False,
             )
         try:
-            return ExecutionResult(spec=spec, answer=fn(task), needs_llm=False)
+            if spec.slug == "native/loop-engineering-agent":
+                ans = fn(task, context=context)
+            else:
+                ans = fn(task)
+            return ExecutionResult(spec=spec, answer=ans, needs_llm=False)
         except Exception as exc:
             logger.exception("Native executor for %s failed: %s", spec.slug, exc)
             return ExecutionResult(

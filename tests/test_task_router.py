@@ -79,9 +79,9 @@ def test_unhealthy_worker_triggers_fallback():
     task = TaskItem(task_id="t_code_01", milestone_id="m1", title="Implement Service Layer", description="Write code")
     decision = router.route_task(task)
 
-    # Should fall back to CodingAgentWorker
-    assert decision.selected_worker == "worker_coding_agent"
-    assert any("CodingAgentWorker" in r or "fell back" in r for r in decision.selection_reasons)
+    # Should fall back to Coding Implementation/Agent Worker
+    assert decision.selected_worker in ("worker_coding_agent", "worker_coding_implementation")
+    assert any("Coding" in r or "fell back" in r for r in decision.selection_reasons)
 
 
 def test_explainable_routing_decision(clean_router):

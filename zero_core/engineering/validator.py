@@ -151,23 +151,50 @@ class PhaseValidator:
         # 1. Polyglot Syntax & Schema Validation on affected files
         checks_run.append("SYNTAX_CHECK")
         affected_files = list(getattr(worker_result, "files_created", [])) + list(getattr(worker_result, "files_modified", []))
+        mutation_expected = getattr(task, "mutation_expected", True)
         
         from zero_core.engineering.polyglot_validators import DEFAULT_POLYGLOT_REGISTRY
         from zero_core.engineering.repository_guard import DEFAULT_REPOSITORY_GUARD
 
-        if affected_files:
-            for fpath in affected_files:
-                resolved = (repo_dir / fpath) if not Path(fpath).is_absolute() else Path(fpath)
-                if resolved.exists():
-                    ok, errs = DEFAULT_POLYGLOT_REGISTRY.validate_file(resolved)
-                    if not ok:
-                        syntax_errors.extend(errs)
+        # Artifact contract enforcement
+        if mutation_expected:
+            if not affected_files:
+                checks_failed.append("NO_IMPLEMENTATION_ARTIFACTS: Task requires mutation but 0 files were created or modified")
+            else:
+                for fpath in affected_files:
+                    resolved = (repo_dir / fpath) if not Path(fpath).is_absolute() else Path(fpath)
+                    if not resolved.exists():
+                        checks_failed.append(f"Worker claimed file '{fpath}' but it does not physically exist on disk")
+                    else:
+                        ok, errs = DEFAULT_POLYGLOT_REGISTRY.validate_file(resolved)
+                        if not ok:
+                            syntax_errors.extend(errs)
+
+            # Check explicit required artifacts
+            for req_art in getattr(task, "required_artifacts", []):
+                art_resolved = (repo_dir / req_art) if not Path(req_art).is_absolute() else Path(req_art)
+                if not art_resolved.exists():
+                    checks_failed.append(f"Missing required artifact on disk: {req_art}")
+
+            # Check explicit required tests
+            for req_test in getattr(task, "required_tests", []):
+                test_resolved = (repo_dir / req_test) if not Path(req_test).is_absolute() else Path(req_test)
+                if not test_resolved.exists():
+                    checks_failed.append(f"Missing required test file on disk: {req_test}")
         else:
-            syntax_errors = self.validate_code_syntax(str(repo_dir))
+            if not affected_files:
+                checks_passed.append("NOTHING_TO_VALIDATE: Read-only audit task with 0 expected mutations")
+            else:
+                for fpath in affected_files:
+                    resolved = (repo_dir / fpath) if not Path(fpath).is_absolute() else Path(fpath)
+                    if resolved.exists():
+                        ok, errs = DEFAULT_POLYGLOT_REGISTRY.validate_file(resolved)
+                        if not ok:
+                            syntax_errors.extend(errs)
 
         if syntax_errors:
             checks_failed.append(f"Syntax/schema validation failed with {len(syntax_errors)} error(s)")
-        else:
+        elif affected_files:
             checks_passed.append("100% Polyglot syntax and schema validation passed")
 
         # 2. Security & Repository Boundary Check
@@ -192,7 +219,20 @@ class PhaseValidator:
         checks_run.append("AUTOMATED_TESTS")
         test_results = {}
         tests_dir = repo_dir / "tests"
-        if tests_dir.exists() and any(tests_dir.rglob("*.py")):
+        req_tests = getattr(task, "required_tests", [])
+
+        # Check if worker already executed tests directly
+        w_executed = getattr(worker_result, "tests_executed", 0)
+        w_passed = getattr(worker_result, "tests_passed", 0)
+        w_details = getattr(worker_result, "test_details", None)
+
+        if w_executed > 0:
+            test_results = w_details or {"executed": True, "success": w_passed == w_executed, "tests_passed": w_passed}
+            if w_passed > 0 and getattr(worker_result, "tests_failed", 0) == 0:
+                checks_passed.append(f"Automated test suite passed ({w_passed}/{w_executed} passed)")
+            else:
+                checks_failed.append(f"Automated test suite failed ({getattr(worker_result, 'tests_failed', 0)} failed)")
+        elif tests_dir.exists() and any(tests_dir.rglob("*.py")):
             test_results = self.run_tests(str(repo_dir))
             if test_results.get("executed"):
                 if test_results.get("success"):
@@ -201,6 +241,8 @@ class PhaseValidator:
                     checks_failed.append(f"Automated pytest suite failed (exit code: {test_results.get('exit_code')})")
             else:
                 checks_passed.append("Test runner executed")
+        elif req_tests:
+            checks_failed.append(f"Task contract required test execution for {', '.join(req_tests)} but tests were not executed")
         else:
             checks_passed.append("No executable pytest directory required for this task")
 

@@ -122,7 +122,7 @@ def test_bootstrap_native_workers():
     reg = WorkerRegistry()
     bootstrap_native_workers(reg)
     workers = reg.list_workers()
-    assert len(workers) == 4
+    assert len(workers) == 9
 
     builder = reg.get("worker_project_builder")
     assert builder is not None
@@ -137,6 +137,14 @@ def test_bootstrap_native_workers():
     research = reg.get("worker_research_agent")
     assert research is not None
     assert research.has_capability(WorkerCapability.RESEARCH)
+
+    auto = reg.get("worker_automation")
+    assert auto is not None
+    assert auto.has_capability(WorkerCapability.AUTOMATION)
+
+    db = reg.get("worker_database_audit")
+    assert db is not None
+    assert db.has_capability(WorkerCapability.DATABASE)
 
     uiux = reg.get("worker_uiux_designer")
     assert uiux is not None

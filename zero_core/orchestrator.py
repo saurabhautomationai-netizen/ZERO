@@ -79,7 +79,7 @@ class Orchestrator:
         match = self.registry.resolve(task, explicit_slug=explicit_slug)
         return {"task": task, "match": match, "selected": match.best}
 
-    def run(self, task: str, agent_slug: Optional[str] = None) -> OrchestratorResult:
+    def run(self, task: str, agent_slug: Optional[str] = None, context: Optional[Any] = None) -> OrchestratorResult:
         if self._graph is not None:  # pragma: no cover
             final_state = self._graph.invoke({"task": task, "explicit_slug": agent_slug})
         else:
@@ -119,14 +119,14 @@ class Orchestrator:
             alternatives=[c for c in match.candidates if c != selected],
         )
 
-    def execute(self, task: str, agent_slug: Optional[str] = None) -> ExecutionResult:
+    def execute(self, task: str, agent_slug: Optional[str] = None, context: Optional[Any] = None) -> ExecutionResult:
         """`run()` only decides. This actually produces an answer where ZERO
         can (native agents backed by a real adapter) and hands off a persona
         for an external LLM call otherwise (Agency-agents specialists) —
         see zero_core/executors.py for why those two cases are handled
         differently rather than both being faked into "an answer."
         """
-        decision = self.run(task, agent_slug=agent_slug)
+        decision = self.run(task, agent_slug=agent_slug, context=context)
         if decision.error == "AGENT_NOT_FOUND":
             suggestions_str = ""
             if decision.alternatives:
@@ -146,7 +146,7 @@ class Orchestrator:
         if decision.selected is None:
             return ExecutionResult(spec=None, answer="No specialist matched this task.", needs_llm=False)
         try:
-            return _execute_spec(decision.selected, task, agency_adapter=self.registry.agency)
+            return _execute_spec(decision.selected, task, agency_adapter=self.registry.agency, context=context)
         except Exception as exc:
             from zero_core.observability import DEFAULT_LOGGER
             DEFAULT_LOGGER.error(

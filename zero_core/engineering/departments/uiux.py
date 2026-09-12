@@ -169,7 +169,14 @@ class UIUXDepartmentCoordinator(EngineeringWorker):
                 {"name": "Jobs", "path": "/jobs", "purpose": "Active job listings, applicant funnel, and hiring team assignments."},
                 {"name": "Pipeline", "path": "/pipeline", "purpose": "Visual Kanban board tracking applicant stages from intake to hire."},
             ])
-        elif any(k in corpus for k in ("trade", "trading", "finance", "portfolio")):
+        elif any(k in corpus for k in ("personal finance", "expense", "budget", "finance tracker", "subscription", "finance")):
+            pages.extend([
+                {"name": "Transactions", "path": "/transactions", "purpose": "Ingested transactions feed, categorization, and receipt attachments."},
+                {"name": "Subscriptions & Recurring", "path": "/subscriptions", "purpose": "Active recurring billing, renewal calendars, and cancellation alerts."},
+                {"name": "Budgets & Categories", "path": "/budgets", "purpose": "Monthly category allocation, variance monitoring, and threshold warnings."},
+                {"name": "Financial Reports & Snapshots", "path": "/reports", "purpose": "Monthly cashflow summaries, net savings rate, and asset snapshots."},
+            ])
+        elif any(k in corpus for k in ("trade", "trading", "mt5", "forex", "algorithmic trading")):
             pages.extend([
                 {"name": "Trading Terminal", "path": "/trading", "purpose": "Live MT5 signal telemetry, position overview, and risk metrics."},
                 {"name": "Strategy Signals", "path": "/signals", "purpose": "Historical and real-time SMC confluence patterns and logs."},

@@ -49,11 +49,28 @@ class WorkerCapability(str, enum.Enum):
     TESTING = "testing"
     SECURITY_AUDIT = "security_audit"
     DATABASE = "database"
+    AUTOMATION = "automation"
+    WORKFLOW_AUDIT = "workflow_audit"
     DEVOPS = "devops"
     DEPLOYMENT = "deployment"
     RESEARCH = "research"
     DOCUMENTATION = "documentation"
     PLANNING = "planning"
+    # Authoritative File & Mutation Capabilities
+    READ_FILES = "read_files"
+    WRITE_FILES = "write_files"
+    CREATE_FILES = "create_files"
+    DELETE_FILES = "delete_files"
+    MODIFY_CODE = "modify_code"
+    GENERATE_CODE = "generate_code"
+    RUN_TESTS = "run_tests"
+    CREATE_TESTS = "create_tests"
+    GENERATE_SQL = "generate_sql"
+    STATIC_VALIDATE_SQL = "static_validate_sql"
+    EXECUTE_SQL = "execute_sql"
+    MODIFY_WORKFLOW = "modify_workflow"
+    RUN_COMMANDS = "run_commands"
+    REVIEW = "review"
 
 
 @dataclass
@@ -65,6 +82,7 @@ class ProjectContextPackage:
     current_phase: str
     task_title: str
     task_description: str
+    repository_path: Optional[str] = None
     acceptance_criteria: List[str] = field(default_factory=list)
     constraints: List[str] = field(default_factory=list)
     relevant_files: Dict[str, str] = field(default_factory=dict)  # rel_path -> content
@@ -100,6 +118,7 @@ class WorkerResult:
     tests_executed: int = 0
     tests_passed: int = 0
     tests_failed: int = 0
+    test_details: Optional[Dict[str, Any]] = None
     acceptance_criteria_results: Dict[str, bool] = field(default_factory=dict)
     artifacts_created: List[str] = field(default_factory=list)
     decisions: List[Dict[str, str]] = field(default_factory=list)

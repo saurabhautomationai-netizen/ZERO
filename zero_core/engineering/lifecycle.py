@@ -99,6 +99,10 @@ class TaskDAG:
     def get_task(self, task_id: str) -> Optional[DAGTaskNode]:
         return self.nodes.get(task_id)
 
+    def list_all_tasks(self) -> List[DAGTaskNode]:
+        """Returns all registered task nodes in the DAG."""
+        return list(self.nodes.values())
+
     def mark_completed(self, task_id: str, summary: str = "Completed successfully") -> None:
         if task_id in self.nodes:
             node = self.nodes[task_id]
@@ -273,3 +277,126 @@ class ProjectLifecycleController:
 
 # Global singleton instance
 DEFAULT_LIFECYCLE_CONTROLLER = ProjectLifecycleController()
+
+
+# ---------------------------------------------------------------------------
+# Authoritative Lifecycle State Snapshot
+# ---------------------------------------------------------------------------
+
+@dataclass
+class AuthoritativeLifecycleState:
+    """Single authoritative snapshot of a project's control-plane lifecycle state."""
+    project_id: str
+    project_name: str
+    project_status: str
+    current_phase: str
+    scope_gate_status: str  # "APPROVED", "PENDING", "REJECTED"
+    current_milestone: Optional[str]
+    completed_milestones: List[str]
+    pending_milestones: List[str]
+    active_milestone: Optional[str]
+    pending_user_actions: List[str]
+    next_allowed_action: str
+    is_m1_completed: bool
+    is_m2_started: bool
+    is_gate_1_approved: bool
+
+    def to_dict(self) -> Dict[str, Any]:
+        return asdict(self)
+
+
+def get_authoritative_lifecycle_state(
+    project_id: str,
+    manifest: Optional[ProjectManifest] = None,
+    store: Optional[Any] = None,
+) -> AuthoritativeLifecycleState:
+    """Computes single authoritative lifecycle state for a project."""
+    from zero_core.engineering.store import DEFAULT_PROJECT_STORE
+    from zero_core.engineering.milestone_runner import (
+        DEFAULT_MILESTONE_ENGINE,
+        get_canonical_milestones_for_project,
+    )
+
+    p_store = store or DEFAULT_PROJECT_STORE
+    p_manifest = manifest or p_store.get_project(project_id)
+    if not p_manifest:
+        raise ValueError(f"Project '{project_id}' not found in manifest store.")
+
+    # 1. Scope Gate Status
+    is_gate_1 = DEFAULT_MILESTONE_ENGINE.is_gate_approved(p_manifest, "GATE_1_FEATURE_SCOPE")
+    scope_gate_status = "APPROVED" if is_gate_1 else "PENDING"
+
+    # 2. Canonical milestones and completion analysis
+    canonical_defs = get_canonical_milestones_for_project(p_manifest)
+    canonical_order = ["M1_FOUNDATION", "M2_WORKFLOW_REFACTOR", "M3_AGENT_RAG", "M4_DASHBOARD_RELEASE"]
+
+    completed_milestones: List[str] = []
+
+    # Check explicit manifest milestone items
+    for m in p_manifest.milestones:
+        m_id = m.milestone_id
+        if m.is_completed or getattr(m, "status", "") == "COMPLETED":
+            if m_id not in completed_milestones:
+                completed_milestones.append(m_id)
+        elif m.tasks and all(t.status == "COMPLETED" or getattr(t, "status", "") == "COMPLETED" for t in m.tasks):
+            if m_id not in completed_milestones:
+                completed_milestones.append(m_id)
+
+    # Check task-level completion for M1
+    if "M1_FOUNDATION" not in completed_milestones:
+        m1_task_ids = {"TASK-M1-01", "TASK-M1-02", "TASK-M1-03", "TASK-M1-04"}
+        completed_task_set = set(p_manifest.completed_tasks or [])
+        if m1_task_ids.issubset(completed_task_set):
+            completed_milestones.append("M1_FOUNDATION")
+
+    is_m1_completed = "M1_FOUNDATION" in completed_milestones
+
+    # Check M2 started
+    is_m2_started = False
+    for m in p_manifest.milestones:
+        if m.milestone_id == "M2_WORKFLOW_REFACTOR":
+            if any(t.status in ("IN_PROGRESS", "COMPLETED") for t in m.tasks):
+                is_m2_started = True
+
+    # Compute pending milestones
+    pending_milestones = [m for m in canonical_order if m not in completed_milestones]
+
+    # Current milestone resolution
+    if is_m1_completed and not is_m2_started:
+        curr_milestone = "M2_WORKFLOW_REFACTOR"
+    elif p_manifest.current_milestone and p_manifest.current_milestone not in completed_milestones:
+        curr_milestone = p_manifest.current_milestone
+    elif pending_milestones:
+        curr_milestone = pending_milestones[0]
+    else:
+        curr_milestone = None
+
+    # Next allowed action
+    if not is_gate_1:
+        next_action = "APPROVE_GATE_1 (Feature Scope Approval)"
+    elif not is_m1_completed:
+        next_action = "@Loop Engineering Agent execute milestone M1_FOUNDATION"
+    elif is_m1_completed and not is_m2_started:
+        next_action = "M2 PREFLIGHT / M2 HITL PROGRESSION ('@Loop Engineering Agent execute milestone M2_WORKFLOW_REFACTOR')"
+    else:
+        next_action = f"@Loop Engineering Agent execute milestone {curr_milestone}" if curr_milestone else "PROJECT_COMPLETED"
+
+    status_val = p_manifest.project_status.value if hasattr(p_manifest.project_status, "value") else str(p_manifest.project_status)
+    phase_val = p_manifest.current_phase.value if hasattr(p_manifest.current_phase, "value") else str(p_manifest.current_phase)
+
+    return AuthoritativeLifecycleState(
+        project_id=p_manifest.project_id,
+        project_name=p_manifest.project_name,
+        project_status=status_val,
+        current_phase=phase_val,
+        scope_gate_status=scope_gate_status,
+        current_milestone=curr_milestone,
+        completed_milestones=completed_milestones,
+        pending_milestones=pending_milestones,
+        active_milestone=curr_milestone,
+        pending_user_actions=list(p_manifest.pending_user_actions or []),
+        next_allowed_action=next_action,
+        is_m1_completed=is_m1_completed,
+        is_m2_started=is_m2_started,
+        is_gate_1_approved=is_gate_1,
+    )

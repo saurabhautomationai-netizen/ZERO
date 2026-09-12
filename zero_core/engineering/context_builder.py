@@ -11,6 +11,7 @@ Coding Agent, UI/UX specialists, and Agency-agents).
 from __future__ import annotations
 
 import hashlib
+import json
 import logging
 import os
 import re
@@ -298,8 +299,9 @@ class ProjectContextBuilder:
         task: Union[TaskItem, Dict[str, Any]],
         target_files: Optional[List[str]] = None,
         max_files: int = 15,
+        subsystem_filter: Optional[str] = None,
     ) -> List[Path]:
-        """Deterministically selects source files relevant to the active task."""
+        """Deterministically selects source files relevant to the active task and optional subsystem."""
         if not repo_path.exists():
             return []
 
@@ -333,6 +335,24 @@ class ProjectContextBuilder:
         noise = {"build", "create", "update", "verify", "check", "task", "project", "system", "file", "with", "from"}
         query_tokens = tokens - noise
 
+        # Subsystem pattern mappings: subsystem -> (extensions, keywords_in_filename)
+        subsystem_patterns: Dict[str, Tuple[Tuple[str, ...], Tuple[str, ...]]] = {
+            "automation": ((".json", ".yaml", ".yml"), ("workflow", "n8n", "webhook", "pipeline", "automation", "trigger", "ingestion", "bridge")),
+            "database": ((".sql", ".prisma"), ("schema", "table", "migration", "db", "database", "model", "entity")),
+            "architecture": ((".md", ".txt", ".json", ".toml", ".yaml", ".yml"), ("readme", "architecture", "adr", "roadmap", "spec", "package", "requirements", "dockerfile", "app", "main")),
+            "prompts": ((".txt", ".md", ".prompt"), ("prompt", "claude", "agent", "system", "instruction", "pft")),
+            "code": ((".py", ".ts", ".js", ".go"), ("service", "core", "api", "handler", "controller", "engine", "adapter")),
+            "backend": ((".py", ".ts", ".js", ".go"), ("service", "core", "api", "handler", "controller", "engine", "adapter", "server", "app")),
+            "frontend": ((".html", ".css", ".tsx", ".jsx", ".vue", ".svelte", ".py"), ("ui", "view", "component", "dashboard", "page", "app", "board")),
+            "uiux": ((".html", ".css", ".tsx", ".jsx", ".md"), ("ui", "ux", "design", "wireframe", "component", "drawer", "theme", "view")),
+            "tests": ((".py", ".ts", ".js"), ("test", "spec", "mock", "fixture")),
+            "qa": ((".py", ".ts", ".js"), ("test", "spec", "mock", "fixture", "e2e")),
+            "finance": ((".py", ".sql", ".json", ".txt"), ("finance", "expense", "budget", "cost", "spending", "transaction", "asset")),
+            "trading": ((".py", ".json", ".mq5"), ("trading", "trade", "mt5", "strategy", "signal", "position", "risk")),
+        }
+
+        active_patterns = subsystem_patterns.get((subsystem_filter or "").lower())
+
         # 3. Scan repo candidates (deterministic ordering)
         candidates: List[Tuple[int, Path]] = []
         for root, dirs, files in os.walk(str(repo_path)):
@@ -354,13 +374,21 @@ class ProjectContextBuilder:
                 score = sum(2 for t in query_tokens if t in fpath.stem.lower())
                 score += sum(1 for t in query_tokens if t in rel_text)
                 
+                # Boost if matches subsystem filter
+                if active_patterns:
+                    exts, kws = active_patterns
+                    if fpath.suffix.lower() in exts:
+                        score += 8
+                    if any(kw in fpath.name.lower() for kw in kws):
+                        score += 10
+
                 # Boost docs/SRS/ARCHITECTURE if task is requirements/architecture
                 if any(k in text_corpus for k in ("srs", "requirements", "spec")) and "srs" in fpath.name.lower():
                     score += 5
                 if any(k in text_corpus for k in ("architecture", "adr", "design")) and "architecture" in fpath.name.lower():
                     score += 5
 
-                if score > 0:
+                if score > 0 or (active_patterns and fpath.suffix.lower() in active_patterns[0]):
                     candidates.append((score, fpath))
 
         # Sort by relevance score descending, then path ascending for determinism
@@ -381,6 +409,7 @@ class ProjectContextBuilder:
         acceptance_criteria: Optional[List[str]] = None,
         constraints: Optional[List[str]] = None,
         target_files: Optional[List[str]] = None,
+        subsystem_filter: Optional[str] = None,
     ) -> ProjectContextPackage:
         """Constructs a minimal, sanitized ProjectContextPackage for the target worker."""
         # 1. Project & Task Identity
@@ -455,6 +484,7 @@ class ProjectContextBuilder:
             task=task,
             target_files=target_files,
             max_files=max_files,
+            subsystem_filter=subsystem_filter,
         )
 
         relevant_files: Dict[str, str] = {}
@@ -505,11 +535,36 @@ class ProjectContextBuilder:
             inc_text = raw_text
             if orig_size > self.config.max_file_bytes:
                 is_truncated = True
-                inc_text = raw_text[:self.config.max_file_bytes] + f"\n\n... [TRUNCATED: original {orig_size} bytes, included {self.config.max_file_bytes} bytes. Reason: Exceeded max file size] ..."
+                # Smart compaction for large workflow JSON files to maintain validity and context budget
+                compacted = False
+                if fpath.suffix.lower() == ".json":
+                    try:
+                        parsed_json = json.loads(raw_text)
+                        if isinstance(parsed_json, dict) and "nodes" in parsed_json and isinstance(parsed_json["nodes"], list):
+                            compact_nodes = []
+                            for n in parsed_json["nodes"]:
+                                compact_nodes.append({
+                                    "name": n.get("name"),
+                                    "type": n.get("type"),
+                                    "parameters": {k: v for k, v in n.get("parameters", {}).items() if k in ("path", "httpMethod", "operation", "resource")}
+                                })
+                            compact_dict = {
+                                "name": parsed_json.get("name", fpath.name),
+                                "nodes": compact_nodes,
+                                "total_nodes": len(parsed_json["nodes"]),
+                            }
+                            inc_text = json.dumps(compact_dict, indent=2)
+                            compacted = True
+                    except Exception as err:
+                        logger.warning("Failed to compact JSON %s: %s", fpath.name, err)
+
+                if not compacted:
+                    inc_text = raw_text[:self.config.max_file_bytes] + f"\n\n... [TRUNCATED: original {orig_size} bytes, included {self.config.max_file_bytes} bytes. Reason: Exceeded max file size] ..."
+
                 truncated_files[rel_str] = {
                     "original_size": orig_size,
                     "included_size": len(inc_text),
-                    "selection_reason": "File size exceeds single file threshold",
+                    "selection_reason": "File size exceeds single file threshold" if not compacted else "Compacted workflow node graph to preserve schema validity",
                 }
 
             # Check total context budget
@@ -578,6 +633,7 @@ class ProjectContextBuilder:
             current_phase=phase,
             task_title=task_title,
             task_description=task_desc,
+            repository_path=str(repo_path) if repo_path else getattr(project, "repository_path", None),
             acceptance_criteria=criteria,
             constraints=constraints or [],
             relevant_files=relevant_files,

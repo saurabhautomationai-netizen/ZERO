@@ -28,6 +28,7 @@ logger = logging.getLogger("zero.engineering.reviewer")
 class ReviewVerdict(str, enum.Enum):
     """Outcomes of an engineering review."""
     PASS = "PASS"
+    FAIL = "FAIL"
     NEEDS_CORRECTION = "NEEDS_CORRECTION"
     BLOCKED = "BLOCKED"
     ESCALATE = "ESCALATE"
@@ -124,6 +125,32 @@ class ReviewerEngine:
             active_reviewer_id, subject_worker_id, task.title,
         )
 
+        # Pre-Review Invariant: If mutation was expected, diff and files MUST exist
+        non_mutation_workers = {"worker_chatgpt", "worker_project_builder", "worker_uiux_designer"}
+        mutation_expected = getattr(task, "mutation_expected", False) and (subject_worker_id not in non_mutation_workers)
+        has_delta = bool(worker_result.diff and worker_result.diff.strip()) or bool(worker_result.files_created or worker_result.files_modified)
+        if mutation_expected and not has_delta:
+            logger.warning("ReviewerEngine: Task %s expected mutations but worker output had empty delta.", task.task_id)
+            return ReviewResult(
+                task_id=task.task_id,
+                reviewer_id=active_reviewer_id,
+                subject_worker_id=subject_worker_id,
+                verdict=ReviewVerdict.FAIL,
+                score=0,
+                summary="REVIEW_FAIL_NO_IMPLEMENTATION",
+                findings=[
+                    ReviewFinding(
+                        category="IMPLEMENTATION",
+                        severity="CRITICAL",
+                        description="Task contract specified mutation_expected=True, but worker produced 0 created files, 0 modified files, and an empty diff.",
+                        recommendation="Dispatch a capable implementation worker to produce real code and tests.",
+                        blocking=True,
+                    )
+                ],
+                recommended_corrections=["Implement required code files and return valid diff."],
+                requires_human=False,
+            )
+
         reviewer_worker = self.worker_registry.get(active_reviewer_id)
 
         # If ChatGPTWorker is available, invoke its review method
@@ -171,9 +198,6 @@ class ReviewerEngine:
 
         # Fallback / Native review logic
         is_clean = len(worker_result.errors) == 0 and worker_result.is_success
-        verdict = ReviewVerdict.PASS if is_clean else ReviewVerdict.NEEDS_CORRECTION
-        score = 95 if is_clean else 60
-
         findings = [
             ReviewFinding(
                 category="ENGINEERING",
@@ -184,6 +208,27 @@ class ReviewerEngine:
             )
             for err in worker_result.errors
         ]
+
+        if mutation_expected:
+            req_arts = getattr(task, "required_artifacts", [])
+            missing_arts = [
+                a for a in req_arts
+                if not any(a in fc or fc in a for fc in (worker_result.files_created + worker_result.files_modified))
+            ]
+            if missing_arts:
+                is_clean = False
+                findings.append(
+                    ReviewFinding(
+                        category="REQUIRED_ARTIFACTS",
+                        severity="CRITICAL",
+                        description=f"Worker did not create or modify required artifact(s): {', '.join(missing_arts)}",
+                        recommendation="Create physical file artifacts specified in task contract.",
+                        blocking=True,
+                    )
+                )
+
+        verdict = ReviewVerdict.PASS if is_clean else ReviewVerdict.NEEDS_CORRECTION
+        score = 95 if is_clean else 30
 
         return ReviewResult(
             task_id=task.task_id,

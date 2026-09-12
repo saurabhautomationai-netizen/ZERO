@@ -8,6 +8,7 @@ Database -> Backend -> AI Agents -> Frontend -> Testing -> Security -> Deploymen
 from __future__ import annotations
 
 import logging
+import re
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
@@ -265,24 +266,225 @@ class LoopEngineeringAgent:
             "future": ["Multi-tenant SaaS subscription billing", "Advanced recruitment analytics export"],
         }
         manifest.pending_features = list(must_have + should_have + nice_to_have)
-        manifest.project_status = ProjectStatus.APPROVAL_PENDING
-        manifest.pending_user_actions = ["Approve feature scope to begin SRS & Architecture specification"]
 
-        self.store.save_project(manifest)
-        self.checkpoints.create_checkpoint(manifest, "Phase 1: Discovery Completed -> Awaiting Scope Approval")
+        from zero_core.engineering.milestone_runner import DEFAULT_MILESTONE_ENGINE
+        already_approved = DEFAULT_MILESTONE_ENGINE.is_gate_approved(manifest, "GATE_1_FEATURE_SCOPE")
 
-        return {
-            "project_id": manifest.project_id,
-            "project_name": manifest.project_name,
-            "project_type": manifest.project_type,
-            "repository_path": manifest.repository_path,
-            "detected_stack": detected_stack if detected_stack else ["Python 3.x", "Zero Engine"],
-            "existing_components": existing_files[:8] if existing_files else [],
-            "feature_scope": manifest.feature_scope,
-            "status": "APPROVAL_PENDING",
-            "gate": "FEATURE_SCOPE",
-            "message": f"Discovery complete for {manifest.project_name}. Please review and approve proposed feature scope (Gate 1).",
-        }
+        if already_approved:
+            # Preserve existing approval state and execution readiness
+            if manifest.project_status in (ProjectStatus.DISCOVERY, ProjectStatus.APPROVAL_PENDING):
+                manifest.project_status = ProjectStatus.IN_PROGRESS
+            manifest.pending_user_actions = [
+                act for act in manifest.pending_user_actions
+                if "approve feature scope" not in str(act).lower()
+            ]
+            if manifest.project_type == "EXISTING_PROJECT" and not manifest.pending_user_actions:
+                manifest.pending_user_actions = [
+                    "Gate 1 Approved. Ready for milestone execution (e.g. 'execute milestone M1_FOUNDATION')"
+                ]
+            self.store.save_project(manifest)
+            self.checkpoints.create_checkpoint(
+                manifest,
+                f"Phase 1: Discovery Refreshed (Preserved Gate 1 Approval) -> {manifest.project_name}",
+            )
+            return {
+                "project_id": manifest.project_id,
+                "project_name": manifest.project_name,
+                "project_type": manifest.project_type,
+                "repository_path": manifest.repository_path,
+                "detected_stack": detected_stack if detected_stack else ["Python 3.x", "Zero Engine"],
+                "existing_components": existing_files[:8] if existing_files else [],
+                "feature_scope": manifest.feature_scope,
+                "status": "APPROVED",
+                "gate": "FEATURE_SCOPE",
+                "message": f"Discovery refreshed for {manifest.project_name}. Existing Gate 1 feature scope approval preserved.",
+            }
+        else:
+            manifest.project_status = ProjectStatus.APPROVAL_PENDING
+            manifest.pending_user_actions = ["Approve feature scope to begin SRS & Architecture specification"]
+            self.store.save_project(manifest)
+            self.checkpoints.create_checkpoint(manifest, "Phase 1: Discovery Completed -> Awaiting Scope Approval")
+
+            return {
+                "project_id": manifest.project_id,
+                "project_name": manifest.project_name,
+                "project_type": manifest.project_type,
+                "repository_path": manifest.repository_path,
+                "detected_stack": detected_stack if detected_stack else ["Python 3.x", "Zero Engine"],
+                "existing_components": existing_files[:8] if existing_files else [],
+                "feature_scope": manifest.feature_scope,
+                "status": "APPROVAL_PENDING",
+                "gate": "FEATURE_SCOPE",
+                "message": f"Discovery complete for {manifest.project_name}. Please review and approve proposed feature scope (Gate 1).",
+            }
+
+    def execute_deep_discovery(
+        self,
+        manifest: ProjectManifest,
+        request: Any,
+    ) -> str:
+        """Executes a dynamic, read-only multi-worker deep discovery audit of an existing project."""
+        from zero_core.engineering.context_builder import DEFAULT_CONTEXT_BUILDER
+        from zero_core.engineering.discovery import (
+            DiscoveryPlanner,
+            DiscoverySynthesisEngine,
+            EvidenceLedger,
+            EvidenceStatus,
+            EvidenceType,
+            ExecutionMode,
+            FeatureEvidence,
+            ReadOnlyPolicyEnforcer,
+            VerificationLevel,
+        )
+        from zero_core.engineering.manifest import TaskItem
+        from zero_core.engineering.workers.registry import (
+            DEFAULT_WORKER_REGISTRY,
+            bootstrap_all_workers,
+        )
+
+        # 1. Enforce strict READ_ONLY execution mode
+        enforcer = ReadOnlyPolicyEnforcer(ExecutionMode.READ_ONLY)
+        enforcer.verify_action_allowed("execute_deep_discovery")
+
+        # 2. Plan dynamic read-only discovery DAG
+        planner = DiscoveryPlanner()
+        dag = planner.plan_discovery(manifest, request)
+
+        # Update manifest subsystems with detected subsystems
+        if dag.detected_subsystems:
+            manifest.subsystems = dag.detected_subsystems
+
+        # Ensure all native and specialist workers are bootstrapped
+        bootstrap_all_workers(DEFAULT_WORKER_REGISTRY)
+
+        worker_results = []
+        ledger = EvidenceLedger()
+
+        # 3. Execute each task in the dynamic DAG using partitioned contexts
+        for task_plan in dag.tasks:
+            worker_obj = DEFAULT_WORKER_REGISTRY.get(task_plan.assigned_worker)
+            if not worker_obj:
+                logger.warning(
+                    "Worker %s not found in registry, skipping task %s",
+                    task_plan.assigned_worker,
+                    task_plan.task_id,
+                )
+                continue
+
+            task_item = TaskItem(
+                task_id=task_plan.task_id,
+                milestone_id="M_DEEP_DISCOVERY",
+                title=task_plan.title,
+                description=task_plan.description,
+                assigned_worker=task_plan.assigned_worker,
+                acceptance_criteria=task_plan.acceptance_criteria,
+            )
+
+            # Build sanitized, partitioned context package for this worker
+            context_pkg = DEFAULT_CONTEXT_BUILDER.build_context(
+                project=manifest,
+                task=task_item,
+                worker=worker_obj,
+                current_phase="PHASE_1_DISCOVERY",
+                acceptance_criteria=task_plan.acceptance_criteria,
+                subsystem_filter=task_plan.subsystem_filter,
+            )
+
+            try:
+                result = worker_obj.run_task(context_pkg)
+                worker_results.append(result)
+
+                # Extract evidence entries with calibrated verification levels
+                primary_file = result.files_read[0] if result.files_read else "repository"
+
+                if task_plan.subsystem_filter == "automation":
+                    for art in result.artifacts_created:
+                        ledger.record(
+                            FeatureEvidence(
+                                feature=f"Workflow Definition: {art}",
+                                status=EvidenceStatus.PARTIAL,
+                                subsystem="automation",
+                                source_file=art,
+                                evidence_type=EvidenceType.WORKFLOW_NODE,
+                                location="n8n JSON nodes",
+                                verification_level=VerificationLevel.IMPLEMENTATION_PRESENT,
+                                verification_notes=f"Parsed workflow definition with {result.decisions.get('total_nodes', 'N/A')} nodes (Untested in live runtime)",
+                            )
+                        )
+                    if "channels" in result.decisions:
+                        for ch in result.decisions["channels"].split(","):
+                            if ch.strip():
+                                ledger.record(
+                                    FeatureEvidence(
+                                        feature=f"Channel Integration: {ch.strip()}",
+                                        status=EvidenceStatus.PARTIAL,
+                                        subsystem="automation",
+                                        source_file=primary_file,
+                                        evidence_type=EvidenceType.WORKFLOW_NODE,
+                                        location=f"Channel node: {ch.strip()}",
+                                        verification_level=VerificationLevel.IMPLEMENTATION_PRESENT,
+                                        verification_notes="Configured integration channel in workflow AST",
+                                    )
+                                )
+
+                elif task_plan.subsystem_filter == "database":
+                    for tbl in result.artifacts_created:
+                        ledger.record(
+                            FeatureEvidence(
+                                feature=f"Relational Table: {tbl}",
+                                status=EvidenceStatus.PARTIAL,
+                                subsystem="database",
+                                source_file=primary_file,
+                                evidence_type=EvidenceType.DATABASE_DDL,
+                                location=f"CREATE TABLE {tbl}",
+                                verification_level=VerificationLevel.STATICALLY_VERIFIED,
+                                verification_notes="Verified table defined in SQL DDL schema (SCHEMA_EXISTS)",
+                            )
+                        )
+
+                elif task_plan.subsystem_filter == "prompts":
+                    for pf in result.artifacts_created:
+                        ledger.record(
+                            FeatureEvidence(
+                                feature=f"System Prompt: {pf}",
+                                status=EvidenceStatus.PLANNED_ONLY,
+                                subsystem="prompts",
+                                source_file=pf,
+                                evidence_type=EvidenceType.SYSTEM_PROMPT,
+                                location="Prompt header",
+                                verification_level=VerificationLevel.ARTIFACT_PRESENT,
+                                verification_notes="System prompt specification exists (PROMPT_EXISTS; code logic unconfirmed)",
+                            )
+                        )
+
+                elif task_plan.subsystem_filter == "code":
+                    for cf in result.files_read:
+                        ledger.record(
+                            FeatureEvidence(
+                                feature=f"Source Module: {cf}",
+                                status=EvidenceStatus.PARTIAL,
+                                subsystem="code",
+                                source_file=cf,
+                                evidence_type=EvidenceType.PYTHON_CODE,
+                                location="Module definition",
+                                verification_level=VerificationLevel.IMPLEMENTATION_PRESENT,
+                                verification_notes="Python/TypeScript source file inspected in read-only audit",
+                            )
+                        )
+
+            except Exception as exc:
+                logger.error("Error executing discovery task %s: %s", task_plan.task_id, exc)
+
+        # 4. Synthesize results into final report adhering to output contract
+        synthesis_engine = DiscoverySynthesisEngine()
+        report_md = synthesis_engine.synthesize(
+            manifest=manifest,
+            request=request,
+            worker_results=worker_results,
+            ledger=ledger,
+        )
+
+        return report_md
 
     # -------------------------------------------------------------------------
     # APPROVAL GATE 1: FEATURE SCOPE
@@ -301,6 +503,30 @@ class LoopEngineeringAgent:
         must = approved_must or manifest.feature_scope.get("must_have", [])
         should = approved_should or manifest.feature_scope.get("should_have", [])
         
+        # Idempotency check: If Gate 1 is already validly approved and no new custom features are specified
+        from zero_core.engineering.milestone_runner import DEFAULT_MILESTONE_ENGINE
+        is_already_approved = DEFAULT_MILESTONE_ENGINE.is_gate_approved(manifest, "GATE_1_FEATURE_SCOPE")
+
+        if is_already_approved and not approved_must and not approved_should:
+            # Clean pending actions without recording duplicate approval
+            manifest.pending_user_actions = [
+                act for act in manifest.pending_user_actions
+                if "approve feature scope" not in str(act).lower()
+            ]
+            if manifest.project_type == "EXISTING_PROJECT" and not any("ready for milestone" in str(a).lower() for a in manifest.pending_user_actions):
+                manifest.pending_user_actions.append(
+                    "Gate 1 Approved. Ready for milestone execution (e.g. 'execute milestone M1_FOUNDATION')"
+                )
+            manifest.project_status = ProjectStatus.IN_PROGRESS
+            self.store.save_project(manifest)
+            return {
+                "status": "APPROVED",
+                "gate": "GATE_1_FEATURE_SCOPE",
+                "project_id": manifest.project_id,
+                "current_phase": manifest.current_phase.value if hasattr(manifest.current_phase, "value") else str(manifest.current_phase),
+                "message": "GATE 1 (Feature Scope / Continuation Plan) ALREADY APPROVED (Idempotent). Milestone execution is authorized.",
+            }
+
         manifest.approved_features = must + should
         manifest.pending_features = [f for f in manifest.pending_features if f not in manifest.approved_features]
         manifest.record_approval("GATE_1_FEATURE_SCOPE", "user", "APPROVED", f"Approved {len(manifest.approved_features)} core features.")
@@ -308,8 +534,240 @@ class LoopEngineeringAgent:
         manifest.pending_user_actions.clear()
         manifest.project_status = ProjectStatus.IN_PROGRESS
 
+        # For existing projects: record approval, create checkpoint, and halt before milestone execution
+        if manifest.project_type == "EXISTING_PROJECT":
+            manifest.pending_user_actions = [
+                "Gate 1 Approved. Ready for milestone execution (e.g. 'execute milestone M1_FOUNDATION')"
+            ]
+            self.store.save_project(manifest)
+            ckpt = self.checkpoints.create_checkpoint(
+                manifest,
+                f"GATE_1_FEATURE_SCOPE approved for existing project {manifest.project_name}",
+            )
+            return {
+                "status": "APPROVED",
+                "gate": "GATE_1_FEATURE_SCOPE",
+                "project_id": manifest.project_id,
+                "current_phase": manifest.current_phase.value if hasattr(manifest.current_phase, "value") else str(manifest.current_phase),
+                "checkpoint_id": ckpt.checkpoint_id,
+                "message": "GATE 1 (Feature Scope / Continuation Plan) APPROVED. Milestone M1_FOUNDATION is now authorized for execution.",
+            }
+
         # Autonomously execute Phase 2 (SRS), Phase 3 (Architecture), Phase 4 (Structure) -> Phase 5 (UI/UX)
         return self._execute_srs_architecture_uiux(manifest)
+
+    def execute_milestone(
+        self,
+        manifest: ProjectManifest,
+        req: Any,
+        context: Optional[Any] = None,
+        mode: Optional[Any] = None,
+    ) -> str:
+        """Executes an authorized milestone through the MilestoneExecutionEngine."""
+        from zero_core.engineering.milestone_runner import DEFAULT_MILESTONE_ENGINE
+        return DEFAULT_MILESTONE_ENGINE.execute_milestone(
+            manifest, req, context=context, mode=mode
+        )
+
+    def reset_milestone(
+        self,
+        manifest: ProjectManifest,
+        req: Any,
+    ) -> str:
+        """Safely resets a phantom-completed milestone to READY after human authorization.
+
+        Enforces:
+        - Valid milestone target in project
+        - Independent reconciliation evidence showing PHANTOM_COMPLETION
+        - Pending HITL action requirement
+        - Audit history preservation (no erased evidence)
+        - Zero filesystem mutations
+        - Gate 1 approval preservation
+        - Resolution of pending reset HITL action
+        - Execution Safety: Does NOT execute the milestone.
+        """
+        raw_text = getattr(req, "raw_instruction", "")
+        target_ms = getattr(req, "target_milestone", None)
+        if not target_ms:
+            m_ms = re.search(r'(?im)\b(?:reset|milestone)\s+(?:phantom\s+)?(?:milestone\s+)?(m\d+[a-zA-Z0-9_\-]*)', raw_text)
+            if m_ms:
+                target_ms = m_ms.group(1).strip()
+
+        if not target_ms:
+            completed_ms = [m for m in manifest.milestones if m.is_completed]
+            if len(completed_ms) == 1:
+                target_ms = completed_ms[0].milestone_id
+            else:
+                return "❌ **MILESTONE_NOT_FOUND**: No target milestone specified in reset request."
+
+        # 1. Verify Milestone exists in manifest or canonical definitions
+        from zero_core.engineering.milestone_runner import get_canonical_milestones_for_project
+        canonical_ms = get_canonical_milestones_for_project(manifest)
+        ms_obj = next((m for m in manifest.milestones if m.milestone_id == target_ms), None)
+        if not ms_obj and target_ms not in canonical_ms:
+            return f"❌ **MILESTONE_NOT_FOUND**: Milestone `{target_ms}` does not exist in project `{manifest.project_id}`."
+
+        # 2. Require Reconciliation Evidence
+        from zero_core.engineering.reconciliation import DEFAULT_RECONCILIATION_ENGINE, MilestoneReconciliationEngine
+        recon_engine = MilestoneReconciliationEngine(store=self.store, checkpoints=self.checkpoints) if self.store else DEFAULT_RECONCILIATION_ENGINE
+        report = recon_engine.reconcile_milestone(manifest, target_ms)
+
+        expected_hitl_action = f"RESET_PHANTOM_{target_ms}_TO_READY"
+        if not report.is_phantom_completion or report.recommended_action != "RESET_TO_READY" or report.pending_hitl_action != expected_hitl_action:
+            return (
+                f"🛑 **RESET_NOT_AUTHORIZED**: Milestone `{target_ms}` in `{manifest.project_id}` cannot be reset.\n"
+                f"- **Manifest Status**: `{report.manifest_status}`\n"
+                f"- **Forensic Verdict**: `{report.real_status}`\n"
+                f"- **Recommended Action**: `{report.recommended_action}`\n\n"
+                f"> [!WARNING]\n"
+                f"> ZERO only permits milestone resets when independent forensic reconciliation verifies a `PHANTOM_COMPLETION` with pending HITL action `{expected_hitl_action}`. Legitimate completed or unexecuted milestones cannot be casually reset."
+            )
+
+        # 3. Preserve Audit History
+        now_iso = datetime.now(timezone.utc).isoformat()
+        previous_state = "COMPLETED"
+        audit_reason = f"Required {target_ms} artifacts missing ({len(report.missing_artifacts)} missing on disk) and checkpoint delta = 0"
+
+        transition_record = {
+            "event": "MILESTONE_RESET",
+            "milestone_id": target_ms,
+            "previous_state": previous_state,
+            "reconciliation_verdict": report.real_status,
+            "human_action": "RESET_TO_READY",
+            "new_state": "READY",
+            "reason": audit_reason,
+            "forensic_findings": list(report.findings),
+            "missing_artifacts": list(report.missing_artifacts),
+            "checkpoint_delta_count": report.checkpoint_delta_count,
+            "timestamp": now_iso,
+            "checkpoints_preserved": True,
+        }
+        manifest.decision_history.append(transition_record)
+        manifest.record_approval(
+            gate=f"RESET_PHANTOM_{target_ms}_TO_READY",
+            approver="user",
+            status="APPROVED",
+            notes=f"Human-authorized reset: {audit_reason}",
+        )
+
+        # 4. Reset Only Execution State
+        if ms_obj:
+            ms_obj.is_completed = False
+            if not ms_obj.tasks and target_ms in canonical_ms:
+                c_item = canonical_ms[target_ms]
+                ms_obj.tasks = [
+                    TaskItem(
+                        task_id=t.task_id,
+                        milestone_id=t.milestone_id,
+                        title=t.title,
+                        description=t.description,
+                        assigned_agent=t.assigned_agent,
+                        status=TaskStatus.PENDING,
+                        dependencies=list(t.dependencies),
+                        acceptance_criteria=list(t.acceptance_criteria),
+                        modified_files=list(t.modified_files),
+                        required_artifacts=getattr(t, "required_artifacts", []),
+                        required_symbols=getattr(t, "required_symbols", []),
+                        required_tests=getattr(t, "required_tests", []),
+                        mutation_expected=getattr(t, "mutation_expected", True),
+                    )
+                    for t in c_item.tasks
+                ]
+            for task in ms_obj.tasks:
+                task.status = TaskStatus.PENDING
+                task.completed_at = None
+                task.created_files = []
+                task.failure_reason = None
+                task.retry_count = 0
+                if task.task_id in manifest.completed_tasks:
+                    manifest.completed_tasks.remove(task.task_id)
+                if task.task_id not in manifest.remaining_tasks:
+                    manifest.remaining_tasks.append(task.task_id)
+        else:
+            c_item = canonical_ms[target_ms]
+            ms_obj = MilestoneItem(
+                milestone_id=c_item.milestone_id,
+                title=c_item.title,
+                phase=c_item.phase,
+                description=c_item.description,
+                tasks=[
+                    TaskItem(
+                        task_id=t.task_id,
+                        milestone_id=t.milestone_id,
+                        title=t.title,
+                        description=t.description,
+                        assigned_agent=t.assigned_agent,
+                        status=TaskStatus.PENDING,
+                        dependencies=list(t.dependencies),
+                        acceptance_criteria=list(t.acceptance_criteria),
+                        modified_files=list(t.modified_files),
+                        required_artifacts=getattr(t, "required_artifacts", []),
+                        required_symbols=getattr(t, "required_symbols", []),
+                        required_tests=getattr(t, "required_tests", []),
+                        mutation_expected=getattr(t, "mutation_expected", True),
+                    )
+                    for t in c_item.tasks
+                ],
+                is_completed=False,
+                acceptance_tests=c_item.acceptance_tests,
+            )
+            manifest.milestones.append(ms_obj)
+
+        manifest.current_milestone = target_ms
+        manifest.completion_status = "IN_PROGRESS"
+        manifest.project_status = ProjectStatus.IN_PROGRESS
+
+        # 5. Clean up pending HITL reset actions & preserve Gate 1 execution readiness
+        manifest.pending_user_actions = [
+            act for act in manifest.pending_user_actions
+            if "RESET_PHANTOM" not in str(act)
+            and "reset milestone" not in str(act).lower()
+            and "approve feature scope" not in str(act).lower()
+        ]
+        manifest.pending_user_actions.append(
+            f"Gate 1 Approved. Ready for milestone execution (e.g. 'execute milestone {target_ms}')"
+        )
+
+        # 6. Save Manifest
+        self.store.save_project(manifest)
+
+        # 7. Formatted Response
+        return (
+            f"# Milestone State Reconciled\n\n"
+            f"- **Project**: `{manifest.project_name}`\n"
+            f"- **Project ID**: `{manifest.project_id}`\n"
+            f"- **Milestone**: `{target_ms}`\n"
+            f"- **Previous Manifest State**: `{previous_state}`\n"
+            f"- **Forensic Verdict**: `{report.real_status}`\n"
+            f"- **New State**: `READY`\n"
+            f"- **Historical Evidence**: `PRESERVED`\n"
+            f"- **Project Files Modified**: `0`\n"
+            f"- **M1 Executed**: `NO`\n\n"
+            f"> [!TIP]\n"
+            f"> **Next Action**: Issue the execution command when ready:\n"
+            f"> `@Loop Engineering Agent execute milestone {target_ms} Project ID: {manifest.project_id}`"
+        )
+
+    def reconcile_milestone_scope(
+        self,
+        manifest: ProjectManifest,
+        target_milestone: Optional[str] = None,
+        request: Optional[Any] = None,
+    ) -> str:
+        """Performs a read-only repository-backed milestone scope reconciliation."""
+        from zero_core.engineering.milestone_scope_reconciler import DEFAULT_SCOPE_RECONCILER
+        target_ms = target_milestone or getattr(request, "target_milestone", None) or manifest.current_milestone or "M2_WORKFLOW_REFACTOR"
+        report = DEFAULT_SCOPE_RECONCILER.reconcile_scope(manifest, target_ms, request=request)
+        return report.to_markdown()
+
+    def replan_milestone(
+        self,
+        manifest: ProjectManifest,
+        target_milestone: Optional[str] = None,
+        request: Optional[Any] = None,
+    ) -> str:
+        """Generates a prescriptive milestone execution plan based on repository reality."""
+        return self.reconcile_milestone_scope(manifest, target_milestone=target_milestone, request=request)
 
     # -------------------------------------------------------------------------
     # PHASES 2, 3, 4, 5: SRS, ARCHITECTURE, FOLDER STRUCTURE, UI/UX
@@ -547,8 +1005,9 @@ class LoopEngineeringAgent:
 
         lines = [
             f"# Engineering Project: {manifest.project_name} [{manifest.project_status.value}]",
+            f"- **Project ID**: `{manifest.project_id}`",
+            f"- **Repository**: `{manifest.repository_path}`",
             f"**Phase**: `{manifest.current_phase.value}` | **Progress**: `{manifest.overall_progress}%`",
-            f"**Repository**: `{manifest.repository_path}`",
             f"**Active Agent**: `{manifest.active_agent or 'Idle'}`",
             "",
             "## Subsystem Status",

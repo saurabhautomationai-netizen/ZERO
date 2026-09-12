@@ -51,12 +51,19 @@ class ResolutionError(Exception):
 class EngineeringIntent(str, enum.Enum):
     """Explicit operational intent for Loop Engineering instructions."""
     DISCOVERY = "DISCOVERY"
+    DEEP_DISCOVERY = "DEEP_DISCOVERY"
+    CONTINUATION_PLAN = "CONTINUATION_PLAN"
     DIAGNOSTIC = "DIAGNOSTIC"
     STATUS = "STATUS"
     PLAN = "PLAN"
     RESUME = "RESUME"
     GATE_APPROVAL = "GATE_APPROVAL"
     TASK_EXECUTION = "TASK_EXECUTION"
+    EXECUTE_MILESTONE = "EXECUTE_MILESTONE"
+    POST_MILESTONE_AUDIT = "POST_MILESTONE_AUDIT"
+    RECONCILE_MILESTONE_SCOPE = "RECONCILE_MILESTONE_SCOPE"
+    REPLAN_MILESTONE = "REPLAN_MILESTONE"
+    RESET_MILESTONE = "RESET_MILESTONE"
     AUTONOMOUS_BUILD = "AUTONOMOUS_BUILD"
     UNKNOWN = "UNKNOWN"
 
@@ -71,9 +78,12 @@ class EngineeringRequest:
     intent: EngineeringIntent = EngineeringIntent.UNKNOWN
     read_only: bool = False
     requested_gate: Optional[str] = None
+    target_milestone: Optional[str] = None
     target_files: List[str] = field(default_factory=list)
     constraints: List[str] = field(default_factory=list)
     source_interface: str = "web"
+    requested_title: Optional[str] = None
+    requested_sections: List[str] = field(default_factory=list)
     metadata: Dict[str, Any] = field(default_factory=dict)
 
 
@@ -185,7 +195,66 @@ class ProjectResolver:
             if not cand.lower().startswith(("id:", "path:", "location:")):
                 extracted_pname = cand
 
-        # 4. Determine intent
+        # 4. Extract output contract requirements (if any)
+        requested_title = None
+        title_match = re.search(r'(?im)(?:return|generate|produce)\s*:\s*\n+[#\s]*([^\n\r]+)', text)
+        if title_match:
+            cand_title = title_match.group(1).strip().lstrip("# ")
+            if len(cand_title) >= 6 and not any(k in cand_title.lower() for k in ("with a", "detailed", "analysis", "covering", "sections")):
+                requested_title = cand_title
+        if not requested_title:
+            # Check for top-level markdown heading
+            top_h_match = re.search(r'(?im)^#\s+([^\n\r]+)', text)
+            if top_h_match:
+                cand_h = top_h_match.group(1).strip()
+                if len(cand_h) >= 5 and "—" in cand_h or "-" in cand_h or "PREFLIGHT" in cand_h.upper() or "PLAN" in cand_h.upper():
+                    requested_title = cand_h
+
+        requested_sections: List[str] = []
+        # Find explicit output contract block (e.g. under Return:, Output:, Required Sections:, or Sections:)
+        contract_block = None
+        block_match = re.search(r'(?im)(?:return|output|required sections|sections to include|analysis covering)\s*:\s*\n+([\s\S]+?)(?=(?:\n\s*(?:then|do not|important|stop|===|---))|\Z)', text)
+        if block_match:
+            contract_block = block_match.group(1)
+        else:
+            # Fallback: Check if there is a block under a markdown title '# ... — ...' containing a numbered list
+            header_block_match = re.search(r'(?im)^#\s+[^\n]+(?:—|-)[^\n]+\n+([\s\S]+?)(?=(?:\n\s*(?:then|do not|important|stop|===|---))|\Z)', text)
+            if header_block_match:
+                contract_block = header_block_match.group(1)
+
+        if contract_block:
+            raw_items = []
+            for line in contract_block.splitlines():
+                sline = line.strip()
+                if not sline or sline.startswith('#'):
+                    continue
+                num_match = re.match(r'^\s*\d+[\.\)]\s+(.+)$', sline)
+                if num_match:
+                    item = num_match.group(1).strip()
+                    header_prefixes = ("repository:", "project id:", "location:", "path:")
+                    if not any(item.lower().startswith(p) for p in header_prefixes):
+                        raw_items.append(item)
+                elif sline.startswith(('-', '*', '•')) and len(sline) > 2:
+                    item = sline.lstrip('-*• ').strip()
+                    header_prefixes = ("repository:", "project id:", "location:", "path:", "action:", "git state:", "safety constraint:", "checkpoint directive:")
+                    if not any(item.lower().startswith(p) for p in header_prefixes):
+                        raw_items.append(item)
+            if len(raw_items) >= 2:
+                requested_sections = raw_items
+
+        # Target Milestone extraction (Must NOT extract words like 'discovery' from negative instructions)
+        extracted_milestone = None
+        m_canonical = re.search(r'(?im)\b(M\d+(?:_[A-Za-z0-9_\-]+)?)\b', text)
+        if m_canonical:
+            extracted_milestone = m_canonical.group(1).strip()
+        else:
+            m_milestone = re.search(r'(?im)(?:execute|run|implement|reconcile(?:\s+scope)?|audit|reset(?:\s+phantom)?|replan)\s+milestone\s+([a-zA-Z0-9_\-]+)', text)
+            if m_milestone:
+                cand_ms = m_milestone.group(1).strip()
+                if cand_ms.lower() not in ("discovery", "task", "project", "audit", "preflight", "all", "scope"):
+                    extracted_milestone = cand_ms
+
+        # 5. Determine intent
         intent, read_only, requested_gate = self.classify_intent(text)
 
         return EngineeringRequest(
@@ -196,13 +265,62 @@ class ProjectResolver:
             intent=intent,
             read_only=read_only,
             requested_gate=requested_gate,
+            target_milestone=extracted_milestone,
             source_interface=source_interface,
+            requested_title=requested_title,
+            requested_sections=requested_sections,
             metadata={"session_project_id": session_project_id} if session_project_id else {},
         )
 
     def classify_intent(self, text: str) -> Tuple[EngineeringIntent, bool, Optional[str]]:
         """Classifies engineering intent and read-only requirements from task text."""
-        t_lower = text.lower()
+        # Clean negative directives like "do not run discovery" so they do not trigger unintended discovery intents
+        cleaned_text = re.sub(r'(?im)\b(?:do\s+not|dont|never)\s+(?:run|execute|perform|do)?\s+discovery\b', '', text)
+        t_lower = cleaned_text.lower()
+        t_raw_lower = text.lower()
+
+        # Milestone Reset Intent (Human-Authorized Reset of Phantom Milestone)
+        # Note: Must NOT trigger on generic words like "reset project" or "reset the project"
+        if not re.search(r'(?im)\breset\s+(?:the\s+)?project\b', t_lower) and (
+            re.search(r'(?im)\breset\s+(?:phantom\s+)?(?:milestone\s+)?m\d+[a-zA-Z0-9_\-]*\b', t_lower)
+            or any(w in t_lower for w in ("reset milestone", "reset phantom milestone"))
+        ):
+            return EngineeringIntent.RESET_MILESTONE, False, None
+
+        # Scope Reconciliation Intent (Repository-backed comparison of planned tasks vs codebase reality)
+        if any(w in t_lower for w in (
+            "scope reconciliation", "reconcile scope", "reconcile milestone scope",
+            "repository-backed reconciliation", "repository-backed scope reconciliation",
+            "reconcile planned scope", "scope reconcile", "reconcile m2 scope", "reconcile m1 scope",
+            "scope reconciliation and final execution plan", "scope reconciliation and execution plan",
+            "scope reconciliation and replan", "scope reconciliation and replanning",
+            "reconcile and replan"
+        )) or (
+            ("reconcile" in t_lower or "reconciliation" in t_lower)
+            and ("scope" in t_lower or "final execution plan" in t_lower or "replan" in t_lower)
+        ):
+            return EngineeringIntent.RECONCILE_MILESTONE_SCOPE, True, None
+
+        # Replan Milestone Intent (Generate corrected prescriptive plan based on repository reality)
+        if any(w in t_lower for w in (
+            "replan milestone", "milestone replan", "replan m2", "replan m1",
+            "replan execution plan", "final execution plan", "replan"
+        )):
+            return EngineeringIntent.REPLAN_MILESTONE, True, None
+
+        # Post-Milestone Forensic Audit & Execution Reconciliation (Verification of claimed past completions)
+        if any(w in t_lower for w in (
+            "reconcile milestone", "reconcile m", "audit milestone",
+            "post-milestone audit", "post milestone audit", "milestone forensic audit",
+            "forensic audit of milestone", "audit phantom", "reconciliation"
+        )):
+            return EngineeringIntent.POST_MILESTONE_AUDIT, True, None
+
+        # Milestone execution intent (explicit execution of a milestone)
+        if any(w in t_lower for w in (
+            "execute milestone", "run milestone", "implement milestone"
+        )):
+            return EngineeringIntent.EXECUTE_MILESTONE, False, None
 
         # Gate approval intent
         for gate_key, gate_name in [
@@ -216,19 +334,40 @@ class ProjectResolver:
             if f"approve {gate_key}" in t_lower:
                 return EngineeringIntent.GATE_APPROVAL, False, gate_name
 
-        # Diagnostic intent (MUST precede general discovery / review keywords)
+        # Continuation Plan / Preflight intent (Engineering reasoning, master planning, architecture synthesis, preflights)
+        if any(w in t_lower for w in (
+            "continuation plan", "continuation master plan", "create a continuation plan",
+            "verified continuation master plan", "target architecture", "continuation roadmap",
+            "preflight", "execution preflight", "m2 preflight", "pre-flight"
+        )):
+            return EngineeringIntent.CONTINUATION_PLAN, True, None
+
+        # Deep Discovery intent (Comprehensive read-only reverse engineering, audit, and feature verification)
+        if any(w in t_lower for w in (
+            "deep discovery", "audit", "audit this existing", "audit existing",
+            "recover the real", "recover and verify", "verify the real", "verify what is actually built",
+            "verify what is built", "verified feature scope", "reverse engineer", "reverse engineering",
+            "compare planned", "compare planned features", "inspect the entire existing project",
+            "feature recovery", "existing project discovery", "existing project audit",
+            "continuation gate", "product state recovery", "real existing", "real implementation state",
+            "actual implemented features", "deep project discovery"
+        )):
+            return EngineeringIntent.DEEP_DISCOVERY, True, None
+
+        # Diagnostic intent (System crashes, errors, tracebacks, runtime bugs in ZERO itself)
         if any(w in t_lower for w in (
             "diagnose", "diagnosis", "why did zero", "why is", "root-cause",
-            "root cause", "bug report", "investigate", "troubleshoot", "debug"
+            "root cause", "bug report", "troubleshoot", "debug", "traceback", "exception"
         )):
             return EngineeringIntent.DIAGNOSTIC, True, None
 
-        # Explicit read-only discovery / state recovery (takes precedence over general continuation)
+        # Lightweight discovery / state recovery
         if any(w in t_lower for w in (
             "read-only discovery", "read only discovery",
             "recover project state", "stop at continuation hitl gate",
             "continuation hitl gate", "perform read-only discovery",
-            "perform read only discovery", "discovery mode"
+            "perform read only discovery", "discovery mode",
+            "discovery", "inspect project", "inspect the existing"
         )):
             return EngineeringIntent.DISCOVERY, True, None
 
@@ -254,12 +393,6 @@ class ProjectResolver:
         )):
             return EngineeringIntent.RESUME, False, None
 
-        # General discovery
-        if any(w in t_lower for w in (
-            "discovery", "inspect project", "inspect the existing"
-        )):
-            return EngineeringIntent.DISCOVERY, True, None
-
         # Autonomous build intent (requires clear imperative trigger)
         if any(w in t_lower for w in (
             "execute autonomous build", "build autonomous", "execute an autonomous",
@@ -269,7 +402,7 @@ class ProjectResolver:
 
         # Task execution intent
         if any(w in t_lower for w in (
-            "execute task", "run task", "implement task", "fix bug", "execute milestone"
+            "execute task", "run task", "implement task", "fix bug"
         )):
             return EngineeringIntent.TASK_EXECUTION, False, None
 
@@ -372,6 +505,28 @@ class ProjectResolver:
                 query=request.raw_instruction,
                 candidates=[p.project_id for p in alias_matches],
             )
+
+        # =========================================================================
+        # RESET_MILESTONE Invariant: Explicit project identity is MANDATORY
+        # Do NOT fall back to active session project or fuzzy guessing
+        # =========================================================================
+        if request.intent == EngineeringIntent.RESET_MILESTONE:
+            avail_ids = [p.project_id for p in all_projects]
+            if len(all_projects) > 1:
+                raise ResolutionError(
+                    status=ResolutionStatus.PROJECT_AMBIGUOUS,
+                    message=f"Milestone reset requires explicit project identity. Multiple projects exist: {', '.join(avail_ids)}. Please specify 'Project ID: <id>'.",
+                    query=request.raw_instruction,
+                    candidates=avail_ids,
+                )
+            elif len(all_projects) == 1:
+                return all_projects[0]
+            else:
+                raise ResolutionError(
+                    status=ResolutionStatus.PROJECT_NOT_FOUND,
+                    message="No registered projects exist to reset.",
+                    query=request.raw_instruction,
+                )
 
         # =========================================================================
         # TIER 5: Structured project metadata in request envelope

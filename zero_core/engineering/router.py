@@ -144,7 +144,46 @@ class TaskRouter:
         fallback_worker_id = None
         reasons = []
 
-        if task_type in (EngineeringTaskType.SRS, EngineeringTaskType.PRODUCT_REQUIREMENTS, EngineeringTaskType.ARCHITECTURE, EngineeringTaskType.ADR):
+        corpus = f"{task.title} {task.description}".lower()
+        is_audit = any(k in corpus for k in ("audit", "discovery", "inspect", "analyze", "review", "read-only")) and not any(k in corpus for k in ("implement", "create", "generate", "write", "migration", "harden", "validator"))
+        non_mutation_types = {
+            EngineeringTaskType.SRS,
+            EngineeringTaskType.PRODUCT_REQUIREMENTS,
+            EngineeringTaskType.ARCHITECTURE,
+            EngineeringTaskType.ADR,
+            EngineeringTaskType.UIUX,
+            EngineeringTaskType.ARCHITECTURE_REVIEW,
+            EngineeringTaskType.CODE_REVIEW,
+            EngineeringTaskType.RESEARCH,
+            EngineeringTaskType.DISCOVERY,
+            EngineeringTaskType.SECURITY_REVIEW,
+        }
+        if task_type in non_mutation_types or is_audit:
+            is_mutation = False
+        else:
+            is_mutation = getattr(task, "mutation_expected", True)
+
+        if department_id == "automation" or any(k in corpus for k in ("workflow", "n8n", "webhook")):
+            if is_mutation:
+                primary_worker_id = "worker_automation_implementation"
+                fallback_worker_id = "worker_coding_implementation"
+                reasons.append("AutomationImplementationWorker selected for physical webhook validator and workflow generation.")
+            else:
+                primary_worker_id = "worker_automation"
+                fallback_worker_id = "worker_coding_agent"
+                reasons.append("AutomationWorker selected for read-only n8n workflow graph and webhook pipeline analysis.")
+
+        elif department_id == "database" or task_type in (EngineeringTaskType.DATABASE_DESIGN, EngineeringTaskType.DATABASE_IMPLEMENTATION) or any(k in corpus for k in ("database", "sql", "ddl", "schema", "tables")):
+            if is_mutation:
+                primary_worker_id = "worker_database_migration"
+                fallback_worker_id = "worker_coding_implementation"
+                reasons.append("DatabaseMigrationWorker selected for generating physical SQL migration files.")
+            else:
+                primary_worker_id = "worker_database_audit"
+                fallback_worker_id = "worker_coding_agent"
+                reasons.append("DatabaseAuditWorker selected for read-only SQL schema, relational model, and DDL inspection.")
+
+        elif task_type in (EngineeringTaskType.SRS, EngineeringTaskType.PRODUCT_REQUIREMENTS, EngineeringTaskType.ARCHITECTURE, EngineeringTaskType.ADR):
             primary_worker_id = "worker_project_builder"
             fallback_worker_id = "worker_chatgpt"
             reasons.append("ProjectBuilderWorker specializes in deterministic inception, SRS, and ADR formulation.")
@@ -160,21 +199,24 @@ class TaskRouter:
             reasons.append("UIUXDepartmentCoordinator manages design systems, page inventories, and interactive prototypes.")
 
         elif task_type in (EngineeringTaskType.CODE_GENERATION, EngineeringTaskType.CODE_REFACTOR, EngineeringTaskType.BUG_FIX):
-            # Prefer Antigravity for multi-file repo edits if available, else CodingAgent
-            ag_worker = self.worker_registry.get("worker_antigravity")
-            if ag_worker and ag_worker.health_check() == WorkerStatus.AVAILABLE:
-                primary_worker_id = "worker_antigravity"
-                fallback_worker_id = "worker_coding_agent"
-                reasons.append("AntigravityWorker selected for repository-wide multi-file implementation.")
+            if is_mutation:
+                primary_worker_id = "worker_coding_implementation"
+                fallback_worker_id = "worker_antigravity"
+                reasons.append("CodingImplementationWorker selected for generating real Python code and physical file mutations.")
             else:
                 primary_worker_id = "worker_coding_agent"
                 fallback_worker_id = "worker_antigravity"
-                reasons.append("CodingAgentWorker selected for deterministic in-process AST code generation.")
+                reasons.append("CodingAgentWorker selected for deterministic in-process AST code inspection.")
 
         elif task_type == EngineeringTaskType.TESTING:
-            primary_worker_id = "worker_coding_agent"
-            fallback_worker_id = "worker_antigravity"
-            reasons.append("CodingAgentWorker manages local pytest test suite execution and AST verification.")
+            if is_mutation or any(k in corpus for k in ("create test", "automated test", "test suite")):
+                primary_worker_id = "worker_coding_implementation"
+                fallback_worker_id = "worker_antigravity"
+                reasons.append("CodingImplementationWorker selected for creating and executing automated tests.")
+            else:
+                primary_worker_id = "worker_coding_agent"
+                fallback_worker_id = "worker_antigravity"
+                reasons.append("CodingAgentWorker manages local pytest test suite execution and AST verification.")
 
         elif task_type == EngineeringTaskType.RESEARCH:
             primary_worker_id = "worker_research_agent"
@@ -182,9 +224,35 @@ class TaskRouter:
             reasons.append("ResearchWorker specializes in multi-source technical intelligence.")
 
         else:
-            primary_worker_id = "worker_coding_agent"
-            fallback_worker_id = "worker_project_builder"
-            reasons.append("Default engineering worker selected.")
+            if is_mutation:
+                primary_worker_id = "worker_coding_implementation"
+                fallback_worker_id = "worker_project_builder"
+                reasons.append("CodingImplementationWorker selected for general implementation.")
+            else:
+                primary_worker_id = "worker_coding_agent"
+                fallback_worker_id = "worker_project_builder"
+                reasons.append("Default engineering worker selected.")
+
+        # Capability enforcement: If mutation is required, verify worker can mutate
+        if is_mutation:
+            mutation_caps = {
+                WorkerCapability.CREATE_FILES,
+                WorkerCapability.WRITE_FILES,
+                WorkerCapability.GENERATE_CODE,
+                WorkerCapability.MODIFY_CODE,
+                WorkerCapability.GENERATE_SQL,
+                WorkerCapability.MODIFY_WORKFLOW,
+            }
+            cand = self.worker_registry.get(primary_worker_id)
+            cand_can_mutate = cand and (any(cand.has_capability(c) for c in mutation_caps) if hasattr(cand, "has_capability") else True)
+            if not cand_can_mutate:
+                fb = self.worker_registry.get(fallback_worker_id)
+                fb_can_mutate = fb and (any(fb.has_capability(c) for c in mutation_caps) if hasattr(fb, "has_capability") else True)
+                if fb_can_mutate:
+                    primary_worker_id = fallback_worker_id
+                else:
+                    primary_worker_id = "NO_CAPABLE_IMPLEMENTATION_WORKER"
+                    reasons.append("Capability mismatch: task requires physical mutation but no capable implementation worker exists.")
 
         # 3. Health & Availability Check
         selected_worker_obj = self.worker_registry.get(primary_worker_id)

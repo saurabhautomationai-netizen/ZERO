@@ -53,10 +53,6 @@ class EngineeringProjectStore:
         """Retrieves a ProjectManifest by project_id."""
         if project_id in self._cache:
             return self._cache[project_id]
-
-    def load_project(self, project_id: str) -> Optional[ProjectManifest]:
-        """Alias for get_project."""
-        return self.get_project(project_id)
         
         file_path = self.storage_dir / f"{project_id}.json"
         if file_path.exists():
@@ -68,6 +64,10 @@ class EngineeringProjectStore:
             except Exception as exc:
                 logger.error("Failed to read project manifest %s: %s", project_id, exc)
         return None
+
+    def load_project(self, project_id: str) -> Optional[ProjectManifest]:
+        """Alias for get_project."""
+        return self.get_project(project_id)
 
     def find_by_name(self, name_or_query: str) -> Optional[ProjectManifest]:
         """Finds a project manifest by exact name, slug match, or token overlap."""
@@ -139,6 +139,3 @@ class EngineeringProjectStore:
 # Global singleton instances
 DEFAULT_PROJECT_STORE = EngineeringProjectStore()
 DEFAULT_ENGINEERING_PROJECT_STORE = DEFAULT_PROJECT_STORE
-
-
-DEFAULT_PROJECT_STORE = EngineeringProjectStore()

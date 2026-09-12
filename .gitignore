@@ -58,3 +58,19 @@ htmlcov/
 .idea/
 *.swp
 *.swo
+
+# ZERO operational state and generated execution payloads
+/zero_core/data/engineering_projects/
+/zero_core/data/checkpoints/
+/zero_core/data/artifacts/
+/zero_core/data/sales_crm.json
+
+# Local environment variants
+.env.*
+!.env.example
+
+# Local assistant settings
+/.claude/settings.local.json
+
+# Generated nested ZERO scaffold
+/Zero/
