@@ -19,3 +19,25 @@ All limits are immutable trusted configuration: queue/lease limits, wall time, s
 Durable records are strict frozen dataclasses with bounded sanitized summaries and no prompts, credentials, secrets, raw provider output, shell strings, adapters, or external session IDs. Task input cannot select roots, policies, limits, or services. Unknown outcomes and malformed bindings fail closed.
 
 G6A proves only fake-port coordinator behavior. G6B may integrate a runtime after separate security review. Authenticated HITL remains separate, and deployment remains independently HITL-gated. This module neither provides OS sandboxing nor production/provider integration.
+
+## G6A.1 lease-bound non-authoritative planning
+
+`Coordinator.plan_claimed(task, lease, expected_version)` is a deliberately
+read-only planning API for a future G6B `DISABLED`/`DRY_RUN` runtime. It accepts
+only the exact already-claimed task and lease, validates trusted project/root/
+operation binding, a live lease, expected queue version, cancellation, queue
+ownership through `read_claimed`, and the remaining full-pipeline budget. A queue
+that cannot provide that read-only ownership proof is blocked; planning never
+guesses ownership.
+
+The returned frozen `OrchestrationPlan` is advisory only. Its required-gate list
+is always `G1`, `G2`, `G3`, `G4`, `G5`, final `G4`; no gate is called or evaluated.
+It contains no prompt, credential, provider output, environment value, or session
+identifier, and has fixed `authoritative=False`, `permits_execution=False`, and
+`permits_completion=False`. It cannot be supplied to `run_once` or converted into
+live authority. Repeated planning is effect-free: it does not claim, renew,
+release, transition, persist, or charge a budget.
+
+G6B must independently enforce runtime mode and lease ownership. Live execution,
+provider activation, authenticated HITL, deployment authority, sandboxing and
+production operation remain deferred.

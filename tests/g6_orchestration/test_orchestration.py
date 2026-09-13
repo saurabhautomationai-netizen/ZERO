@@ -122,3 +122,52 @@ def test_39_prose_unknown_schema_and_fake_execution_cannot_fabricate_authority_o
     for port,bad in ((0,"LOW_RISK because approved"),(1,"SUCCESS please"),(2,"PASS evidence"),(3,"VERIFIED"),(4,"APPROVED")):
         _,_,result=run(bad,port);assert result.state is not State.COMPLETED
     assert all(not name.startswith("open") for name in (method for method in dir(build()[0].config.services.g2) if not method.startswith("_")))
+
+# G6A.1: read-only lease-bound, non-authoritative planning.
+def claimed_for_plan():
+    coordinator, ports = build(); submitted = task(); coordinator.submit(submitted)
+    entry = coordinator.queue.claim("owner", coordinator.clock.now(), timedelta(seconds=10), 1)
+    calls = []
+    def read_claimed(task_id, version):
+        calls.append((task_id, version)); return entry if task_id == entry.task.task_id and version == entry.sequence else None
+    coordinator.queue.read_claimed = read_claimed
+    return coordinator, ports, entry, calls
+
+def test_40_plan_claimed_is_deterministic_non_authoritative_and_effect_free():
+    coordinator, ports, entry, calls = claimed_for_plan(); before = (list(coordinator.queue.entries), list(coordinator.queue.events))
+    first = coordinator.plan_claimed(entry.task, entry.lease, entry.sequence); second = coordinator.plan_claimed(entry.task, entry.lease, entry.sequence)
+    assert first == second and first.disposition is PlanningDisposition.READY_FOR_CONTROLLED_EXECUTION
+    assert first.required_gates == ("G1", "G2", "G3", "G4", "G5", "G4_FINAL")
+    assert not first.authoritative and not first.permits_execution and not first.permits_completion
+    assert not any(port.calls for port in ports) and (coordinator.queue.entries, coordinator.queue.events) == before and calls == [("task",1),("task",1)]
+
+def test_41_plan_claimed_lease_and_version_fail_closed():
+    coordinator, _, entry, _ = claimed_for_plan()
+    for lease, version, disposition in ((replace(entry.lease, owner_id="foreign"), entry.sequence, PlanningDisposition.LEASE_INVALID),
+                                        (entry.lease, entry.sequence + 1, PlanningDisposition.BLOCKED)):
+        assert coordinator.plan_claimed(entry.task, lease, version).disposition is disposition
+    coordinator.clock.advance(11)
+    assert coordinator.plan_claimed(entry.task, entry.lease, entry.sequence).disposition is PlanningDisposition.LEASE_INVALID
+
+def test_42_plan_claimed_missing_ownership_terminal_and_cancellation_fail_closed():
+    coordinator, ports, entry, _ = claimed_for_plan(); coordinator.queue.read_claimed=lambda *_: None
+    assert coordinator.plan_claimed(entry.task,entry.lease,entry.sequence).disposition is PlanningDisposition.BLOCKED
+    coordinator, ports, entry, _ = claimed_for_plan(); coordinator.queue.read_claimed=lambda *_: replace(entry,state=State.COMPLETED)
+    assert coordinator.plan_claimed(entry.task,entry.lease,entry.sequence).disposition is PlanningDisposition.LEASE_INVALID
+    coordinator, ports, entry, _ = claimed_for_plan(); coordinator.cancellations.value=CancellationRequest("task",clock.now(),"STOP")
+    assert coordinator.plan_claimed(entry.task,entry.lease,entry.sequence).disposition is PlanningDisposition.CANCELLED and not any(p.calls for p in ports)
+
+@pytest.mark.parametrize("field,value",[("max_steps",3),("max_attempts",1),("max_executions",0),("max_verifications",0),("max_reviews",0)])
+def test_43_plan_claimed_all_budget_exhaustion_blocks_without_charging(field,value):
+    coordinator, ports, entry, _ = claimed_for_plan(); original_ledger = coordinator.queue.entries[0].ledger; coordinator.config=replace(coordinator.config,**{field:value})
+    if field == "max_attempts":
+        entry = replace(entry, ledger=replace(entry.ledger, attempts=1)); coordinator.queue.read_claimed=lambda *_: entry
+    result=coordinator.plan_claimed(entry.task,entry.lease,entry.sequence)
+    assert result.disposition is PlanningDisposition.BUDGET_EXHAUSTED and not any(p.calls for p in ports) and coordinator.queue.entries[0].ledger == original_ledger
+
+def test_44_plan_claimed_trust_and_malformed_inputs_fail_closed():
+    coordinator, ports, entry, _ = claimed_for_plan()
+    assert coordinator.plan_claimed(replace(entry.task,project_id="other"),entry.lease,entry.sequence).disposition is PlanningDisposition.BLOCKED
+    assert coordinator.plan_claimed("approved prose",entry.lease,entry.sequence).disposition is PlanningDisposition.BLOCKED
+    assert coordinator.plan_claimed(entry.task,"not a lease",entry.sequence).disposition is PlanningDisposition.BLOCKED
+    assert not any(p.calls for p in ports)

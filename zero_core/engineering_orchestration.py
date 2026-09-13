@@ -6,6 +6,7 @@ from datetime import datetime, timedelta, timezone
 from enum import Enum
 from pathlib import PureWindowsPath
 from typing import Any, Protocol
+import hashlib
 
 
 MAX_TEXT = 240
@@ -50,6 +51,12 @@ class G2Outcome(str, Enum): SUCCESS = "SUCCESS"; FAILED = "FAILED"; BLOCKED = "B
 class G3Outcome(str, Enum): PASS = "PASS"; FAILED = "FAILED"; BLOCKED = "BLOCKED"; INCONCLUSIVE = "INCONCLUSIVE"
 class G4Outcome(str, Enum): VERIFIED = "VERIFIED"; CORRUPT = "CORRUPT"; REQUIRES_REVERIFICATION = "REQUIRES_REVERIFICATION"
 class G5Outcome(str, Enum): APPROVED = "APPROVED"; REJECTED = "REJECTED"; REMEDIATION = "REMEDIATION"; BLOCKED = "BLOCKED"
+class PlanningDisposition(str, Enum):
+    READY_FOR_CONTROLLED_EXECUTION = "READY_FOR_CONTROLLED_EXECUTION"
+    BLOCKED = "BLOCKED"
+    CANCELLED = "CANCELLED"
+    LEASE_INVALID = "LEASE_INVALID"
+    BUDGET_EXHAUSTED = "BUDGET_EXHAUSTED"
 
 
 def _text(value: str, name: str, limit: int = MAX_TEXT) -> str:
@@ -153,6 +160,32 @@ class OrchestrationResult:
     def __post_init__(self) -> None: _text(self.task_id,"TASK"); _text(self.summary,"SUMMARY")
 
 
+@dataclass(frozen=True)
+class RemainingBudget:
+    steps: int; attempts: int; executions: int; verifications: int; reviews: int
+    def __post_init__(self) -> None:
+        for value, name in ((self.steps,"STEPS"),(self.attempts,"ATTEMPTS"),(self.executions,"EXECUTIONS"),(self.verifications,"VERIFICATIONS"),(self.reviews,"REVIEWS")):
+            _count(value, name)
+
+
+@dataclass(frozen=True)
+class OrchestrationPlan:
+    """A descriptive result only; its booleans intentionally cannot authorize work."""
+    disposition: PlanningDisposition; task_fingerprint: str; lease_fingerprint: str
+    configuration_fingerprint: str; current_state: State; required_gates: tuple[str, ...]
+    remaining_budget: RemainingBudget; reason_code: str; authoritative: bool = False
+    permits_execution: bool = False; permits_completion: bool = False
+    def __post_init__(self) -> None:
+        if type(self.disposition) is not PlanningDisposition or type(self.current_state) is not State:
+            raise OrchestrationError("INVALID_PLAN")
+        for value, name in ((self.task_fingerprint,"TASK_FINGERPRINT"),(self.lease_fingerprint,"LEASE_FINGERPRINT"),(self.configuration_fingerprint,"CONFIGURATION_FINGERPRINT"),(self.reason_code,"PLAN_REASON")):
+            _text(value, name)
+        if type(self.required_gates) is not tuple or self.required_gates != ("G1", "G2", "G3", "G4", "G5", "G4_FINAL"):
+            raise OrchestrationError("INVALID_PLAN")
+        if type(self.remaining_budget) is not RemainingBudget or self.authoritative is not False or self.permits_execution is not False or self.permits_completion is not False:
+            raise OrchestrationError("INVALID_PLAN")
+
+
 class QueueRepository(Protocol):
     def enqueue(self, task: OrchestrationTask, ledger: BudgetLedger, maximum: int) -> QueueEntry: ...
     def claim(self, owner_id: str, now: datetime, duration: timedelta, maximum: int) -> QueueEntry | None: ...
@@ -160,6 +193,7 @@ class QueueRepository(Protocol):
     def find_idempotency(self, key: str) -> QueueEntry | None: ...
     def recover_expired(self, now: datetime) -> int: ...
     def renew(self, entry: QueueEntry, lease: Lease, now: datetime, duration: timedelta, maximum: int) -> Lease: ...
+    def read_claimed(self, task_id: str, expected_version: int) -> QueueEntry | None: ...
 
 class G1Port(Protocol):
     def validate(self, task: OrchestrationTask, config: TrustedConfiguration) -> G1Outcome: ...
@@ -204,6 +238,74 @@ class Coordinator:
             raise OrchestrationError("LEASE_NOT_LIVE")
         return self.queue.renew(entry, entry.lease, self.clock.now(), self.config.lease_duration,
                                 self.config.max_lease_renewals)
+
+    def plan_claimed(self, task: OrchestrationTask, lease: Lease, expected_version: int) -> OrchestrationPlan:
+        """Read-only, repeatable G6B planning surface for an already-owned lease.
+
+        This method neither calls a gate nor changes queue or durable state.  A
+        repository without the explicit read-only ownership operation is blocked.
+        """
+        task_id = task.task_id if isinstance(task, OrchestrationTask) else "UNKNOWN"
+        if isinstance(task, OrchestrationTask) and self._cancelled(task):
+            return self._plan(PlanningDisposition.CANCELLED, task, lease, State.LEASED, "CANCELLED")
+        try:
+            task.__post_init__()
+            lease.__post_init__()
+            _count(expected_version, "EXPECTED_VERSION", 1)
+            self._bound(task)
+        except (AttributeError, OrchestrationError):
+            return self._blocked_plan(task_id, "INVALID_BINDING")
+        reader = getattr(self.queue, "read_claimed", None)
+        if not callable(reader):
+            return self._plan(PlanningDisposition.BLOCKED, task, lease, State.LEASED, "OWNERSHIP_UNAVAILABLE")
+        entry = reader(task.task_id, expected_version)
+        if not isinstance(entry, QueueEntry):
+            return self._plan(PlanningDisposition.BLOCKED, task, lease, State.LEASED, "OWNERSHIP_MISSING")
+        try:
+            entry.__post_init__()
+            if entry.task is not task or entry.lease != lease or entry.sequence != expected_version or entry.state is not State.LEASED:
+                return self._plan(PlanningDisposition.LEASE_INVALID, task, lease, entry.state, "LEASE_MISMATCH")
+            now = self.clock.now(); _utc(now)
+            if lease.task_id != task.task_id or lease.expires_at <= now:
+                return self._plan(PlanningDisposition.LEASE_INVALID, task, lease, entry.state, "LEASE_EXPIRED")
+            budget = self._remaining_for_plan(entry.ledger, now)
+        except OrchestrationError as error:
+            return self._plan(PlanningDisposition.BUDGET_EXHAUSTED if str(error) == "BUDGET_EXHAUSTED" else PlanningDisposition.BLOCKED, task, lease, entry.state, str(error))
+        return OrchestrationPlan(PlanningDisposition.READY_FOR_CONTROLLED_EXECUTION, task.content_digest,
+                                 self._lease_fingerprint(lease), self._configuration_fingerprint(), entry.state,
+                                 ("G1", "G2", "G3", "G4", "G5", "G4_FINAL"), budget, "PLAN_ONLY")
+
+    def _remaining_for_plan(self, ledger: BudgetLedger, now: datetime) -> RemainingBudget:
+        if now - ledger.started_at > self.config.max_wall_clock:
+            raise OrchestrationError("BUDGET_EXHAUSTED")
+        # A full pipeline needs four charged steps, one attempt/execution,
+        # one verification and one review.  Planning never charges any of them.
+        needed = (("steps", 4, self.config.max_steps), ("attempts", 1, self.config.max_attempts),
+                  ("executions", 1, self.config.max_executions), ("verifications", 1, self.config.max_verifications),
+                  ("reviews", 1, self.config.max_reviews))
+        if any(getattr(ledger, name) + amount > maximum for name, amount, maximum in needed):
+            raise OrchestrationError("BUDGET_EXHAUSTED")
+        return RemainingBudget(self.config.max_steps - ledger.steps, self.config.max_attempts - ledger.attempts,
+                               self.config.max_executions - ledger.executions, self.config.max_verifications - ledger.verifications,
+                               self.config.max_reviews - ledger.reviews)
+
+    def _plan(self, disposition: PlanningDisposition, task: OrchestrationTask, lease: Lease, state: State, reason: str) -> OrchestrationPlan:
+        return OrchestrationPlan(disposition, task.content_digest, self._lease_fingerprint(lease), self._configuration_fingerprint(), state,
+                                 ("G1", "G2", "G3", "G4", "G5", "G4_FINAL"), RemainingBudget(0,0,0,0,0), reason)
+
+    def _blocked_plan(self, task_id: str, reason: str) -> OrchestrationPlan:
+        safe = task_id if type(task_id) is str and task_id else "UNKNOWN"
+        return OrchestrationPlan(PlanningDisposition.BLOCKED, safe, "UNAVAILABLE", self._configuration_fingerprint(), State.LEASED,
+                                 ("G1", "G2", "G3", "G4", "G5", "G4_FINAL"), RemainingBudget(0,0,0,0,0), reason)
+
+    @staticmethod
+    def _lease_fingerprint(lease: Lease) -> str:
+        return hashlib.sha256((lease.task_id + "|" + lease.lease_id + "|" + lease.owner_id + "|" + lease.expires_at.isoformat() + "|" + str(lease.renewals)).encode("utf-8")).hexdigest()
+
+    def _configuration_fingerprint(self) -> str:
+        c = self.config
+        value = "|".join((c.project_id,c.repository_root,",".join(sorted(c.permitted_operation_classes)),str(c.max_steps),str(c.max_attempts),str(c.max_executions),str(c.max_verifications),str(c.max_reviews),str(c.max_wall_clock.total_seconds())))
+        return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
     def _run(self, entry: QueueEntry) -> OrchestrationResult:
         task, lease, ledger = entry.task, entry.lease, entry.ledger
